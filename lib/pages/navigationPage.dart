@@ -2,11 +2,16 @@ import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+
+//引入material UI库使用里面的方法和组件
+import 'package:flutter/material.dart' show showMenu, PopupMenuItem;
+
 import '../router/router.dart';
 import '../widgets/windowButtons.dart';
 
 class NavigationPage extends StatefulWidget {
   final Widget child;
+
   const NavigationPage({super.key, required this.child});
 
   @override
@@ -73,42 +78,6 @@ class _NavigationPageState extends State<NavigationPage> {
           }
         }),
     PaneItem(
-        icon: const Icon(FluentIcons.heart),
-        title: const Text(
-          '收藏夹',
-          style: TextStyle(fontSize: 14, fontFamily: "微软雅黑"),
-        ),
-        body: const SizedBox.shrink(),
-        onTap: () {
-          if (router.location != '/favorites') {
-            router.goNamed('favorites');
-          }
-        }),
-    PaneItem(
-        icon: const Icon(FluentIcons.password_field),
-        title: const Text(
-          '密码箱',
-          style: TextStyle(fontSize: 14, fontFamily: "微软雅黑"),
-        ),
-        body: const SizedBox.shrink(),
-        onTap: () {
-          if (router.location != '/password') {
-            router.goNamed('password');
-          }
-        }),
-    PaneItem(
-        icon: const Icon(FluentIcons.subscribe),
-        title: const Text(
-          '订阅',
-          style: TextStyle(fontSize: 14, fontFamily: "微软雅黑"),
-        ),
-        body: const SizedBox.shrink(),
-        onTap: () {
-          if (router.location != '/subscribe') {
-            router.goNamed('subscribe');
-          }
-        }),
-    PaneItem(
         icon: const Icon(FluentIcons.empty_recycle_bin),
         title: const Text(
           '回收站',
@@ -122,7 +91,7 @@ class _NavigationPageState extends State<NavigationPage> {
         }),
     PaneItemSeparator(),
     PaneItem(
-      icon: const Icon(FluentIcons.account_management),
+      icon: const Icon(FluentIcons.chevron_unfold10),
       title: const Text(
         '传输列表',
         style: TextStyle(fontSize: 14, fontFamily: "微软雅黑"),
@@ -133,11 +102,60 @@ class _NavigationPageState extends State<NavigationPage> {
           router.goNamed('transferList');
         }
       },
-    )
+    ),
+    PaneItem(
+      enabled: false,
+      icon: const Text(
+        '36.7GB/100GB',
+        style: TextStyle(fontSize: 12, fontFamily: "微软雅黑", color: Colors.grey),
+      ),
+      body: const SizedBox.shrink(),
+      trailing: Padding(
+        padding: const EdgeInsets.only(right: 32),
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent, // 在 GestureDetector 上添加这个属性
+          onTap: () {
+            if (router.location != '/capacityInformation') {
+              router.goNamed('capacityInformation');
+            }
+          },
+          child: Wrap(
+            alignment: WrapAlignment.start,
+            crossAxisAlignment: WrapCrossAlignment.start,
+            children: [
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Text(
+                  "容量信息",
+                  style: TextStyle(
+                      fontSize: 11, fontFamily: "微软雅黑", color: Colors.blue),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
+        ),
+      ),
+    ),
+    PaneItem(
+      enabled: false,
+      icon: const Padding(
+        padding: EdgeInsets.only(left: 2),
+        child: SizedBox(
+          width: 160, //使 ProgressBar 更长
+          child: ProgressBar(value: 60),
+        ),
+      ),
+      body: const SizedBox.shrink(),
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
+    //获取屏幕的宽度高度  窗口最大化 最小化的时候会重新出发build方法
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return NavigationView(
       appBar: NavigationAppBar(
           // backgroundColor: Colors.red,  //导航背景颜色
@@ -156,41 +174,100 @@ class _NavigationPageState extends State<NavigationPage> {
         return widget.child;
       },
       pane: NavigationPane(
-        size: const NavigationPaneSize(openWidth: 220), //配置左侧宽度
+        size: const NavigationPaneSize(openWidth: 220),
+        //配置左侧宽度
         selected: topIndex,
         onChanged: (index) => setState(() => topIndex = index),
         displayMode: PaneDisplayMode.open,
         items: items,
         footerItems: [
           PaneItem(
-            icon: const Icon(FluentIcons.settings),
-            title: const Text('Settings'),
-            body: const SizedBox.shrink(),
-            onTap: () {
-              if (router.location != '/settings') {
-                router.goNamed('settings');
-              }
-            },
-          ),
-          PaneItemAction(
-            icon: const Icon(FluentIcons.add),
-            title: const Text('Add New Item'),
-            onTap: () {
-              // Your Logic to Add New `NavigationPaneItem`
-              items.add(
-                PaneItem(
-                  icon: const Icon(FluentIcons.new_folder),
-                  title: const Text('New Item'),
-                  body: const Center(
-                    child: Text(
-                      'This is a newly added Item',
-                    ),
-                  ),
-                ),
-              );
-              setState(() {});
-            },
-          ),
+              enabled: false,
+              icon: const Icon(FluentIcons.user_window),
+              title: const Text(
+                '用户123321',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              body: const SizedBox.shrink(),
+              onTap: () {
+                if (router.location != '/settings') {
+                  router.goNamed('settings');
+                }
+              },
+              trailing: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: IconButton(
+                    icon: const Icon(FluentIcons.settings),
+                    onPressed: () {
+                      print("设置");
+                      showMenu(
+                          context: context,
+                          position: RelativeRect.fromLTRB(
+                              200, screenHeight - 280, screenWidth - 200, 300),
+                          items: const [
+                            PopupMenuItem(
+                              height: 44,
+                              child: Row(
+                                children: [
+                                  Text("个人中心",
+                                      style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 14,
+                                          fontFamily: "微软雅黑"))
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              height: 44,
+                              child: Row(
+                                children: [
+                                  Text("帮助反馈",
+                                      style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 14,
+                                          fontFamily: "微软雅黑"))
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              height: 44,
+                              child: Row(
+                                children: [
+                                  Text("关于",
+                                      style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 14,
+                                          fontFamily: "微软雅黑"))
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              height: 44,
+                              child: Row(
+                                children: [
+                                  Text("设置",
+                                      style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 14,
+                                          fontFamily: "微软雅黑"))
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              height: 44,
+                              child: Row(
+                                children: [
+                                  Text("退出登录",
+                                      style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 14,
+                                          fontFamily: "微软雅黑"))
+                                ],
+                              ),
+                            ),
+                          ]);
+                    }),
+              )),
         ],
       ),
     );

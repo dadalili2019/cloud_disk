@@ -10,6 +10,9 @@ import '../pages/settings.dart';
 import '../pages/subscribe.dart';
 import '../pages/recyclePage.dart';
 import '../pages/photo.dart';
+import '../pages/transferList.dart';
+import '../pages/deviceInformation.dart';
+import '../pages/capacityInformation.dart';
 
 final router = GoRouter(
   initialLocation: "/file", //初始化的路由
@@ -66,9 +69,26 @@ final router = GoRouter(
           },
         ),
         GoRoute(
+          name: "transferList",
+          path: '/transferList',
+          builder: (context, state) => const TransferListPage(),
+        ),
+        GoRoute(
           name: "settings",
           path: '/settings',
           builder: (context, state) => const SettingsPage(),
+        ),
+        GoRoute(
+          //硬件信息
+          name: "deviceInformation",
+          path: '/deviceInformation',
+          builder: (context, state) => const DeviceInformation(),
+        ),
+        GoRoute(
+          //容量信息
+          name: "capacityInformation",
+          path: '/capacityInformation',
+          builder: (context, state) => const CapacityInformation(),
         ),
       ],
     ),

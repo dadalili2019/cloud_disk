@@ -15,7 +15,7 @@ void main() async {
     win.minSize = initialSize;
     win.size = initialSize;
     win.alignment = Alignment.center;
-    win.title = "Shared cloud storage";
+    win.title = "cloud_disk";
     win.show();
   });
 
