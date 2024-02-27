@@ -1,4 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart' show showMenu, PopupMenuItem;
 
 class FilePage extends StatefulWidget {
   const FilePage({super.key});
@@ -83,25 +85,7 @@ class _FilePageState extends State<FilePage> {
                           size: 17,
                         ),
                         onPressed: () {}),
-                    MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: IconButton(
-                              icon: const Icon(
-                                FluentIcons.add,
-                                size: 16,
-                              ),
-                              style: ButtonStyle(
-                                  backgroundColor: ButtonState.all(Colors.blue),
-                                  foregroundColor:
-                                      ButtonState.all(Colors.white),
-                                  shape: ButtonState.all(RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(15)))),
-                              onPressed: () {}),
-                        ))
+                    _addButtonWidget()
                   ],
                 ),
               )
@@ -138,22 +122,23 @@ class _FilePageState extends State<FilePage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const SizedBox(
-                      width: 120,
-                      child: Row(
-                        children: [
-                          Icon(
-                            FluentIcons.sort,
-                            size: 12,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            "按照名称排序",
-                            style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
-                          )
-                        ],
-                      ),
-                    ),
+                    _sortButtonWidget(),
+                    // const SizedBox(
+                    //   width: 120,
+                    //   child: Row(
+                    //     children: [
+                    //       Icon(
+                    //         FluentIcons.sort,
+                    //         size: 12,
+                    //       ),
+                    //       SizedBox(width: 8),
+                    //       Text(
+                    //         "按照名称排序",
+                    //         style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
+                    //       )
+                    //     ],
+                    //   ),
+                    // ),
                     MouseRegion(
                       cursor: SystemMouseCursors.click,
                       child: Padding(
@@ -220,6 +205,256 @@ class _FilePageState extends State<FilePage> {
                 );
               });
         });
+  }
+
+  //右侧增加按钮的菜单组件
+  Widget _addButtonWidget() {
+    return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Listener(
+          onPointerDown: (e) {
+            print(e.position.dx);
+            print(e.position.dy);
+            print(e.kind);
+            print(e.buttons); //1 表示鼠标的左键  2表示右键
+            if (e.kind == PointerDeviceKind.mouse && e.buttons == 1) {
+              showMenu(
+                  context: context,
+                  position: RelativeRect.fromLTRB(
+                      e.position.dx,
+                      e.position.dy - 22,
+                      MediaQuery.of(context).size.width - e.position.dx,
+                      MediaQuery.of(context).size.height - e.position.dy),
+                  items: [
+                    const PopupMenuItem(
+                      height: 44,
+                      enabled: false,
+                      child: Row(
+                        children: [
+                          Text("添加文件",
+                              style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                  fontFamily: "微软雅黑"))
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                        onTap: () async {},
+                        height: 44,
+                        child: const Row(children: [
+                          Padding(
+                            padding: EdgeInsets.only(left: 0, right: 5),
+                            child: Icon(FluentIcons.open_file),
+                          ),
+                          Text(
+                            "上传文件",
+                            style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
+                          )
+                        ])),
+                    PopupMenuItem(
+                        onTap: () async {},
+                        height: 44,
+                        child: const Row(children: [
+                          Padding(
+                            padding: EdgeInsets.only(left: 0, right: 5),
+                            child: Icon(FluentIcons.fabric_folder_upload),
+                          ),
+                          Text(
+                            "上传文件夹",
+                            style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
+                          )
+                        ])),
+                    const PopupMenuItem(
+                        height: 44,
+                        child: Row(children: [
+                          Padding(
+                            padding: EdgeInsets.only(left: 0, right: 5),
+                            child: Icon(FluentIcons.fabric_new_folder),
+                          ),
+                          Text(
+                            "新建文件夹",
+                            style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
+                          )
+                        ])),
+                    const PopupMenuItem(
+                      enabled: false,
+                      height: 44,
+                      child: Row(
+                        children: [
+                          Text("添加到相簿",
+                              style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                  fontFamily: "微软雅黑"))
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                        height: 44,
+                        child: Row(children: [
+                          Padding(
+                            padding: EdgeInsets.only(left: 0, right: 5),
+                            child: Icon(FluentIcons.camera),
+                          ),
+                          Text(
+                            "上传照片视频",
+                            style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
+                          )
+                        ])),
+                    const PopupMenuItem(
+                        height: 44,
+                        child: Row(children: [
+                          Padding(
+                            padding: EdgeInsets.only(left: 0, right: 5),
+                            child: Icon(FluentIcons.fabric_folder),
+                          ),
+                          Text(
+                            "照片文件夹",
+                            style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
+                          )
+                        ])),
+                  ]);
+            }
+          },
+          child: SizedBox(
+            width: 30,
+            height: 30,
+            child: IconButton(
+                icon: const Icon(
+                  FluentIcons.add,
+                  size: 16,
+                ),
+                style: ButtonStyle(
+                    backgroundColor: ButtonState.all(Colors.blue),
+                    foregroundColor: ButtonState.all(Colors.white),
+                    shape: ButtonState.all(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15)))),
+                onPressed: null),
+          ),
+        ));
+  }
+
+  //排序组件
+  Widget _sortButtonWidget() {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: Listener(
+        onPointerDown: (e) {
+          showMenu(
+              color: Colors.white,
+              context: context,
+              position: RelativeRect.fromLTRB(
+                  e.position.dx,
+                  e.position.dy - 24,
+                  MediaQuery.of(context).size.width - e.position.dx,
+                  MediaQuery.of(context).size.height - e.position.dy),
+              items: const [
+                PopupMenuItem(
+                    height: 44,
+                    child: Row(children: [
+                      Padding(
+                        padding: EdgeInsets.only(left: 0, right: 10),
+                        child: Icon(
+                          FluentIcons.accept,
+                          size: 12,
+                        ),
+                      ),
+                      Text(
+                        "资源名称",
+                        style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
+                      )
+                    ])),
+                PopupMenuItem(
+                    height: 44,
+                    child: Row(children: [
+                      Padding(
+                        padding: EdgeInsets.only(left: 10, right: 10),
+                        child: Text(""),
+                      ),
+                      Text(
+                        "创建时间",
+                        style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
+                      )
+                    ])),
+                PopupMenuItem(
+                    height: 44,
+                    child: Row(children: [
+                      Padding(
+                        padding: EdgeInsets.only(left: 10, right: 10),
+                        child: Text(""),
+                      ),
+                      Text(
+                        "修改时间",
+                        style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
+                      )
+                    ])),
+                PopupMenuItem(
+                    height: 44,
+                    child: Row(children: [
+                      Padding(
+                        padding: EdgeInsets.only(left: 10, right: 10),
+                        child: Text(""),
+                      ),
+                      Text(
+                        "文档大小",
+                        style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
+                      )
+                    ])),
+                PopupMenuItem(
+                  enabled: false,
+                  height: 5,
+                  child: Row(
+                    children: const [Expanded(child: Divider())],
+                  ),
+                ),
+                PopupMenuItem(
+                    height: 44,
+                    child: Row(children: [
+                      Padding(
+                        padding: EdgeInsets.only(left: 0, right: 10),
+                        child: Icon(
+                          FluentIcons.accept,
+                          size: 12,
+                        ),
+                      ),
+                      Text(
+                        "升序",
+                        style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
+                      )
+                    ])),
+                PopupMenuItem(
+                    height: 44,
+                    child: Row(children: [
+                      Padding(
+                        padding: EdgeInsets.only(left: 10, right: 10),
+                        child: Text(""),
+                      ),
+                      Text(
+                        "降序",
+                        style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
+                      )
+                    ])),
+              ]);
+        },
+        child: const SizedBox(
+          width: 120,
+          child: Row(
+            children: [
+              Icon(
+                FluentIcons.sort,
+                size: 12,
+              ),
+              SizedBox(width: 8),
+              Text(
+                "按照名称排序",
+                style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   //横向列表展示

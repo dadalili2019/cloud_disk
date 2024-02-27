@@ -13,10 +13,16 @@ import '../pages/photo.dart';
 import '../pages/transferList.dart';
 import '../pages/deviceInformation.dart';
 import '../pages/capacityInformation.dart';
+import '../pages/login.dart';
 
 final router = GoRouter(
-  initialLocation: "/file", //初始化的路由
+  initialLocation: "/login", //初始化的路由
   routes: [
+    GoRoute(
+      name: "login",
+      path: '/login',
+      builder: (context, state) => const LoginPage(),
+    ),
     ShellRoute(
       builder: (BuildContext context, GoRouterState state, Widget child) {
         return NavigationPage(child: child);
