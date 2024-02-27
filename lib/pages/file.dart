@@ -206,7 +206,7 @@ class _FilePageState extends State<FilePage> {
                 return Container(
                   decoration: BoxDecoration(
                       color: state.isHovering
-                          ? const Color.fromRGBO(169, 178, 226, 1)
+                          ? const Color.fromRGBO(245, 245, 246, 1)
                           : Colors.white),
                   padding: const EdgeInsets.all(6.0),
                   child: ListTile(
@@ -240,7 +240,7 @@ class _FilePageState extends State<FilePage> {
               return Container(
                 decoration: BoxDecoration(
                   color: state.isHovering
-                      ? const Color.fromRGBO(169, 178, 226, 1)
+                      ? const Color.fromRGBO(245, 245, 246, 1)
                       : Colors.white,
                 ),
                 padding: const EdgeInsets.all(6.0),
