@@ -1,6 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:go_router/go_router.dart';
-import '../pages/navigationPage.dart';
+import '../menu/navigationPage.dart';
 import '../pages/file.dart';
 import '../pages/myProfile.dart';
 import '../pages/favorites.dart';
@@ -14,6 +14,7 @@ import '../pages/transferList.dart';
 import '../pages/deviceInformation.dart';
 import '../pages/capacityInformation.dart';
 import '../pages/login.dart';
+import '../pages/shareFolder/shareFolder.dart';
 
 final router = GoRouter(
   initialLocation: "/login", //初始化的路由
@@ -66,6 +67,13 @@ final router = GoRouter(
           name: "myProfile",
           path: '/myProfile',
           builder: (context, state) => const MyProfilePage(),
+        ),
+        GoRoute(
+          name: "shareFolder",
+          path: '/shareFolder',
+          builder: (context, state) {
+            return const ShareFolder();
+          },
         ),
         GoRoute(
           name: "recycle",

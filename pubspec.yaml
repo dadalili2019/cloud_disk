@@ -39,6 +39,8 @@ dependencies:
   go_router: ^6.5.6
   bitsdojo_window: ^0.1.5
   system_tray: ^2.0.2
+  http: ^0.13.3
+  flutter_svg: ^2.0.9
 
 dev_dependencies:
   flutter_test:
@@ -69,6 +71,7 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/
+    - assets/login/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -1,21 +1,62 @@
-import 'dart:io';
+import 'dart:math';
 
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
-import '../widgets/loginButtons .dart';
-
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  String _userName = "";
-  String _passWord = "";
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  List<String> iconPaths = [
+    'assets/login/兔子.svg',
+    'assets/login/小狗.svg',
+    'assets/login/小猪.svg',
+    'assets/login/小猫.svg',
+    'assets/login/小鸡.svg',
+    'assets/login/小鸭.svg',
+    'assets/login/棕熊.svg',
+    'assets/login/猴子.svg',
+    'assets/login/白熊.svg',
+    'assets/login/老虎.svg',
+    'assets/login/青蛙.svg',
+    'assets/login/鸽子.svg',
+  ];
+
+  late String selectedIconPath;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    // Randomly select an icon path
+    selectedIconPath = iconPaths[Random().nextInt(iconPaths.length)];
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,16 +67,7 @@ class _LoginPageState extends State<LoginPage> {
           toolbarHeight: 40,
           elevation: 0,
           backgroundColor: Colors.white,
-          title: WindowTitleBarBox(child: MoveWindow()),
-          actions: [
-            Platform.isWindows
-                ? Container(
-                    alignment: Alignment.centerRight,
-                    width: 94,
-                    child: const LoginButtons(),
-                  )
-                : const Text("")
-          ],
+          // title: const Text("CLOUD DISK"),
         ),
         body: Center(
           child: Container(
@@ -44,93 +76,45 @@ class _LoginPageState extends State<LoginPage> {
             height: 400,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.fromLTRB(10, 0, 20, 20),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(left: 0), // 调整此值以改变左边距
-                        child: Icon(
-                          Icons.cloud,
-                          size: 40,
-                          color: Color.fromRGBO(126, 145, 250, 1),
+                SvgPicture.asset(
+                  selectedIconPath,
+                  width: 200,
+                  height: 200,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(
+                      const Color.fromRGBO(126, 145, 250, 1),
+                    ),
+                    shape: MaterialStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  onPressed: () {
+                    _animationController.forward().then((_) {
+                      context.go("/file");
+                    });
+                  },
+                  onLongPress: () {
+                    _animationController.reverse();
+                  },
+                  child: ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                      child: Text(
+                        '进入',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Padding(
-                          padding: EdgeInsets.only(left: 0, top: 5),
-                          // 调整此值以改变左边距
-                          child: Text(
-                            " CLOUD DISK",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 30,
-                              fontFamily: "微软雅黑",
-                            ),
-                          ))
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  width: 360,
-                  height: 68,
-                  child: TextField(
-                    onChanged: (value) {
-                      setState(() {
-                        _userName = value;
-                      });
-                    },
-                    decoration: const InputDecoration(
-                        hintText: "账号", border: OutlineInputBorder()),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  width: 360,
-                  height: 68,
-                  child: Stack(
-                    children: [
-                      TextField(
-                        onChanged: (value) {
-                          setState(() {
-                            _passWord = value;
-                          });
-                        },
-                        decoration: const InputDecoration(
-                            hintText: "密码", border: OutlineInputBorder()),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: 320,
-                  height: 42,
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
-                            const Color.fromRGBO(126, 145, 250, 1)),
-                        shape: MaterialStateProperty.all(//圆角
-                            RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)))),
-                    child: const Text('登录'),
-                    onPressed: () {
-                      //请求接口验证数据
-
-                      print(_userName);
-                      print(_passWord);
-
-                      context.go("/file");
-
-                      // appWindow.hide(); //macos需要去掉这句话
-                      //
-                      // sleep(const Duration(milliseconds: 50));
-                      // appWindow.minSize = const Size(1000, 600);
-                      // appWindow.size = const Size(1000, 600);
-                      // appWindow.alignment = Alignment.center;
-                      // appWindow.show();
-                    },
+                    ),
                   ),
                 ),
               ],

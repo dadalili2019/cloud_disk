@@ -10,21 +10,29 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cloud_disk/main.dart';
 
+import 'dart:io';
+
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  // 共享目录的路径
+  var sharedFolderPath = r'\\ALPHA\shareFolder';
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  // 创建目录对象
+  var sharedDirectory = Directory(sharedFolderPath);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  // 判断目录是否存在
+  if (sharedDirectory.existsSync()) {
+    // 获取目录下的文件和子目录列表
+    var files = sharedDirectory.listSync(recursive: true);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
-  });
+    // 遍历文件和子目录列表
+    for (var entity in files) {
+      if (entity is File) {
+        print('File: ${entity.path}');
+      } else if (entity is Directory) {
+        print('Directory: ${entity.path}');
+      }
+    }
+  } else {
+    print('Shared directory not found.');
+  }
 }

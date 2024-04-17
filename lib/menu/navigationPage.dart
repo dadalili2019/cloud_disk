@@ -63,6 +63,19 @@ class _NavigationPageState extends State<NavigationPage> {
             }
           },
         ),
+        PaneItem(
+          icon: const Icon(FluentIcons.people_external_share),
+          title: const Text(
+            '共享文件夹',
+            style: TextStyle(fontSize: 14, fontFamily: "微软雅黑"),
+          ),
+          body: const SizedBox.shrink(),
+          onTap: () {
+            if (router.location != '/shareFolder') {
+              router.goNamed('shareFolder');
+            }
+          },
+        ),
       ],
     ),
     PaneItem(
