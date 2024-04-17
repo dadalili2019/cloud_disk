@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:io'; // 导入 dart:io 包
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -58,6 +59,17 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
+  Future<void> _closeApp() async {
+    await Future.delayed(Duration.zero);
+    if (Platform.isWindows) {
+      // 关闭 Windows 应用程序
+      exit(0);
+    } else {
+      // 其他平台的处理逻辑
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -67,6 +79,12 @@ class _LoginPageState extends State<LoginPage>
           toolbarHeight: 40,
           elevation: 0,
           backgroundColor: Colors.white,
+          leading: IconButton(
+            icon: Icon(Icons.close),
+            onPressed: () {
+              _closeApp(); // 调用关闭应用程序的方法
+            },
+          ),
           // title: const Text("CLOUD DISK"),
         ),
         body: Center(
