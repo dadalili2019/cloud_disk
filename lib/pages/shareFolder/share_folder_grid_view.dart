@@ -12,6 +12,7 @@ Widget gridViewWidget(List<Map<String, String>> _filesList) {
         maxCrossAxisExtent: 160,
       ),
       itemBuilder: (context, index) {
+        bool isFolder = _filesList[index]["size"] == "Directory"; // 判断是否是文件夹
         return HoverButton(
           onPressed: () {}, // 必须配置 配置以后才可以监听到state状态
           builder: (context, state) {
@@ -25,10 +26,14 @@ Widget gridViewWidget(List<Map<String, String>> _filesList) {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Icon(
-                    FluentIcons.fabric_folder_fill,
+                  Icon(
+                    isFolder
+                        ? FluentIcons.fabric_folder_fill
+                        : FluentIcons.document,
                     size: 68,
-                    color: Color.fromRGBO(126, 145, 250, 1),
+                    color: isFolder
+                        ? const Color.fromRGBO(126, 145, 250, 1)
+                        : const Color.fromRGBO(31, 41, 55, 1),
                   ),
                   Container(
                     padding: const EdgeInsets.all(5),

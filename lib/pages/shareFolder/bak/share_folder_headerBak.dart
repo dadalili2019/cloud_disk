@@ -1,14 +1,16 @@
-// share_folder_header.dart
+// share_folder_headerBak.dart
 import 'dart:ui';
 
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/material.dart' show showMenu, PopupMenuItem;
 
+import '../files_loader.dart';
+
 class HeaderWidget extends StatefulWidget {
   final bool isGridView;
   final List<Map<String, String>> filesList;
   final VoidCallback onGridViewToggle; // 回调函数，用于切换视图模式
-  final String sharedFolderPath; // 添加目标路径参数
+  String sharedFolderPath; // 添加目标路径参数
 
   HeaderWidget({
     required this.isGridView,
@@ -22,6 +24,37 @@ class HeaderWidget extends StatefulWidget {
 }
 
 class _HeaderWidgetState extends State<HeaderWidget> {
+  late List<Map<String, String>> _filesList;
+
+  @override
+  void initState() {
+    super.initState();
+    _filesList = widget.filesList; // 初始化_filesList为初始的文件列表
+  }
+
+  void goToParentDirectory() async {
+    String currentPath = widget.sharedFolderPath; // 获取当前目录路径
+    if (currentPath.isNotEmpty) {
+      // 确保当前路径非空
+      int lastIndex = currentPath.lastIndexOf('\\'); // 找到最后一个 '\\' 的索引
+      if (lastIndex != -1) {
+        // 如果找到了路径分隔符
+        String parentPath = currentPath.substring(0, lastIndex); // 获取父级路径
+        setState(() {
+          widget.sharedFolderPath = parentPath; // 更新目标路径为父级路径
+        });
+        print('上一级目录：$parentPath'); // 输出调试信息
+        List<Map<String, String>> filesList =
+            await FilesLoader.loadFilesAndDirectories(
+                parentPath); // 加载父级目录下的文件列表
+        setState(() {
+          _filesList = filesList; // 更新文件列表
+        });
+      }
+    }
+    print('当前设置的_fileList列表数据为: $_filesList');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -76,6 +109,14 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                       ),
                     ),
                     Text("  共 ${widget.filesList.length} 项"),
+                    const SizedBox(width: 7),
+                    IconButton(
+                      icon: const Icon(
+                        FluentIcons.chevron_left_med,
+                        size: 15,
+                      ),
+                      onPressed: goToParentDirectory,
+                    ),
                   ],
                 ),
               ),

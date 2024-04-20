@@ -1,6 +1,7 @@
 # cloud_disk
 
-Shared cloud storage
+自用小工具合集 ~.~
+将来会集成例如:天气显示小组件、日历、提醒待办项等等。。。。
 
 ## Getting Started
 
@@ -14,3 +15,15 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## 目前已完成功能介绍
+
+- 获取局域网内共享目录中的内容(目前只支持windows系统)
+
+PS：需要提前设置好windows电脑之间的网络共享，并且暂不支持加密访问。
+
+1. 可以通过指定共享目录读取目录下所有的文件和文件夹
+2. 支持TXT文件双击打开和编译保存。
+3. 支持png&jpg&jpeg文件双击预览。
+
+
