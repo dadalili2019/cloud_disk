@@ -1,7 +1,16 @@
+import 'dart:io';
 import 'dart:ui';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:flutter/material.dart' show showMenu, PopupMenuItem;
+import 'package:flutter/material.dart'
+    show
+        AlertDialog,
+        InputDecoration,
+        PopupMenuItem,
+        TextButton,
+        TextField,
+        showMenu;
 
 import 'files_loader.dart';
 import 'share_folder_grid_view.dart';
@@ -22,10 +31,15 @@ class _ShareFolderState extends State<ShareFolder> {
 
   late String _sharedFolderPath; // 新增字段用于存储共享文件夹路径
 
+  List<File> _selectedFiles = []; // 用于存储选择的文件列表
+
+  //当前目录的顶级目录
+  static const String _shareFolderRootPath = r'\\ALPHA\shareFolder';
+
   @override
   void initState() {
     super.initState();
-    _sharedFolderPath = r'\\ALPHA\shareFolder'; // 初始化共享文件夹路径
+    _sharedFolderPath = _shareFolderRootPath; // 初始化共享文件夹路径
     _filesList = FilesLoader.loadFilesAndDirectories(_sharedFolderPath);
   }
 
@@ -55,7 +69,48 @@ class _ShareFolderState extends State<ShareFolder> {
                           FluentIcons.search,
                           size: 17,
                         ),
-                        onPressed: () {},
+                        onPressed: () async {
+                          String? searchQuery = await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              String inputText = '';
+                              return AlertDialog(
+                                title: const Text('搜索文件'),
+                                content: TextField(
+                                  onChanged: (value) {
+                                    inputText = value;
+                                  },
+                                  decoration: const InputDecoration(
+                                    hintText: '输入文件名',
+                                  ),
+                                ),
+                                actions: <Widget>[
+                                  TextButton(
+                                    // 修改这里的 FlatButton 为 TextButton
+                                    onPressed: () {
+                                      Navigator.pop(context); // 关闭对话框
+                                    },
+                                    child: Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop(inputText);
+                                    },
+                                    child: Text('搜索'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                          if (searchQuery != null && searchQuery.isNotEmpty) {
+                            // 根据搜索查询执行搜索操作
+                            print('Performing search operation: $searchQuery');
+                            List<Map<String, String>> searchResults =
+                                await FilesLoader.searchFiles(
+                                    _sharedFolderPath, searchQuery);
+                            _updateSearchResults(searchResults);
+                          }
+                        },
                       ),
                       _addButtonWidget(context),
                     ],
@@ -71,7 +126,7 @@ class _ShareFolderState extends State<ShareFolder> {
               children: [
                 //左侧
                 SizedBox(
-                  width: 100,
+                  width: 160,
                   child: Row(
                     children: [
                       Container(
@@ -85,14 +140,31 @@ class _ShareFolderState extends State<ShareFolder> {
                         ),
                       ),
                       Text("  共 ${_filesList.length} 项"),
-                      const SizedBox(width: 7),
+                      const SizedBox(width: 10),
+                      IconButton(
+                          icon: const Icon(
+                            FluentIcons.home,
+                            size: 15,
+                          ),
+                          onPressed: () {
+                            _goRootpath();
+                          }),
+                      IconButton(
+                          icon: const Icon(
+                            FluentIcons.refresh,
+                            size: 15,
+                          ),
+                          onPressed: () {
+                            _refresh();
+                          }),
+                      // const SizedBox(width: 5),
                       IconButton(
                         icon: const Icon(
                           FluentIcons.chevron_left_med,
                           size: 15,
                         ),
-                        onPressed: _sharedFolderPath == r"\\ALPHA\shareFolder"
-                            ? null // 如果当前路径是 "\\ALPHA\shareFolder"，则禁用按钮
+                        onPressed: _sharedFolderPath == _shareFolderRootPath
+                            ? null // 如果当前路径是 顶级目录，则禁用按钮
                             : goToParentDirectory, // 否则允许点击执行 goToParentDirectory 方法
                       ),
                     ],
@@ -100,32 +172,34 @@ class _ShareFolderState extends State<ShareFolder> {
                 ),
                 //右侧
                 SizedBox(
-                  width: 160,
+                  width: 140,
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
+                      //文件排序组件
                       _sortButtonWidget(context),
-                      MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 10),
-                          child: _isGridView
-                              ? IconButton(
-                                  icon: const Icon(
-                                    FluentIcons.collapse_menu,
-                                    size: 16,
-                                  ),
-                                  onPressed: _toggleGridView,
-                                )
-                              : IconButton(
-                                  icon: const Icon(
-                                    FluentIcons.table,
-                                    size: 16,
-                                  ),
-                                  onPressed: _toggleGridView,
-                                ),
-                        ),
-                      )
+                      // MouseRegion(
+                      // cursor: SystemMouseCursors.click,
+                      // child: Padding(
+                      // padding: const EdgeInsets.only(right: 10),
+                      // child: _isGridView
+                      // ? IconButton(
+                      //     icon: const Icon(
+                      //       FluentIcons.collapse_menu,
+                      //       size: 16,
+                      //     ),
+                      //     onPressed: _toggleGridView,
+                      //   )
+                      // : IconButton(
+                      //     icon: const Icon(
+                      //       FluentIcons.table,
+                      //       size: 16,
+                      //     ),
+                      //     onPressed: _toggleGridView,
+                      //     // onPressed: (){},
+                      //   ),
+                      // ),
+                      // )
                     ],
                   ),
                 )
@@ -148,6 +222,30 @@ class _ShareFolderState extends State<ShareFolder> {
     );
   }
 
+  void _goRootpath() {
+    setState(() {
+      _filesList =
+          FilesLoader.loadFilesAndDirectories(_shareFolderRootPath); // 更新文件列表
+    });
+  }
+
+  void _refresh(){
+    setState(() {
+      _filesList =
+          FilesLoader.loadFilesAndDirectories(_sharedFolderPath); // 更新文件列表
+    });
+  }
+
+  void _updateSearchResults(List<Map<String, String>> results) {
+    setState(() {
+      List<String> filePaths =
+          results.map((result) => result['directoryPath'] ?? '').toList();
+      print(filePaths.first);
+      _filesList =
+          FilesLoader.loadFilesAndDirectories(filePaths.first); // 更新文件列表
+    });
+  }
+
   void _updateFilesList() {
     setState(() {
       _filesList =
@@ -161,6 +259,7 @@ class _ShareFolderState extends State<ShareFolder> {
     });
   }
 
+  //鼠标双击进入子目录
   void goToParentDirectory() async {
     String currentPath = _sharedFolderPath; // 获取当前目录路径
     if (currentPath.isNotEmpty) {
@@ -181,6 +280,109 @@ class _ShareFolderState extends State<ShareFolder> {
         });
       }
     }
+  }
+
+  Future<void> _openFilePicker() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      setState(() {
+        _selectedFiles = result.files.map((file) => File(file.path!)).toList();
+      });
+    }
+  }
+
+  Future<void> _uploadFiles() async {
+    List<Map<String, String>> newFiles = _selectedFiles.map((file) {
+      return {
+        'id': _filesList.length.toString(),
+        'title': file.path.split('\\').last,
+        'updateTime': DateTime.now().toString(),
+        'size': '${(file.lengthSync() / (1024 * 1024)).toStringAsFixed(2)} MB',
+        'path': file.path,
+      };
+    }).toList();
+
+    setState(() {
+      _filesList.addAll(newFiles);
+    });
+  }
+
+  Future<void> _copyFiles() async {
+    for (var file in _selectedFiles) {
+      // 构建目标目录中的文件路径，使用文件的名称作为新的文件名
+      // String newFilePath = 'C:/path/to/target/directory/${file.path.split(Platform.pathSeparator).last}';
+      print("上传的文件目录为: ${_sharedFolderPath}");
+      String newFilePath = _sharedFolderPath;
+
+      Map<String, String> fileInfo = new Map<String, String>();
+
+      bool flag = true;
+
+      try {
+        // 创建目标文件对象
+        File newFile = File(newFilePath);
+
+        FileStat fileStat = await file.stat();
+
+        // 输出文件权限信息
+        print('文件权限信息：');
+        print('类型：${fileStat.type}');
+        print('权限：${fileStat.modeString()}');
+        print('大小：${fileStat.size} bytes');
+        print('修改时间：${fileStat.modified}');
+        print('访问时间：${fileStat.accessed}');
+
+        // 拷贝文件到目标目录
+        // TODO 目前发现copy事件会发生 PathAccessException: Cannot copy file to '\\ALPHA\shareFolder', path = 'C:\Users\12814\Desktop\VPN.txt' (OS Error: 拒绝访问)。的错误。
+        // 待修复
+        await file.copy(newFilePath);
+
+        // 构建新文件的信息
+        fileInfo = {
+          'id': _filesList.length.toString(),
+          'title': newFile.path.split(Platform.pathSeparator).last,
+          'updateTime': DateTime.now().toString(),
+          'size':
+              '${(newFile.lengthSync() / (1024 * 1024)).toStringAsFixed(2)} MB',
+          'path': newFile.path,
+        };
+
+      } catch (e) {
+        // 发生异常时弹窗提示异常信息
+        await showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text('文件复制失败'),
+              content: Text('$e'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('确定'),
+                ),
+              ],
+            );
+          },
+        );
+        print('文件上传失败：$e');
+        flag = false;
+      }
+
+      //如果发生异常就不进行添加
+      if (flag) {
+        // 将新文件信息添加到文件列表中
+        setState(() {
+          _filesList.add(fileInfo);
+        });
+      }
+    }
+  }
+
+
+  Future<void> checkFilePermissions(String filePath) async {
+
   }
 
   //右侧增加按钮的菜单组件
@@ -216,7 +418,11 @@ class _ShareFolderState extends State<ShareFolder> {
                       ),
                     ),
                     PopupMenuItem(
-                        onTap: () async {},
+                        onTap: () async {
+                          await _openFilePicker(); // 打开文件选择器
+                          await _uploadFiles(); // 上传文件并更新文件列表
+                          await _copyFiles();
+                        },
                         height: 44,
                         child: const Row(children: [
                           Padding(
@@ -258,7 +464,7 @@ class _ShareFolderState extends State<ShareFolder> {
                       height: 44,
                       child: Row(
                         children: [
-                          Text("添加到相簿",
+                          Text("添加其他文件",
                               style: TextStyle(
                                   color: Colors.grey,
                                   fontSize: 12,
@@ -274,7 +480,7 @@ class _ShareFolderState extends State<ShareFolder> {
                             child: Icon(FluentIcons.camera),
                           ),
                           Text(
-                            "上传照片视频",
+                            "上传图片",
                             style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
                           )
                         ])),
@@ -286,7 +492,7 @@ class _ShareFolderState extends State<ShareFolder> {
                             child: Icon(FluentIcons.fabric_folder),
                           ),
                           Text(
-                            "照片文件夹",
+                            "上传视频",
                             style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
                           )
                         ])),
@@ -447,7 +653,7 @@ class _ShareFolderState extends State<ShareFolder> {
               ),
               SizedBox(width: 8),
               Text(
-                "按照名称排序",
+                "排序",
                 style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
               ),
             ],
