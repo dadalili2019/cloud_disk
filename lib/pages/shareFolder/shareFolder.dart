@@ -33,12 +33,24 @@ class _ShareFolderState extends State<ShareFolder> {
 
   List<File> _selectedFiles = []; // 用于存储选择的文件列表
 
-  //当前目录的顶级目录
+  //当前目录的顶级目录  如果为空则使用默认地址
   static const String _shareFolderRootPath = r'\\ALPHA\shareFolder';
+
+  static const String _shareFolderUserRootPath = r'\\ALPHA\Users';
+
+  static const Map<String, String> shareFolders = {
+    'rootPath': r'\\ALPHA\shareFolder',
+    'userRootPath': r'\\ALPHA\Users',
+  };
+
+  //文件排序初始化规则
+  String _order = "desc"; //倒序
+  String _orderType = "modifyTime"; //文件修改时间
 
   @override
   void initState() {
     super.initState();
+    showInputDialog(); // 在页面加载时调用 showInputDialog 方法
     _sharedFolderPath = _shareFolderRootPath; // 初始化共享文件夹路径
     _filesList = FilesLoader.loadFilesAndDirectories(_sharedFolderPath);
   }
@@ -64,6 +76,56 @@ class _ShareFolderState extends State<ShareFolder> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
+                      IconButton(
+                        icon: const Icon(
+                          FluentIcons.add_connection,
+                          size: 17,
+                        ),
+                        onPressed: () async {
+                          String? sharePath = await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              String inputText = '';
+                              return AlertDialog(
+                                title: const Text('更改连接目录地址'),
+                                content: TextField(
+                                  onChanged: (value) {
+                                    inputText = value;
+                                  },
+                                  decoration: const InputDecoration(
+                                    hintText: '输入路径',
+                                  ),
+                                ),
+                                actions: <Widget>[
+                                  TextButton(
+                                    // 修改这里的 FlatButton 为 TextButton
+                                    onPressed: () {
+                                      Navigator.pop(context); // 关闭对话框
+                                    },
+                                    child: Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop(inputText);
+                                    },
+                                    child: Text('确定'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                          if (sharePath != null && sharePath.isNotEmpty) {
+                            print('Performing search operation: $sharePath');
+
+                            List<Map<String, String>> filesList =
+                                await FilesLoader.loadFilesAndDirectories(
+                                    sharePath); // 加载父级目录下的文件列表
+                            setState(() {
+                              _filesList = filesList; // 更新文件列表
+                            });
+                          }
+                        },
+                      ),
                       IconButton(
                         icon: const Icon(
                           FluentIcons.search,
@@ -105,6 +167,7 @@ class _ShareFolderState extends State<ShareFolder> {
                           if (searchQuery != null && searchQuery.isNotEmpty) {
                             // 根据搜索查询执行搜索操作
                             print('Performing search operation: $searchQuery');
+                            _sharedFolderPath = searchQuery;
                             List<Map<String, String>> searchResults =
                                 await FilesLoader.searchFiles(
                                     _sharedFolderPath, searchQuery);
@@ -112,7 +175,7 @@ class _ShareFolderState extends State<ShareFolder> {
                           }
                         },
                       ),
-                      _addButtonWidget(context),
+                      // _addButtonWidget(context),
                     ],
                   ),
                 )
@@ -163,7 +226,7 @@ class _ShareFolderState extends State<ShareFolder> {
                           FluentIcons.chevron_left_med,
                           size: 15,
                         ),
-                        onPressed: _sharedFolderPath == _shareFolderRootPath
+                        onPressed: shareFolders.containsValue(_sharedFolderPath)
                             ? null // 如果当前路径是 顶级目录，则禁用按钮
                             : goToParentDirectory, // 否则允许点击执行 goToParentDirectory 方法
                       ),
@@ -172,7 +235,7 @@ class _ShareFolderState extends State<ShareFolder> {
                 ),
                 //右侧
                 SizedBox(
-                  width: 140,
+                  width: 120,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -222,6 +285,53 @@ class _ShareFolderState extends State<ShareFolder> {
     );
   }
 
+  // 异步方法，用于显示对话框并获取用户输入的文本
+  void showInputDialog() async {
+    String? inputText = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String input = ''; // 用于存储用户输入的文本
+        return AlertDialog(
+          title: const Text('输入文本'),
+          content: TextField(
+            onChanged: (value) {
+              input = value; // 监听文本框变化并更新输入值
+            },
+            decoration: const InputDecoration(
+              hintText: '输入文本',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // 关闭对话框
+              },
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(input); // 关闭对话框并返回输入值
+              },
+              child: const Text('确定'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (inputText != null && inputText.isNotEmpty) {
+      // 如果用户输入了文本，则更新页面内容
+      _loadContent(inputText);
+    }
+  }
+
+  // 加载页面内容的方法，这里假设你有一个名为_loadContent的方法来加载内容
+  void _loadContent(String inputText) {
+    // 在这里根据输入文本加载页面内容
+    // 这部分需要根据你的具体需求进行实现
+    print('输入的文本是${inputText}');
+  }
+
   void _goRootpath() {
     setState(() {
       _filesList =
@@ -229,7 +339,7 @@ class _ShareFolderState extends State<ShareFolder> {
     });
   }
 
-  void _refresh(){
+  void _refresh() {
     setState(() {
       _filesList =
           FilesLoader.loadFilesAndDirectories(_sharedFolderPath); // 更新文件列表
@@ -346,7 +456,6 @@ class _ShareFolderState extends State<ShareFolder> {
               '${(newFile.lengthSync() / (1024 * 1024)).toStringAsFixed(2)} MB',
           'path': newFile.path,
         };
-
       } catch (e) {
         // 发生异常时弹窗提示异常信息
         await showDialog(
@@ -380,10 +489,7 @@ class _ShareFolderState extends State<ShareFolder> {
     }
   }
 
-
-  Future<void> checkFilePermissions(String filePath) async {
-
-  }
+  Future<void> checkFilePermissions(String filePath) async {}
 
   //右侧增加按钮的菜单组件
   Widget _addButtonWidget(BuildContext context) {
@@ -532,43 +638,17 @@ class _ShareFolderState extends State<ShareFolder> {
               MediaQuery.of(context).size.width - e.position.dx,
               MediaQuery.of(context).size.height - e.position.dy,
             ),
-            items: const [
+            items: [
               PopupMenuItem(
+                onTap: () {
+                  setState(() {
+                    _orderType = "updateTime"; // 设置排序类型为按照创建日期
+                    _filesList.sort((a, b) =>
+                        (a[_orderType] ?? "").compareTo(b[_orderType] ?? ""));
+                  });
+                },
                 height: 44,
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 0, right: 10),
-                      child: Icon(
-                        FluentIcons.accept,
-                        size: 12,
-                      ),
-                    ),
-                    Text(
-                      "资源名称",
-                      style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                height: 44,
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 10, right: 10),
-                      child: Text(""),
-                    ),
-                    Text(
-                      "创建时间",
-                      style: TextStyle(fontSize: 12, fontFamily: "微软雅黑"),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                height: 44,
-                child: Row(
+                child: const Row(
                   children: [
                     Padding(
                       padding: EdgeInsets.only(left: 10, right: 10),
@@ -582,8 +662,15 @@ class _ShareFolderState extends State<ShareFolder> {
                 ),
               ),
               PopupMenuItem(
+                onTap: () {
+                  setState(() {
+                    _orderType = "size"; // 设置排序类型为按照文档大小
+                    _filesList.sort((a, b) =>
+                        (a[_orderType] ?? "").compareTo(b[_orderType] ?? ""));
+                  });
+                },
                 height: 44,
-                child: Row(
+                child: const Row(
                   children: [
                     Padding(
                       padding: EdgeInsets.only(left: 10, right: 10),
@@ -596,7 +683,7 @@ class _ShareFolderState extends State<ShareFolder> {
                   ],
                 ),
               ),
-              PopupMenuItem(
+              const PopupMenuItem(
                 enabled: false,
                 height: 5,
                 child: Row(
@@ -608,8 +695,14 @@ class _ShareFolderState extends State<ShareFolder> {
                 ),
               ),
               PopupMenuItem(
+                onTap: () {
+                  setState(() {
+                    _filesList.sort((a, b) =>
+                        _compareDocumentSize(a[_orderType], b[_orderType]));
+                  });
+                },
                 height: 44,
-                child: Row(
+                child: const Row(
                   children: [
                     Padding(
                       padding: EdgeInsets.only(left: 0, right: 10),
@@ -626,8 +719,15 @@ class _ShareFolderState extends State<ShareFolder> {
                 ),
               ),
               PopupMenuItem(
+                onTap: () {
+                  setState(() {
+                    print(_orderType);
+                    _filesList.sort((a, b) => _compareDocumentSizeDescending(
+                        a[_orderType], b[_orderType]));
+                  });
+                },
                 height: 44,
-                child: Row(
+                child: const Row(
                   children: [
                     Padding(
                       padding: EdgeInsets.only(left: 10, right: 10),
@@ -661,5 +761,17 @@ class _ShareFolderState extends State<ShareFolder> {
         ),
       ),
     );
+  }
+
+  int _compareDocumentSize(String? a, String? b) {
+    double sizeA = double.tryParse(a ?? "0") ?? 0;
+    double sizeB = double.tryParse(b ?? "0") ?? 0;
+    return sizeB.compareTo(sizeA); // 反转返回值以实现升序排序
+  }
+
+  int _compareDocumentSizeDescending(String? a, String? b) {
+    double sizeA = double.tryParse(a ?? "0") ?? 0;
+    double sizeB = double.tryParse(b ?? "0") ?? 0;
+    return sizeA.compareTo(sizeB); // 反转返回值以实现降序排序
   }
 }
