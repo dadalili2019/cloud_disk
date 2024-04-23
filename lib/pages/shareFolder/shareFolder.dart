@@ -50,7 +50,6 @@ class _ShareFolderState extends State<ShareFolder> {
   @override
   void initState() {
     super.initState();
-    showInputDialog(); // 在页面加载时调用 showInputDialog 方法
     _sharedFolderPath = _shareFolderRootPath; // 初始化共享文件夹路径
     _filesList = FilesLoader.loadFilesAndDirectories(_sharedFolderPath);
   }
@@ -283,53 +282,6 @@ class _ShareFolderState extends State<ShareFolder> {
               _sharedFolderPath, // 传递当前共享文件夹路径
               _updateFilesList),
     );
-  }
-
-  // 异步方法，用于显示对话框并获取用户输入的文本
-  void showInputDialog() async {
-    String? inputText = await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        String input = ''; // 用于存储用户输入的文本
-        return AlertDialog(
-          title: const Text('输入文本'),
-          content: TextField(
-            onChanged: (value) {
-              input = value; // 监听文本框变化并更新输入值
-            },
-            decoration: const InputDecoration(
-              hintText: '输入文本',
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // 关闭对话框
-              },
-              child: const Text('取消'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(input); // 关闭对话框并返回输入值
-              },
-              child: const Text('确定'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (inputText != null && inputText.isNotEmpty) {
-      // 如果用户输入了文本，则更新页面内容
-      _loadContent(inputText);
-    }
-  }
-
-  // 加载页面内容的方法，这里假设你有一个名为_loadContent的方法来加载内容
-  void _loadContent(String inputText) {
-    // 在这里根据输入文本加载页面内容
-    // 这部分需要根据你的具体需求进行实现
-    print('输入的文本是${inputText}');
   }
 
   void _goRootpath() {
