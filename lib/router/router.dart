@@ -15,6 +15,8 @@ import '../pages/deviceInformation.dart';
 import '../pages/capacityInformation.dart';
 import '../pages/login.dart';
 import '../pages/shareFolder/shareFolder.dart';
+import '../pages/home.dart';
+import '../pages/tools.dart';
 
 final router = GoRouter(
   initialLocation: "/login", //初始化的路由
@@ -30,6 +32,11 @@ final router = GoRouter(
       },
       routes: <RouteBase>[
         GoRoute(
+          name: "home",
+          path: '/home',
+          builder: (context, state) => const HomePage(),
+        ),
+        GoRoute(
           name: "file",
           path: '/file',
           builder: (context, state) => const FilePage(),
@@ -38,6 +45,11 @@ final router = GoRouter(
           name: "photo",
           path: '/photo',
           builder: (context, state) => const PhotoPage(),
+        ),
+        GoRoute(
+          name: "tools",
+          path: '/tools',
+          builder: (context, state) => const ToolsPage(),
         ),
         GoRoute(
           name: "password",

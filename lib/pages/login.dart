@@ -115,7 +115,7 @@ class _LoginPageState extends State<LoginPage>
                   ),
                   onPressed: () {
                     _animationController.forward().then((_) {
-                      context.go("/file");
+                      context.go("/home");
                     });
                   },
                   onLongPress: () {

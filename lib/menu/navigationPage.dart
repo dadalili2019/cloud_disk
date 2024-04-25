@@ -22,6 +22,30 @@ class _NavigationPageState extends State<NavigationPage> {
   int topIndex = 0; //第几个选中
   //左侧的选项卡 以及选项卡对应的页面
   List<NavigationPaneItem> items = [
+    PaneItem(
+        icon: const Icon(FluentIcons.home),
+        title: const Text(
+          '首页',
+          style: TextStyle(fontSize: 14, fontFamily: "微软雅黑"),
+        ),
+        body: const SizedBox.shrink(),
+        onTap: () {
+          if (router.location != '/home') {
+            router.goNamed('home');
+          }
+        }),
+    PaneItem(
+        icon: const Icon(FluentIcons.developer_tools),
+        title: const Text(
+          '工具箱',
+          style: TextStyle(fontSize: 14, fontFamily: "微软雅黑"),
+        ),
+        body: const SizedBox.shrink(),
+        onTap: () {
+          if (router.location != '/tools') {
+            router.goNamed('tools');
+          }
+        }),
     PaneItemExpander(
       icon: const Icon(
         FluentIcons.folder_open,
