@@ -1,38 +1,52 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:cloud_disk/dto/home/weather.dart';
+import 'package:cloud_disk/utils/DBHelper.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import 'package:cloud_disk/main.dart';
+void main() async {
+  // WidgetsFlutterBinding.ensureInitialized();
+  // 初始化 sqflite_common_ffi
+  sqfliteFfiInit();
+  // 设置 databaseFactoryFfi 作为默认的 databaseFactory
+  databaseFactory = databaseFactoryFfi;
 
-import 'dart:io';
+  // 数据库配置
+  const tableName = 'weather';
+  const columns = ['location', 'temp', 'text', 'humidity', 'date'];
+  const columnProperties = ['TEXT', 'TEXT', 'TEXT', 'TEXT', 'TEXT'];
 
-void main() {
-  // 共享目录的路径
-  var sharedFolderPath = r'\\ALPHA\shareFolder';
+  // 创建 DBHelper 实例
+  final dbHelper = DBHelper();
 
-  // 创建目录对象
-  var sharedDirectory = Directory(sharedFolderPath);
+  // 初始化数据库和表
+  final db = await dbHelper.initDb(tableName, 1, columns, columnProperties);
 
-  // 判断目录是否存在
-  if (sharedDirectory.existsSync()) {
-    // 获取目录下的文件和子目录列表
-    var files = sharedDirectory.listSync(recursive: true);
+  // 获取当前日期和时间
+  DateTime now = DateTime.now();
 
-    // 遍历文件和子目录列表
-    for (var entity in files) {
-      if (entity is File) {
-        print('File: ${entity.path}');
-      } else if (entity is Directory) {
-        print('Directory: ${entity.path}');
-      }
-    }
-  } else {
-    print('Shared directory not found.');
+  // 创建一个 DateFormat 对象来指定日期格式
+  DateFormat dateFormat = DateFormat('yyyy-MM-dd');
+
+  // 使用 DateFormat 对象来格式化日期
+  String desiredDateValue = dateFormat.format(now);
+
+  Map<String, dynamic> conditions = {
+    'location': '101200304',
+    'date': desiredDateValue,
+  };
+
+  List<Map<String, dynamic>> allRows =
+  await dbHelper.getByMultipleFields(tableName, conditions);
+
+  List<Weather> weatherList = [];
+  for (var map in allRows) {
+    Weather weather = Weather.fromJson(map);
+    weatherList.add(weather);
   }
+
+
+  var length = weatherList.length;
+
+  await db.close();
 }
