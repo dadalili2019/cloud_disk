@@ -13,6 +13,7 @@ import 'package:logging/logging.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../dto/home/weather.dart';
+import '../dto/todoList/todoList.dart';
 import '../utils/DBHelper.dart';
 import '../utils/HttpUtils.dart';
 
@@ -42,6 +43,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _selectedDate = DateTime.now();
     getWeatherInfo(); // 页面加载时获取天气信息
+    getTodoList();
   }
 
   // 根据时间段获取对应的 GIF 路径
@@ -133,12 +135,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  List<String> todoList = [
-    '完成任务1',
-    '完成任务2',
-    '取消任务3',
-    '完成任务4',
-  ];
+  List<Map<String, dynamic>> todoList = [];
 
   @override
   Widget build(BuildContext context) {
@@ -309,19 +306,25 @@ class _HomePageState extends State<HomePage> {
                       physics: NeverScrollableScrollPhysics(),
                       itemCount: todoList.length,
                       itemBuilder: (context, index) {
-                        String todo = todoList[index];
-                        bool isCompleted = todo.startsWith('完成');
+                        Map<String, dynamic> todo = todoList[index];
+                        bool isCompleted = todo['category'].startsWith('已完成');
                         return ListTile(
-                          title: Text(todo),
+                          title: Text(todo['title']),
                           trailing: isCompleted
                               ? Icon(Icons.check_circle, color: Colors.green)
                               : Icon(Icons.cancel, color: Colors.red),
                           onTap: () {
                             setState(() {
                               if (isCompleted) {
-                                todoList[index] = '取消' + todo.substring(2);
+                                // 如果是已完成状态，点击变为待办，更新数据库状态为待办
+                                updateTodoStatus(
+                                    todo['id'], '待办'); // 假设 id 是唯一标识待办的字段
+                                todoList[index]['category'] = '待办'; // 更新内存中的状态
                               } else {
-                                todoList[index] = '完成' + todo.substring(2);
+                                // 如果是待办状态，点击变为已完成，更新数据库状态为已完成
+                                updateTodoStatus(
+                                    todo['id'], '已完成'); // 假设 id 是唯一标识待办的字段
+                                todoList[index]['category'] = '已完成'; // 更新内存中的状态
                               }
                             });
                           },
@@ -422,5 +425,74 @@ class _HomePageState extends State<HomePage> {
     });
 
     await db.close();
+  }
+
+  void getTodoList() async {
+    // 初始化 sqflite_common_ffi
+    sqfliteFfiInit();
+    // 设置 databaseFactoryFfi 作为默认的 databaseFactory
+    databaseFactory = databaseFactoryFfi;
+
+    // 数据库配置
+    const tableName = TodoList.tableName;
+    const columns = TodoList.columns;
+    const columnProperties = TodoList.columnsType;
+
+    // 创建 DBHelper 实例
+    final dbHelper = DBHelper();
+
+    // 初始化数据库和表
+    final db = await dbHelper.initDb(tableName, 1, columns, columnProperties);
+
+    List<Map<String, dynamic>> allRows =
+        await dbHelper.getTopByColum(tableName, 'create_date', 4, false);
+
+    List<Map<String, dynamic>> todoLists = [];
+
+    for (Map<String, dynamic> row in allRows) {
+      Map<String, dynamic> task = {
+        'title': row['title'].toString(),
+        'details': row['details'].toString(),
+        'category': row['category'].toString(),
+        'create_date': row['create_date'],
+        'id': row['id'],
+      };
+      todoLists.add(task);
+    }
+
+    setState(() {
+      todoList = todoLists;
+    });
+
+    await db.close();
+  }
+
+  void updateTodoStatus(int id, String newCategory) async {
+    // 初始化 sqflite_common_ffi
+    sqfliteFfiInit();
+    // 设置 databaseFactoryFfi 作为默认的 databaseFactory
+    databaseFactory = databaseFactoryFfi;
+
+    // 数据库配置
+    const tableName = TodoList.tableName;
+    const columns = TodoList.columns;
+    const columnProperties = TodoList.columnsType;
+
+    // 创建 DBHelper 实例
+    final dbHelper = DBHelper();
+
+    // 初始化数据库和表
+    final db = await dbHelper.initDb(tableName, 1, columns, columnProperties);
+
+    final Map<String, dynamic> updateRow = {
+      'category': newCategory,
+    };
+
+    int rowsAffected = await dbHelper
+        .update('ToDolist', updateRow, where: 'id = ?', whereArgs: [id]);
+
+    await db.close();
+
+    getTodoList();
   }
 }

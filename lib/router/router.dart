@@ -17,6 +17,7 @@ import '../pages/login.dart';
 import '../pages/shareFolder/shareFolder.dart';
 import '../pages/home.dart';
 import '../pages/tools.dart';
+import '../pages/todo.dart';
 
 final router = GoRouter(
   initialLocation: "/login", //初始化的路由
@@ -50,6 +51,11 @@ final router = GoRouter(
           name: "tools",
           path: '/tools',
           builder: (context, state) => const ToolsPage(),
+        ),
+        GoRoute(
+          name: "todo",
+          path: '/todo',
+          builder: (context, state) => const TodoPage(),
         ),
         GoRoute(
           name: "password",

@@ -35,6 +35,18 @@ class _NavigationPageState extends State<NavigationPage> {
           }
         }),
     PaneItem(
+        icon: const Icon(FluentIcons.to_do_logo_inverse),
+        title: const Text(
+          '清单',
+          style: TextStyle(fontSize: 14, fontFamily: "微软雅黑"),
+        ),
+        body: const SizedBox.shrink(),
+        onTap: () {
+          if (router.location != '/todo') {
+            router.goNamed('todo');
+          }
+        }),
+    PaneItem(
         icon: const Icon(FluentIcons.developer_tools),
         title: const Text(
           '工具箱',

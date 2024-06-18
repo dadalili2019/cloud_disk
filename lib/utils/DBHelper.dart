@@ -58,13 +58,15 @@ class DBHelper {
     await _db!.execute(sql, values);
   }
 
-  Future<void> insertOrUpdate(String tableName, Map<String, dynamic> row) async {
+  Future<void> insertOrUpdate(
+      String tableName, Map<String, dynamic> row) async {
     // 构建更新语句的列和值
     final updateColumns = row.keys.map((key) => "$key = ?").join(', ');
     final updateSql = "UPDATE $tableName SET $updateColumns WHERE 1=1";
 
     // 将 row 转换为一个 Map，其中包含更新所需的键值对
-    final updateValues = Map.fromEntries(row.entries.map((e) => MapEntry(e.key, e.value)));
+    final updateValues =
+        Map.fromEntries(row.entries.map((e) => MapEntry(e.key, e.value)));
 
     // 尝试更新行
     int updatedRows = await _db!.update(updateSql, updateValues);
@@ -73,7 +75,8 @@ class DBHelper {
       // 如果没有行被更新，执行插入操作
       final columns = row.keys.join(', ');
       final placeholders = row.keys.map((_) => '?').join(', ');
-      final insertSql = "INSERT INTO $tableName ($columns) VALUES ($placeholders)";
+      final insertSql =
+          "INSERT INTO $tableName ($columns) VALUES ($placeholders)";
 
       // 执行插入操作
       await _db!.execute(insertSql, row.values.toList());
@@ -85,17 +88,29 @@ class DBHelper {
     return await _db!.query(tableName);
   }
 
+//根据字段排序获取前n个元素
+  Future<List<Map<String, dynamic>>> getTopByColum(
+      String tableName, String dateColumn, int count, bool ascending) async {
+    List<Map<String, dynamic>> allRows = await getAll(tableName);
+    // allRows 这是 SQLite 查询的结果类型，而不是 Dart 中的 List 类型。这就是为什么你无法直接对其进行排序的原因。
+    // 因此，你需要将 QueryResultSet 转换为 Dart 中的可变列表类型，例如 List<Map<String, dynamic>>，然后再进行排序和其他操作。
+    List<Map<String, dynamic>> mutableRows = List.from(allRows);
+    mutableRows.sort((a, b) => ascending
+        ? a[dateColumn].compareTo(b[dateColumn])
+        : b[dateColumn].compareTo(a[dateColumn])); // 根据 ascending 参数决定排序顺序
+    return mutableRows.take(count).toList(); // 获取前 count 个元素
+  }
 
   // 根据某个字段查询数据
   Future<List<Map<String, dynamic>>> getByField(
       String tableName, String fieldName, dynamic value) async {
-    return await _db!.query(tableName, where: '$fieldName = ?', whereArgs: [value]);
+    return await _db!
+        .query(tableName, where: '$fieldName = ?', whereArgs: [value]);
   }
 
   // 根据多个字段查询数据
   Future<List<Map<String, dynamic>>> getByMultipleFields(
       String tableName, Map<String, dynamic> conditions) async {
-
     // 构建查询条件
     List<String> whereClauses = [];
     List<dynamic> whereArgs = [];
@@ -108,9 +123,9 @@ class DBHelper {
     // 使用逻辑运算符AND连接多个条件
     String whereClause = whereClauses.join(' AND ');
 
-    return await _db!.query(tableName, where: whereClause, whereArgs: whereArgs);
+    return await _db!
+        .query(tableName, where: whereClause, whereArgs: whereArgs);
   }
-
 
   // 根据ID查询数据
   Future<Map<String, dynamic>?> getById(String tableName, int id) async {
@@ -120,16 +135,31 @@ class DBHelper {
   }
 
   // 更新数据
+  // Future<int> update(String tableName, Map<String, dynamic> row,
+  //     {String? where, List<dynamic>? whereArgs}) async {
+  //   final setClause = row.entries.map((e) => "${e.key} = ?").join(', ');
+  //   final updateValues = row.values.toList();
+  //   String sql = "UPDATE $tableName SET ($setClause)";
+  //   if (where != null && whereArgs != null) {
+  //     sql += " WHERE $where";
+  //     updateValues.addAll(whereArgs);
+  //   }
+  //   return await _db!
+  //       .update(tableName, row, where: where, whereArgs: whereArgs);
+  // }
+
+  //根据某个字段更新数据
   Future<int> update(String tableName, Map<String, dynamic> row,
       {String? where, List<dynamic>? whereArgs}) async {
     final setClause = row.entries.map((e) => "${e.key} = ?").join(', ');
     final updateValues = row.values.toList();
-    String sql = "UPDATE $tableName SET ($setClause)";
+    String sql = "UPDATE $tableName SET $setClause";
     if (where != null && whereArgs != null) {
       sql += " WHERE $where";
       updateValues.addAll(whereArgs);
     }
-    return await _db!.update(tableName, row, where: where, whereArgs: whereArgs);
+    return await _db!
+        .update(tableName, row, where: where, whereArgs: whereArgs);
   }
 
   // 删除数据
