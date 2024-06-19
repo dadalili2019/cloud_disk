@@ -13,25 +13,25 @@ class DBHelper {
 
   late Database? _db;
 
-  // 初始化数据库，接受表名作为参数
-  Future<Database> initDb(String tableName, int version, List<String> columns,
-      List<String> columnProperties) async {
+// 初始化数据库，接受表名作为参数
+  Future<Database> initDb(String tableName, int version, List<String> columns, List<String> columnProperties) async {
     final dir = await getDatabasesPath();
     final path = join(dir, "my_database.db");
-    _logger.info("The storage path for Table $tableName is $path");
-    _db = await openDatabase(path, version: 1,
-        onCreate: (Database db, int version) async {
+    print("The storage path for Table $tableName is $path");
+    _db = await openDatabase(path, version: version, onCreate: (Database db, int version) async {
       // 使用传入的表名、字段列表和字段属性列表来创建表
       await _onCreate(db, version, tableName, columns, columnProperties);
     });
+
+    // 检查表是否存在，如果不存在则创建
+    await _checkAndCreateTable(tableName, columns, columnProperties);
+
     return _db!;
   }
 
-  Future _onCreate(Database db, int version, String tableName,
-      List<String> columns, List<String> columnProperties) async {
+  Future _onCreate(Database db, int version, String tableName, List<String> columns, List<String> columnProperties) async {
     // 构建 CREATE TABLE 语句
-    var createTableStatement =
-        "CREATE TABLE IF NOT EXISTS $tableName ($columns)";
+    var createTableStatement = "CREATE TABLE IF NOT EXISTS $tableName ($columns)";
 
     // 将字段列表和字段属性列表合并为实际的列定义
     List<String> columnDefinitions = [];
@@ -42,11 +42,26 @@ class DBHelper {
     }
 
     // 替换占位符为实际的列定义
-    createTableStatement = createTableStatement.replaceAll(
-        '$columns', columnDefinitions.join(', '));
+    createTableStatement = createTableStatement.replaceAll('$columns', columnDefinitions.join(', '));
 
     // 执行 SQL 语句
     await db.execute(createTableStatement);
+  }
+
+  Future<void> _checkAndCreateTable(String tableName, List<String> columns, List<String> columnProperties) async {
+    if (_db == null) {
+      throw Exception("Database is not initialized");
+    }
+
+    // 检查表是否存在
+    var result = await _db!.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='$tableName';");
+
+    if (result.isEmpty) {
+      // 表不存在，创建表
+      await _onCreate(_db!, 1, tableName, columns, columnProperties);
+    } else {
+      print("Table $tableName already exists.");
+    }
   }
 
   // 插入数据

@@ -2,6 +2,8 @@
 /// @since 2024-04-25 13:51
 /// @Description: 待办事项页面
 
+import 'dart:math';
+
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/material.dart' as material;
@@ -45,8 +47,21 @@ class _TodoPageState extends State<TodoPage> {
   @override
   Widget build(BuildContext context) {
     return fluent.ScaffoldPage(
-      header: const fluent.PageHeader(
-        title: Text('任务清单'),
+      header: fluent.PageHeader(
+        title: const Text('任务清单'),
+        commandBar: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 250), // 调整左侧间距
+              child: material.IconButton(
+                icon: const Icon(fluent.FluentIcons.add),
+                onPressed: () {
+                  _showCommandBarDialog();
+                },
+              ),
+            ),
+          ],
+        ),
       ),
       content: ListView(
         children: _expandedItems.keys.map((category) {
@@ -246,14 +261,113 @@ class _TodoPageState extends State<TodoPage> {
     // 初始化数据库和表
     final db = await dbHelper.initDb(tableName, 1, columns, columnProperties);
 
+    Random random = Random();
+    int randomId = random.nextInt(1000000000); // 生成一个9位数的随机ID
+
     // 插入任务到数据库
     await dbHelper.insert(tableName, {
       'title': title,
       'details': details,
       'category': category,
       'create_date': DateTime.now().millisecondsSinceEpoch,
+      'id': randomId,
     });
 
     await db.close();
   }
+
+  String generateRandomId(int length) {
+    const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    final random = Random();
+    return String.fromCharCodes(
+      Iterable.generate(length, (_) => chars.codeUnitAt(random.nextInt(chars.length))),
+    );
+  }
+
+
+  void _showCommandBarDialog() {
+    final TextEditingController titleController = TextEditingController();
+    final TextEditingController detailsController = TextEditingController();
+    String selectedCategory = '待办'; // 默认类别
+
+    material.showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return material.AlertDialog(
+              title: const Text('新增任务'),
+              content: SizedBox(
+                width: 400, // 设置对话框的宽度
+                height: 300, // 设置对话框的高度
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start, // 左对齐所有子元素
+                  children: [
+                    material.TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(labelText: '标题'),
+                    ),
+                    const SizedBox(height: 20),
+                    Flexible(
+                      child: material.TextField(
+                        controller: detailsController,
+                        maxLines: null,
+                        keyboardType: TextInputType.multiline,
+                        decoration: const InputDecoration(
+                          labelText: '详情',
+                          border: material.OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Align(
+                      alignment: Alignment.centerLeft, // 下拉框左对齐
+                      child: material.DropdownButton<String>(
+                        value: selectedCategory,
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedCategory = newValue!;
+                          });
+                        },
+                        items: <String>['待办', '待整理', '已完成']
+                            .map<material.DropdownMenuItem<String>>((String value) {
+                          return material.DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                material.TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('取消'),
+                ),
+                material.TextButton(
+                  onPressed: () async {
+                    await _addTaskToDatabase(
+                      titleController.text,
+                      detailsController.text,
+                      selectedCategory,
+                    );
+                    Navigator.of(context).pop();
+                    _fetchTasksFromDatabase();
+                  },
+                  child: const Text('提交'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+
 }

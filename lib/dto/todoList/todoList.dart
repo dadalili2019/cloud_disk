@@ -21,7 +21,7 @@ class TodoList {
     'title',
     'details',
     'category',
-    'createDate',
+    'create_date',
     'id',
   ];
 
@@ -41,7 +41,7 @@ class TodoList {
       'title',
       'details',
       'category',
-      'createDate',
+      'create_date',
       'id',
     ];
   }
