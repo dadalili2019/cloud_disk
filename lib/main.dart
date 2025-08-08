@@ -1,44 +1,49 @@
+import 'dart:async';
 import 'package:fluent_ui/fluent_ui.dart';
-import "./router/router.dart";
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import './router/router.dart';
 import './services/tray.dart';
 
-void main() async {
-  //必须配置
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 先画 UI 壳
   runApp(const MyApp());
 
-  //配置窗口大小
+  // 首帧绘制后再初始化桌面相关（避免阻塞首屏）
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _initDesktopStuff();
+  });
+}
+
+Future<void> _initDesktopStuff() async {
+  // 窗口配置
   doWhenWindowReady(() {
     final win = appWindow;
     const initialSize = Size(1000, 600);
     win.minSize = initialSize;
     win.size = initialSize;
     win.alignment = Alignment.center;
-    win.title = "cloud_disk";
+    win.title = 'cloud_disk';
     win.show();
   });
 
-  //初始化系统托盘
-  await initSystemTray();
+  // 托盘后台初始化
+  unawaited(initSystemTray());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  // This widget is the root of your application.
+
   @override
   Widget build(BuildContext context) {
     return FluentApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: FluentThemeData(
-        accentColor: Colors.blue, //主题颜色
-        scaffoldBackgroundColor: Colors.white, //背景颜色
-        // navigationPaneTheme: NavigationPaneThemeData(//左侧导航颜色
-        //   backgroundColor: Colors.red,
-        // )
+        accentColor: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
       ),
-      //挂载路由
       routeInformationProvider: router.routeInformationProvider,
       routeInformationParser: router.routeInformationParser,
       routerDelegate: router.routerDelegate,

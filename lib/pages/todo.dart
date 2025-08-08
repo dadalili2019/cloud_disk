@@ -48,7 +48,7 @@ class _TodoPageState extends State<TodoPage> {
   Widget build(BuildContext context) {
     return fluent.ScaffoldPage(
       header: fluent.PageHeader(
-        title: const Text('任务清单'),
+        title: const Text('清单列表'),
         commandBar: Row(
           children: [
             Padding(
@@ -126,7 +126,7 @@ class _TodoPageState extends State<TodoPage> {
         return material.AlertDialog(
           title: Text(title),
           content: SizedBox(
-            width: 400,  // 设置对话框的宽度
+            width: 400, // 设置对话框的宽度
             height: 300, // 设置对话框的高度
             child: SingleChildScrollView(
               child: Text(details),
@@ -145,7 +145,6 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
-
   void _showAddTaskDialog(String category) {
     final TextEditingController titleController = TextEditingController();
     final TextEditingController detailsController = TextEditingController();
@@ -156,7 +155,7 @@ class _TodoPageState extends State<TodoPage> {
         return material.AlertDialog(
           title: const Text('新增任务'),
           content: SizedBox(
-            width: 400,  // 设置对话框的宽度
+            width: 400, // 设置对话框的宽度
             height: 300, // 设置对话框的高度
             child: Column(
               children: [
@@ -203,7 +202,6 @@ class _TodoPageState extends State<TodoPage> {
       },
     );
   }
-
 
   void _fetchTasksFromDatabase() async {
     // 初始化 sqflite_common_ffi
@@ -277,13 +275,14 @@ class _TodoPageState extends State<TodoPage> {
   }
 
   String generateRandomId(int length) {
-    const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const chars =
+        '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     final random = Random();
     return String.fromCharCodes(
-      Iterable.generate(length, (_) => chars.codeUnitAt(random.nextInt(chars.length))),
+      Iterable.generate(
+          length, (_) => chars.codeUnitAt(random.nextInt(chars.length))),
     );
   }
-
 
   void _showCommandBarDialog() {
     final TextEditingController titleController = TextEditingController();
@@ -330,7 +329,8 @@ class _TodoPageState extends State<TodoPage> {
                           });
                         },
                         items: <String>['待办', '待整理', '已完成']
-                            .map<material.DropdownMenuItem<String>>((String value) {
+                            .map<material.DropdownMenuItem<String>>(
+                                (String value) {
                           return material.DropdownMenuItem<String>(
                             value: value,
                             child: Text(value),
@@ -367,7 +367,4 @@ class _TodoPageState extends State<TodoPage> {
       },
     );
   }
-
-
-
 }

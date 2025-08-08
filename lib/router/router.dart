@@ -1,126 +1,199 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:go_router/go_router.dart';
+
+// 轻页面（直接 import）
 import '../menu/navigationPage.dart';
-import '../pages/file.dart';
-import '../pages/myProfile.dart';
-import '../pages/favorites.dart';
-import '../pages/recently_played.dart';
-import '../pages/password.dart';
-import '../pages/settings.dart';
-import '../pages/subscribe.dart';
-import '../pages/recyclePage.dart';
-import '../pages/photo.dart';
-import '../pages/transferList.dart';
-import '../pages/deviceInformation.dart';
 import '../pages/capacityInformation.dart';
-import '../pages/login.dart';
-import '../pages/shareFolder/shareFolder.dart';
+import '../pages/comparison/comparison.dart' deferred as cmp;
+import '../pages/deviceInformation.dart';
+import '../pages/favorites.dart';
+import '../pages/file.dart';
+import '../pages/game/game.dart' deferred as game;
 import '../pages/home.dart';
-import '../pages/tools.dart';
+import '../pages/jsonformat/jsonformat.dart' deferred as jf;
+import '../pages/login.dart';
+import '../pages/myProfile.dart';
+import '../pages/password.dart';
+
+// 重页面（deferred import，按需加载）
+import '../pages/photo.dart' deferred as photo;
+import '../pages/recently_played.dart';
+import '../pages/recyclePage.dart';
+import '../pages/settings.dart';
+import '../pages/shareFolder/shareFolder.dart' deferred as share;
+import '../pages/speedtestpage/speedtestpage.dart' deferred as speed;
+import '../pages/subscribe.dart';
 import '../pages/todo.dart';
+import '../pages/transferList.dart';
+
+/// 延迟加载占位组件
+class DeferredWidget extends StatelessWidget {
+  final Future<void> Function() loader;
+  final Widget Function() builder;
+
+  const DeferredWidget(
+      {super.key, required this.loader, required this.builder});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: loader(),
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.done) {
+          return builder();
+        }
+        return const ScaffoldPage(
+          content: Center(child: ProgressRing()),
+        );
+      },
+    );
+  }
+}
 
 final router = GoRouter(
-  initialLocation: "/login", //初始化的路由
+  initialLocation: '/login',
   routes: [
+    // 登录页
     GoRoute(
-      name: "login",
+      name: 'login',
       path: '/login',
-      builder: (context, state) => const LoginPage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: LoginPage()),
     ),
+
+    // 登录后主框架
     ShellRoute(
-      builder: (BuildContext context, GoRouterState state, Widget child) {
-        return NavigationPage(child: child);
-      },
+      builder: (context, state, child) => NavigationPage(child: child),
       routes: <RouteBase>[
         GoRoute(
-          name: "home",
+          name: 'home',
           path: '/home',
-          builder: (context, state) => const HomePage(),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: HomePage()),
         ),
         GoRoute(
-          name: "file",
+          name: 'file',
           path: '/file',
-          builder: (context, state) => const FilePage(),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: FilePage()),
         ),
         GoRoute(
-          name: "photo",
-          path: '/photo',
-          builder: (context, state) => const PhotoPage(),
-        ),
-        GoRoute(
-          name: "tools",
-          path: '/tools',
-          builder: (context, state) => const ToolsPage(),
-        ),
-        GoRoute(
-          name: "todo",
-          path: '/todo',
-          builder: (context, state) => const TodoPage(),
-        ),
-        GoRoute(
-          name: "password",
-          path: '/password', //位置，如同url
-          builder: (context, state) {
-            return const PasswordPage();
-          },
-        ),
-        GoRoute(
-          name: "subscribe",
-          path: '/subscribe', //位置，如同url
-          builder: (context, state) {
-            return const SubscribePage();
-          },
-        ),
-        GoRoute(
-          name: "recentlyPlayed",
-          path: '/recentlyPlayed',
-          builder: (context, state) => const RecentlyPlayedPage(),
-        ),
-        GoRoute(
-          name: "favorites",
-          path: '/favorites',
-          builder: (context, state) => const FavoritesPage(),
-        ),
-        GoRoute(
-          name: "myProfile",
+          name: 'myProfile',
           path: '/myProfile',
-          builder: (context, state) => const MyProfilePage(),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: MyProfilePage()),
         ),
         GoRoute(
-          name: "shareFolder",
-          path: '/shareFolder',
-          builder: (context, state) {
-            return const ShareFolder();
-          },
+          name: 'favorites',
+          path: '/favorites',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: FavoritesPage()),
         ),
         GoRoute(
-          name: "recycle",
-          path: '/recycle',
-          builder: (context, state) {
-            return const RecyclePage();
-          },
+          name: 'recentlyPlayed',
+          path: '/recentlyPlayed',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: RecentlyPlayedPage()),
         ),
         GoRoute(
-          name: "transferList",
-          path: '/transferList',
-          builder: (context, state) => const TransferListPage(),
+          name: 'password',
+          path: '/password',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: PasswordPage()),
         ),
         GoRoute(
-          name: "settings",
+          name: 'settings',
           path: '/settings',
-          builder: (context, state) => const SettingsPage(),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: SettingsPage()),
         ),
         GoRoute(
-          //硬件信息
-          name: "deviceInformation",
+          name: 'subscribe',
+          path: '/subscribe',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: SubscribePage()),
+        ),
+        GoRoute(
+          name: 'recycle',
+          path: '/recycle',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: RecyclePage()),
+        ),
+        GoRoute(
+          name: 'transferList',
+          path: '/transferList',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: TransferListPage()),
+        ),
+        GoRoute(
+          name: 'deviceInformation',
           path: '/deviceInformation',
-          builder: (context, state) => const DeviceInformation(),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: DeviceInformation()),
         ),
         GoRoute(
-          //容量信息
-          name: "capacityInformation",
+          name: 'capacityInformation',
           path: '/capacityInformation',
-          builder: (context, state) => const CapacityInformation(),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: CapacityInformation()),
+        ),
+
+        // ===== 延迟加载的“重页面” =====
+        GoRoute(
+          name: 'photo',
+          path: '/photo',
+          builder: (context, state) => DeferredWidget(
+            loader: photo.loadLibrary,
+            builder: () => photo.PhotoPage(),
+          ),
+        ),
+        GoRoute(
+          name: 'comparison',
+          path: '/comparison',
+          builder: (context, state) => DeferredWidget(
+            loader: cmp.loadLibrary,
+            builder: () => cmp.ComparisonPage(),
+          ),
+        ),
+        GoRoute(
+          name: 'jsonformat',
+          path: '/jsonformat',
+          builder: (context, state) => DeferredWidget(
+            loader: jf.loadLibrary,
+            builder: () => jf.JsonFormatPage(),
+          ),
+        ),
+        GoRoute(
+          name: 'speedtestpage',
+          path: '/speedtestpage',
+          builder: (context, state) => DeferredWidget(
+            loader: speed.loadLibrary,
+            builder: () => speed.SpeedTestPage(),
+          ),
+        ),
+        GoRoute(
+          name: 'game',
+          path: '/game',
+          builder: (context, state) => DeferredWidget(
+            loader: game.loadLibrary,
+            builder: () => game.GamePage(),
+          ),
+        ),
+        GoRoute(
+          name: 'shareFolder',
+          path: '/shareFolder',
+          builder: (context, state) => DeferredWidget(
+            loader: share.loadLibrary,
+            builder: () => share.ShareFolder(),
+          ),
+        ),
+
+        // todo 保持轻量
+        GoRoute(
+          name: 'todo',
+          path: '/todo',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: TodoPage()),
         ),
       ],
     ),
