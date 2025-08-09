@@ -8,23 +8,22 @@ import '../pages/comparison/comparison.dart' deferred as cmp;
 import '../pages/deviceInformation.dart';
 import '../pages/favorites.dart';
 import '../pages/file.dart';
-import '../pages/game/game.dart' deferred as game;
 import '../pages/home.dart';
 import '../pages/jsonformat/jsonformat.dart' deferred as jf;
 import '../pages/login.dart';
 import '../pages/myProfile.dart';
 import '../pages/password.dart';
+import '../pages/setting/setting.dart';
 
 // 重页面（deferred import，按需加载）
 import '../pages/photo.dart' deferred as photo;
 import '../pages/recently_played.dart';
 import '../pages/recyclePage.dart';
-import '../pages/settings.dart';
 import '../pages/shareFolder/shareFolder.dart' deferred as share;
 import '../pages/speedtestpage/speedtestpage.dart' deferred as speed;
 import '../pages/subscribe.dart';
 import '../pages/todo.dart';
-import '../pages/transferList.dart';
+import '../pages/game/game.dart' deferred as game;
 
 /// 延迟加载占位组件
 class DeferredWidget extends StatelessWidget {
@@ -102,10 +101,10 @@ final router = GoRouter(
               const NoTransitionPage(child: PasswordPage()),
         ),
         GoRoute(
-          name: 'settings',
-          path: '/settings',
+          name: 'setting',
+          path: '/setting',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: SettingsPage()),
+              const NoTransitionPage(child: SettingPage()),
         ),
         GoRoute(
           name: 'subscribe',
@@ -119,12 +118,12 @@ final router = GoRouter(
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: RecyclePage()),
         ),
-        GoRoute(
-          name: 'transferList',
-          path: '/transferList',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: TransferListPage()),
-        ),
+        // GoRoute(
+        //   name: 'transferList',
+        //   path: '/transferList',
+        //   pageBuilder: (context, state) =>
+        //       const NoTransitionPage(child: TransferListPage()),
+        // ),
         GoRoute(
           name: 'deviceInformation',
           path: '/deviceInformation',

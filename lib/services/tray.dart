@@ -55,10 +55,10 @@ Future<void> _replaceWithFullMenu(SystemTray systemTray, AppWindow appWindow) as
   final fullMenu = Menu();
   await fullMenu.buildFrom([
     MenuItemLabel(label: '打开主面板', onClicked: (_) => appWindow.show()),
-    MenuItemLabel(label: '打开网页版', onClicked: (_) {
-      // TODO: 打开外链/内置 WebView
-      // 这里保持轻输出，避免 Debug 里 print 过多拖慢
-    }),
+    // MenuItemLabel(label: '打开网页版', onClicked: (_) {
+    //   // TODO: 打开外链/内置 WebView
+    //   // 这里保持轻输出，避免 Debug 里 print 过多拖慢
+    // }),
     MenuSeparator(),
     MenuItemLabel(label: '设置', onClicked: (_) {}),
     MenuItemLabel(label: '检测更新', onClicked: (_) {}),

@@ -3,11 +3,7 @@
 /// @Description: 待办事项页面
 
 import 'dart:math';
-
-import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:flutter/material.dart' as material;
-import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../dto/todoList/todoList.dart';
@@ -21,248 +17,320 @@ class TodoPage extends StatefulWidget {
 }
 
 class _TodoPageState extends State<TodoPage> {
-  @override
-  void initState() {
-    super.initState();
-    // 在页面加载时执行数据库查询，并更新任务列表和展开项状态
-    _fetchTasksFromDatabase();
-  }
-
-  // final List<Map<String, String>> tasks = [
-  //   {'title': '任务6', 'category': '待整理', 'details': '任务6的详情'},
-  //   {'title': '任务7', 'category': '已完成', 'details': '任务7的详情'},
-  //   {'title': '任务8', 'category': '已完成', 'details': '任务8的详情'},
-  //   {'title': '任务9', 'category': '待办', 'details': '任务9的详情'},
-  // ];
-  //
-  // final Map<String, bool> _expandedItems = {
-  //   '待办': false,
-  //   '待整理': false,
-  //   '已完成': false,
-  // };
-
   List<Map<String, String>> tasks = [];
   Map<String, bool> _expandedItems = {};
 
   @override
+  void initState() {
+    super.initState();
+    _fetchTasksFromDatabase();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return fluent.ScaffoldPage(
-      header: fluent.PageHeader(
+    final theme = FluentTheme.of(context);
+
+    return ScaffoldPage(
+      header: PageHeader(
         title: const Text('清单列表'),
-        commandBar: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 250), // 调整左侧间距
-              child: material.IconButton(
-                icon: const Icon(fluent.FluentIcons.add),
-                onPressed: () {
-                  _showCommandBarDialog();
-                },
-              ),
-            ),
-          ],
-        ),
+        commandBar: CommandBar(primaryItems: [
+          CommandBarButton(
+            icon: const Icon(FluentIcons.add),
+            label: const Text('新增'),
+            onPressed: _showCommandBarDialog,
+          ),
+        ]),
       ),
       content: ListView(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
         children: _expandedItems.keys.map((category) {
-          List<Map<String, String>> filteredTasks =
-              tasks.where((task) => task['category'] == category).toList();
-          return _buildExpansionPanelList(category, filteredTasks);
+          final filtered =
+              tasks.where((t) => t['category'] == category).toList();
+          return _buildCategoryCard(theme, category, filtered);
         }).toList(),
       ),
     );
   }
 
-  Widget _buildExpansionPanelList(
-      String category, List<Map<String, String>> tasks) {
+  // 分类卡片 + 折叠列表
+  Widget _buildCategoryCard(
+      FluentThemeData theme, String category, List<Map<String, String>> items) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: material.ExpansionPanelList(
-        expandedHeaderPadding: EdgeInsets.zero,
-        children: [
-          material.ExpansionPanel(
-            headerBuilder: (BuildContext context, bool isExpanded) {
-              return material.ListTile(
-                title: Text(category),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    material.IconButton(
-                      icon: const Icon(fluent.FluentIcons.add_to),
-                      onPressed: () {
-                        _showAddTaskDialog(category);
-                      },
-                    ),
-                  ],
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.resources.cardBackgroundFillColorDefault,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(
+                blurRadius: 14, offset: Offset(0, 6), color: Color(0x12000000))
+          ],
+        ),
+        child: Expander(
+          initiallyExpanded: _expandedItems[category] ?? false,
+          onStateChanged: (v) => setState(() => _expandedItems[category] = v),
+
+          // 头部更瘦
+          header: SizedBox(
+            height: 37, // ← 想更瘦可改成 32
+            child: Row(
+              children: [
+                Text(category,
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w600)),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(FluentIcons.add_to, size: 14),
+                  onPressed: () => _showAddTaskDialog(category),
                 ),
-                onTap: () {
-                  setState(() {
-                    _expandedItems[category] = !_expandedItems[category]!;
-                  });
-                },
-              );
-            },
-            body: Column(
-              children: tasks
-                  .map((task) => material.ListTile(
-                        title: Text(task['title']!),
-                        onTap: () {
-                          _showDetails(task['title']!, task['details']!);
-                        },
-                      ))
-                  .toList(),
+              ],
             ),
-            isExpanded: _expandedItems[category]!,
+          ),
+
+          // 4.8.x 有 contentPadding 就设为最小；没有该参数就删掉这一行也行
+          contentPadding: EdgeInsets.zero,
+
+          // 列表内容更瘦
+          content: items.isEmpty
+              ? Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child:
+                      InfoLabel(label: '暂无任务', child: const SizedBox.shrink()),
+                )
+              : Padding(
+                  padding: const EdgeInsets.fromLTRB(6, 2, 6, 6),
+                  child: Column(
+                    children: items.map((task) {
+                      return Container(
+                        // 薄一点的卡片
+                        margin: const EdgeInsets.symmetric(vertical: 3),
+                        decoration: BoxDecoration(
+                          color:
+                              theme.resources.cardBackgroundFillColorSecondary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        // 用 SizedBox + Button 自定义行高，比 ListTile 更好控
+                        child: SizedBox(
+                          height: 32,
+                          width: double.infinity, // 铺满整行
+                          child: Button(
+                            style: ButtonStyle(
+                              padding: ButtonState.all(const EdgeInsets.symmetric(horizontal: 10)),
+                              shape: ButtonState.all(
+                                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                            ),
+                            onPressed: () => _showDetails(task['title']!, task['details']!),
+                            child: Row(
+                              children: [
+                                Expanded( // 占满左侧空间
+                                  child: Align(
+                                    alignment: Alignment.centerLeft, // 文本靠左
+                                    child: Text(
+                                      task['title'] ?? '',
+                                      style: const TextStyle(fontSize: 13),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                                const Icon(FluentIcons.chevron_right, size: 14), // 右侧箭头
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
+  // 详情对话框（纯白卡片）
+  void _showDetails(String title, String details) {
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        constraints: const BoxConstraints(maxWidth: 460),
+        title: Text(title),
+        content: SizedBox(
+          height: 280,
+          child: SingleChildScrollView(child: Text(details)),
+        ),
+        actions: [
+          Button(
+              child: const Text('关闭'), onPressed: () => Navigator.pop(context)),
+        ],
+      ),
+    );
+  }
+
+  // 在指定分组下新增
+  void _showAddTaskDialog(String category) {
+    final titleController = TextEditingController();
+    final detailsController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        constraints: const BoxConstraints(maxWidth: 460),
+        title: const Text('新增任务'),
+        content: SizedBox(
+          height: 300,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('标题'),
+              const SizedBox(height: 6),
+              TextBox(controller: titleController, placeholder: '例如：写周报'),
+              const SizedBox(height: 16),
+              const Text('详情'),
+              const SizedBox(height: 6),
+              Expanded(
+                child: TextBox(
+                  controller: detailsController,
+                  minLines: 4,
+                  maxLines: null,
+                  placeholder: '补充说明（可选）',
+                ),
+              ),
+              const SizedBox(height: 16),
+              InfoLabel(label: '类别', child: Text(category)),
+            ],
+          ),
+        ),
+        actions: [
+          Button(
+              child: const Text('取消'), onPressed: () => Navigator.pop(context)),
+          FilledButton(
+            child: const Text('提交'),
+            onPressed: () async {
+              await _addTaskToDatabase(
+                  titleController.text, detailsController.text, category);
+              if (context.mounted) Navigator.pop(context);
+              _fetchTasksFromDatabase();
+            },
           ),
         ],
       ),
     );
   }
 
-  void _showDetails(String title, String details) {
-    material.showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return material.AlertDialog(
-          title: Text(title),
-          content: SizedBox(
-            width: 400, // 设置对话框的宽度
-            height: 300, // 设置对话框的高度
-            child: SingleChildScrollView(
-              child: Text(details),
-            ),
-          ),
-          actions: [
-            material.TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('关闭'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // 顶部「新增」按钮弹窗（可选类别）
+  void _showCommandBarDialog() {
+    final title = TextEditingController();
+    final details = TextEditingController();
+    String category = '待办';
 
-  void _showAddTaskDialog(String category) {
-    final TextEditingController titleController = TextEditingController();
-    final TextEditingController detailsController = TextEditingController();
-
-    material.showDialog(
+    showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return material.AlertDialog(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setS) => ContentDialog(
+          constraints: const BoxConstraints(maxWidth: 460),
           title: const Text('新增任务'),
           content: SizedBox(
-            width: 400, // 设置对话框的宽度
-            height: 300, // 设置对话框的高度
+            height: 320,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                material.TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: '标题'),
-                ),
-                const SizedBox(height: 10),
+                const Text('标题'),
+                const SizedBox(height: 6),
+                TextBox(controller: title, placeholder: '例如：写周报'),
+                const SizedBox(height: 16),
+                const Text('详情'),
+                const SizedBox(height: 6),
                 Expanded(
-                  child: material.TextField(
-                    controller: detailsController,
+                  child: TextBox(
+                    controller: details,
+                    minLines: 4,
                     maxLines: null,
-                    keyboardType: TextInputType.multiline,
-                    decoration: const InputDecoration(
-                      labelText: '详情',
-                      border: material.OutlineInputBorder(),
-                    ),
+                    placeholder: '补充说明（可选）',
                   ),
+                ),
+                const SizedBox(height: 16),
+                const Text('类别'),
+                const SizedBox(height: 6),
+                ComboBox<String>(
+                  value: category,
+                  items: const ['待办', '待整理', '已完成']
+                      .map(
+                          (e) => ComboBoxItem<String>(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: (v) => setS(() => category = v!),
                 ),
               ],
             ),
           ),
           actions: [
-            material.TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('取消'),
-            ),
-            material.TextButton(
+            Button(
+                child: const Text('取消'),
+                onPressed: () => Navigator.pop(context)),
+            FilledButton(
+              child: const Text('提交'),
               onPressed: () async {
-                await _addTaskToDatabase(
-                  titleController.text,
-                  detailsController.text,
-                  category,
-                );
-                Navigator.of(context).pop();
+                await _addTaskToDatabase(title.text, details.text, category);
+                if (context.mounted) Navigator.pop(context);
                 _fetchTasksFromDatabase();
               },
-              child: const Text('提交'),
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 
-  void _fetchTasksFromDatabase() async {
-    // 初始化 sqflite_common_ffi
+  // =================== 数据层（保持不变） ===================
+
+  Future<void> _fetchTasksFromDatabase() async {
+    // FFI 初始化（多次调用也安全）
     sqfliteFfiInit();
-    // 设置 databaseFactoryFfi 作为默认的 databaseFactory
     databaseFactory = databaseFactoryFfi;
 
-    // 数据库配置
     const tableName = TodoList.tableName;
     const columns = TodoList.columns;
     const columnProperties = TodoList.columnsType;
 
-    // 创建 DBHelper 实例
     final dbHelper = DBHelper();
-
-    // 初始化数据库和表
     final db = await dbHelper.initDb(tableName, 1, columns, columnProperties);
 
-    List<Map<String, dynamic>> allRows = await dbHelper.getAll(tableName);
+    final allRows = await dbHelper.getAll(tableName);
 
-    Set<String> categories = {};
-    List<Map<String, String>> fetchedTasks = [];
+    final categories = <String>{};
+    final fetched = <Map<String, String>>[];
 
-    for (Map<String, dynamic> row in allRows) {
-      Map<String, String> task = {
+    for (final row in allRows) {
+      fetched.add({
         'title': row['title'].toString(),
         'category': row['category'].toString(),
         'details': row['details'].toString(),
-      };
-      fetchedTasks.add(task);
+      });
       categories.add(row['category'].toString());
     }
 
     setState(() {
-      tasks = fetchedTasks;
-      _expandedItems = {for (var category in categories) category: false};
+      tasks = fetched;
+      _expandedItems = {for (final c in categories) c: false};
     });
 
     await db.close();
   }
 
-  _addTaskToDatabase(String title, String details, String category) async {
-    // 初始化 sqflite_common_ffi
+  Future<void> _addTaskToDatabase(
+      String title, String details, String category) async {
     sqfliteFfiInit();
-    // 设置 databaseFactoryFfi 作为默认的 databaseFactory
     databaseFactory = databaseFactoryFfi;
 
-    // 数据库配置
     const tableName = TodoList.tableName;
     const columns = TodoList.columns;
     const columnProperties = TodoList.columnsType;
 
-    // 创建 DBHelper 实例
     final dbHelper = DBHelper();
-    // 初始化数据库和表
     final db = await dbHelper.initDb(tableName, 1, columns, columnProperties);
 
-    Random random = Random();
-    int randomId = random.nextInt(1000000000); // 生成一个9位数的随机ID
+    final randomId = Random().nextInt(1000000000);
 
-    // 插入任务到数据库
     await dbHelper.insert(tableName, {
       'title': title,
       'details': details,
@@ -277,94 +345,10 @@ class _TodoPageState extends State<TodoPage> {
   String generateRandomId(int length) {
     const chars =
         '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    final random = Random();
+    final rnd = Random();
     return String.fromCharCodes(
       Iterable.generate(
-          length, (_) => chars.codeUnitAt(random.nextInt(chars.length))),
-    );
-  }
-
-  void _showCommandBarDialog() {
-    final TextEditingController titleController = TextEditingController();
-    final TextEditingController detailsController = TextEditingController();
-    String selectedCategory = '待办'; // 默认类别
-
-    material.showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return material.AlertDialog(
-              title: const Text('新增任务'),
-              content: SizedBox(
-                width: 400, // 设置对话框的宽度
-                height: 300, // 设置对话框的高度
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, // 左对齐所有子元素
-                  children: [
-                    material.TextField(
-                      controller: titleController,
-                      decoration: const InputDecoration(labelText: '标题'),
-                    ),
-                    const SizedBox(height: 20),
-                    Flexible(
-                      child: material.TextField(
-                        controller: detailsController,
-                        maxLines: null,
-                        keyboardType: TextInputType.multiline,
-                        decoration: const InputDecoration(
-                          labelText: '详情',
-                          border: material.OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Align(
-                      alignment: Alignment.centerLeft, // 下拉框左对齐
-                      child: material.DropdownButton<String>(
-                        value: selectedCategory,
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedCategory = newValue!;
-                          });
-                        },
-                        items: <String>['待办', '待整理', '已完成']
-                            .map<material.DropdownMenuItem<String>>(
-                                (String value) {
-                          return material.DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                material.TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('取消'),
-                ),
-                material.TextButton(
-                  onPressed: () async {
-                    await _addTaskToDatabase(
-                      titleController.text,
-                      detailsController.text,
-                      selectedCategory,
-                    );
-                    Navigator.of(context).pop();
-                    _fetchTasksFromDatabase();
-                  },
-                  child: const Text('提交'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+          length, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))),
     );
   }
 }

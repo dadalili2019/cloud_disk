@@ -76,43 +76,43 @@ class _NavigationPageState extends State<NavigationPage> {
         if (router.location != '/game') router.goNamed('game');
       },
     ),
-    PaneItemExpander(
-      icon: const Icon(FluentIcons.folder_open),
-      title:
-          const Text('文件', style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
-      body: const SizedBox.shrink(),
-      // 不要写 expanded: ...（老版本没有这个参数）
-      items: [
-        PaneItem(
-          icon: const Icon(FluentIcons.reminder_time),
-          title: const Text('最近播放',
-              style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
-          body: const SizedBox.shrink(),
-          onTap: () {
-            if (router.location != '/recentlyPlayed')
-              router.goNamed('recentlyPlayed');
-          },
-        ),
-        PaneItem(
-          icon: const Icon(FluentIcons.document_set),
-          title: const Text('我的资料',
-              style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
-          body: const SizedBox.shrink(),
-          onTap: () {
-            if (router.location != '/myProfile') router.goNamed('myProfile');
-          },
-        ),
-        // 如需更多子项，在这里继续加 PaneItem 即可
-      ],
-    ),
+    // PaneItemExpander(
+    //   icon: const Icon(FluentIcons.folder_open),
+    //   title:
+    //       const Text('文件', style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
+    //   body: const SizedBox.shrink(),
+    //   // 不要写 expanded: ...（老版本没有这个参数）
+    //   items: [
+    //     PaneItem(
+    //       icon: const Icon(FluentIcons.reminder_time),
+    //       title: const Text('最近播放',
+    //           style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
+    //       body: const SizedBox.shrink(),
+    //       onTap: () {
+    //         if (router.location != '/recentlyPlayed')
+    //           router.goNamed('recentlyPlayed');
+    //       },
+    //     ),
+    //     PaneItem(
+    //       icon: const Icon(FluentIcons.document_set),
+    //       title: const Text('我的资料',
+    //           style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
+    //       body: const SizedBox.shrink(),
+    //       onTap: () {
+    //         if (router.location != '/myProfile') router.goNamed('myProfile');
+    //       },
+    //     ),
+    //     // 如需更多子项，在这里继续加 PaneItem 即可
+    //   ],
+    // ),
     PaneItemSeparator(),
     PaneItem(
-      icon: const Icon(FluentIcons.chevron_unfold10),
-      title: const Text('传输列表',
-          style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
+      icon: const Icon(FluentIcons.settings),
+      title:
+          const Text('设置', style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
       body: const SizedBox.shrink(),
       onTap: () {
-        if (router.location != '/transferList') router.goNamed('transferList');
+        if (router.location != '/setting') router.goNamed('setting');
       },
     ),
   ];
@@ -148,89 +148,89 @@ class _NavigationPageState extends State<NavigationPage> {
 
         items: items,
 
-        footerItems: [
-          PaneItem(
-            enabled: false,
-            icon: const Icon(FluentIcons.user_window),
-            title: const Text('用户123321',
-                style: TextStyle(fontSize: 14, color: Colors.grey)),
-            body: const SizedBox.shrink(),
-            onTap: () {
-              if (router.location != '/settings') {
-                router.goNamed('settings');
-              }
-            },
-            trailing: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: IconButton(
-                icon: const Icon(FluentIcons.settings),
-                onPressed: () {
-                  showMenu(
-                    context: context,
-                    position: RelativeRect.fromLTRB(
-                      200,
-                      screenSize.height - 280,
-                      screenSize.width - 200,
-                      300,
-                    ),
-                    items: const [
-                      PopupMenuItem(
-                        height: 44,
-                        child: Row(children: [
-                          Text("个人中心",
-                              style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                  fontFamily: "微软雅黑")),
-                        ]),
-                      ),
-                      PopupMenuItem(
-                        height: 44,
-                        child: Row(children: [
-                          Text("帮助反馈",
-                              style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                  fontFamily: "微软雅黑")),
-                        ]),
-                      ),
-                      PopupMenuItem(
-                        height: 44,
-                        child: Row(children: [
-                          Text("关于",
-                              style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                  fontFamily: "微软雅黑")),
-                        ]),
-                      ),
-                      PopupMenuItem(
-                        height: 44,
-                        child: Row(children: [
-                          Text("设置",
-                              style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                  fontFamily: "微软雅黑")),
-                        ]),
-                      ),
-                      PopupMenuItem(
-                        height: 44,
-                        child: Row(children: [
-                          Text("退出登录",
-                              style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                  fontFamily: "微软雅黑")),
-                        ]),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
+        // footerItems: [
+        //   PaneItem(
+        //     enabled: false,
+        //     icon: const Icon(FluentIcons.user_window),
+        //     title: const Text('用户123321',
+        //         style: TextStyle(fontSize: 14, color: Colors.grey)),
+        //     body: const SizedBox.shrink(),
+        //     onTap: () {
+        //       if (router.location != '/settings') {
+        //         router.goNamed('settings');
+        //       }
+        //     },
+        //     trailing: MouseRegion(
+        //       cursor: SystemMouseCursors.click,
+        //       child: IconButton(
+        //         icon: const Icon(FluentIcons.settings),
+        //         onPressed: () {
+        //           showMenu(
+        //             context: context,
+        //             position: RelativeRect.fromLTRB(
+        //               200,
+        //               screenSize.height - 280,
+        //               screenSize.width - 200,
+        //               300,
+        //             ),
+        //             items: const [
+        //               PopupMenuItem(
+        //                 height: 44,
+        //                 child: Row(children: [
+        //                   Text("个人中心",
+        //                       style: TextStyle(
+        //                           color: Colors.grey,
+        //                           fontSize: 14,
+        //                           fontFamily: "微软雅黑")),
+        //                 ]),
+        //               ),
+        //               PopupMenuItem(
+        //                 height: 44,
+        //                 child: Row(children: [
+        //                   Text("帮助反馈",
+        //                       style: TextStyle(
+        //                           color: Colors.grey,
+        //                           fontSize: 14,
+        //                           fontFamily: "微软雅黑")),
+        //                 ]),
+        //               ),
+        //               PopupMenuItem(
+        //                 height: 44,
+        //                 child: Row(children: [
+        //                   Text("关于",
+        //                       style: TextStyle(
+        //                           color: Colors.grey,
+        //                           fontSize: 14,
+        //                           fontFamily: "微软雅黑")),
+        //                 ]),
+        //               ),
+        //               PopupMenuItem(
+        //                 height: 44,
+        //                 child: Row(children: [
+        //                   Text("设置",
+        //                       style: TextStyle(
+        //                           color: Colors.grey,
+        //                           fontSize: 14,
+        //                           fontFamily: "微软雅黑")),
+        //                 ]),
+        //               ),
+        //               PopupMenuItem(
+        //                 height: 44,
+        //                 child: Row(children: [
+        //                   Text("退出登录",
+        //                       style: TextStyle(
+        //                           color: Colors.grey,
+        //                           fontSize: 14,
+        //                           fontFamily: "微软雅黑")),
+        //                 ]),
+        //               ),
+        //             ],
+        //           );
+        //         },
+        //       ),
+        //     ),
+        //   ),
+        // ],
       ),
     );
   }

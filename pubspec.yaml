@@ -58,6 +58,7 @@ dependencies:
   connectivity_plus: ^5.0.2
   audioplayers: ^5.2.1
   just_audio: ^0.9.36
+  shared_preferences: ^2.2.3
 
 
 dev_dependencies:
