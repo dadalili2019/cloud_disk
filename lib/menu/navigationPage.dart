@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:flutter/material.dart' show showMenu, PopupMenuItem;
 
 import '../router/router.dart';
 import '../widgets/windowButtons.dart';
@@ -65,6 +64,15 @@ class _NavigationPageState extends State<NavigationPage> {
       body: const SizedBox.shrink(),
       onTap: () {
         if (router.location != '/comparison') router.goNamed('comparison');
+      },
+    ),
+    PaneItem(
+      icon: const Icon(FluentIcons.library),
+      title:
+          const Text('知识库', style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
+      body: const SizedBox.shrink(),
+      onTap: () {
+        if (router.location != '/ragknowledge') router.goNamed('ragknowledge');
       },
     ),
     PaneItem(

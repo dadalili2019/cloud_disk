@@ -21,6 +21,7 @@ import '../pages/recently_played.dart';
 import '../pages/recyclePage.dart';
 import '../pages/shareFolder/shareFolder.dart' deferred as share;
 import '../pages/speedtestpage/speedtestpage.dart' deferred as speed;
+import '../pages/ragknowledge/ragknowledge.dart' deferred as ragknowledge;
 import '../pages/subscribe.dart';
 import '../pages/todo.dart';
 import '../pages/game/game.dart' deferred as game;
@@ -168,6 +169,14 @@ final router = GoRouter(
           builder: (context, state) => DeferredWidget(
             loader: speed.loadLibrary,
             builder: () => speed.SpeedTestPage(),
+          ),
+        ),
+        GoRoute(
+          name: 'ragknowledge',
+          path: '/ragknowledge',
+          builder: (context, state) => DeferredWidget(
+            loader: ragknowledge.loadLibrary,
+            builder: () => ragknowledge.RagKnowledgePage(),
           ),
         ),
         GoRoute(
