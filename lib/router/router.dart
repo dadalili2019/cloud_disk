@@ -1,7 +1,7 @@
-import 'package:fluent_ui/fluent_ui.dart';
+﻿import 'package:fluent_ui/fluent_ui.dart';
 import 'package:go_router/go_router.dart';
 
-// 轻页面（直接 import）
+// 杞婚〉闈紙鐩存帴 import锛?
 import '../menu/navigationPage.dart';
 import '../pages/capacityInformation.dart';
 import '../pages/comparison/comparison.dart' deferred as cmp;
@@ -10,12 +10,18 @@ import '../pages/favorites.dart';
 import '../pages/file.dart';
 import '../pages/home.dart';
 import '../pages/jsonformat/jsonformat.dart' deferred as jf;
+import '../pages/imagetools/imagetools.dart' deferred as imagetools;
+import '../pages/imagetools/watermark_tool.dart' deferred as watermarktool;
+import '../pages/imagetools/crop_tool.dart' deferred as croptool;
+import '../pages/imagetools/filter_tool.dart' deferred as filtertool;
+import '../pages/imagetools/collage_tool.dart' deferred as collagetool;
+import '../pages/imagetools/dedupe_tool.dart' deferred as dedupetool;
 import '../pages/login.dart';
 import '../pages/myProfile.dart';
 import '../pages/password.dart';
 import '../pages/setting/setting.dart';
 
-// 重页面（deferred import，按需加载）
+// 閲嶉〉闈紙deferred import锛屾寜闇€鍔犺浇锛?
 import '../pages/photo.dart' deferred as photo;
 import '../pages/recently_played.dart';
 import '../pages/recyclePage.dart';
@@ -26,7 +32,7 @@ import '../pages/subscribe.dart';
 import '../pages/todo.dart';
 import '../pages/game/game.dart' deferred as game;
 
-/// 延迟加载占位组件
+/// 寤惰繜鍔犺浇鍗犱綅缁勪欢
 class DeferredWidget extends StatelessWidget {
   final Future<void> Function() loader;
   final Widget Function() builder;
@@ -53,7 +59,7 @@ class DeferredWidget extends StatelessWidget {
 final router = GoRouter(
   initialLocation: '/login',
   routes: [
-    // 登录页
+    // 鐧诲綍椤?
     GoRoute(
       name: 'login',
       path: '/login',
@@ -61,7 +67,7 @@ final router = GoRouter(
           const NoTransitionPage(child: LoginPage()),
     ),
 
-    // 登录后主框架
+    // 鐧诲綍鍚庝富妗嗘灦
     ShellRoute(
       builder: (context, state, child) => NavigationPage(child: child),
       routes: <RouteBase>[
@@ -138,7 +144,7 @@ final router = GoRouter(
               const NoTransitionPage(child: CapacityInformation()),
         ),
 
-        // ===== 延迟加载的“重页面” =====
+        // ===== 寤惰繜鍔犺浇鐨勨€滈噸椤甸潰鈥?=====
         GoRoute(
           name: 'photo',
           path: '/photo',
@@ -162,6 +168,59 @@ final router = GoRouter(
             loader: jf.loadLibrary,
             builder: () => jf.JsonFormatPage(),
           ),
+        ),
+        GoRoute(
+          name: 'imageConvert',
+          path: '/imagetools/convert',
+          builder: (context, state) => DeferredWidget(
+            loader: imagetools.loadLibrary,
+            builder: () => imagetools.ImageToolsPage(),
+          ),
+        ),
+        GoRoute(
+          name: 'imageWatermark',
+          path: '/imagetools/watermark',
+          builder: (context, state) => DeferredWidget(
+            loader: watermarktool.loadLibrary,
+            builder: () => watermarktool.WatermarkToolPage(),
+          ),
+        ),
+        GoRoute(
+          name: 'imageCrop',
+          path: '/imagetools/crop',
+          builder: (context, state) => DeferredWidget(
+            loader: croptool.loadLibrary,
+            builder: () => croptool.CropToolPage(),
+          ),
+        ),
+        GoRoute(
+          name: 'imageFilter',
+          path: '/imagetools/filter',
+          builder: (context, state) => DeferredWidget(
+            loader: filtertool.loadLibrary,
+            builder: () => filtertool.FilterToolPage(),
+          ),
+        ),
+        GoRoute(
+          name: 'imageCollage',
+          path: '/imagetools/collage',
+          builder: (context, state) => DeferredWidget(
+            loader: collagetool.loadLibrary,
+            builder: () => collagetool.CollageToolPage(),
+          ),
+        ),
+        GoRoute(
+          name: 'imageDedupe',
+          path: '/imagetools/dedupe',
+          builder: (context, state) => DeferredWidget(
+            loader: dedupetool.loadLibrary,
+            builder: () => dedupetool.DedupeToolPage(),
+          ),
+        ),
+        GoRoute(
+          name: 'imagetools',
+          path: '/imagetools',
+          redirect: (context, state) => '/imagetools/convert',
         ),
         GoRoute(
           name: 'speedtestpage',
@@ -196,7 +255,7 @@ final router = GoRouter(
           ),
         ),
 
-        // todo 保持轻量
+        // todo 淇濇寔杞婚噺
         GoRoute(
           name: 'todo',
           path: '/todo',
@@ -207,3 +266,4 @@ final router = GoRouter(
     ),
   ],
 );
+

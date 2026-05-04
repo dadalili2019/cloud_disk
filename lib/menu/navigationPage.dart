@@ -4,250 +4,254 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 
 import '../router/router.dart';
+import '../theme/theme_controller.dart';
 import '../widgets/windowButtons.dart';
 
 class NavigationPage extends StatefulWidget {
-  final Widget child;
-
   const NavigationPage({super.key, required this.child});
+
+  final Widget child;
 
   @override
   State<NavigationPage> createState() => _NavigationPageState();
 }
 
 class _NavigationPageState extends State<NavigationPage> {
-  int topIndex = 0; // 左侧选中索引（仅控制高亮）
+  int topIndex = 0;
 
-  // 左侧菜单
-  late final List<NavigationPaneItem> items = <NavigationPaneItem>[
-    PaneItem(
-      icon: const Icon(FluentIcons.home),
-      title:
-          const Text('首页', style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
+  Text _menuTitle(String text, {bool sub = false}) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: sub ? 15 : 16,
+        fontWeight: sub ? FontWeight.w500 : FontWeight.w600,
+      ),
+    );
+  }
+
+  PaneItem _item({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    required ButtonState<Color?> tileColor,
+    required ButtonState<Color?> selectedTileColor,
+    bool sub = false,
+  }) {
+    return PaneItem(
+      icon: Icon(icon),
+      title: _menuTitle(title, sub: sub),
       body: const SizedBox.shrink(),
-      onTap: () {
-        if (router.location != '/home') router.goNamed('home');
-      },
-    ),
-    PaneItem(
-      icon: const Icon(FluentIcons.to_do_logo_inverse),
-      title: const Text('待办清单',
-          style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
-      body: const SizedBox.shrink(),
-      onTap: () {
-        if (router.location != '/todo') router.goNamed('todo');
-      },
-    ),
-    PaneItem(
-      icon: const Icon(FluentIcons.my_network),
-      title: const Text('网络测速',
-          style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
-      body: const SizedBox.shrink(),
-      onTap: () {
-        if (router.location != '/speedtestpage')
-          router.goNamed('speedtestpage');
-      },
-    ),
-    PaneItem(
-      icon: const Icon(FluentIcons.format_painter),
-      title: const Text('JSON格式化',
-          style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
-      body: const SizedBox.shrink(),
-      onTap: () {
-        if (router.location != '/jsonFormat') router.goNamed('jsonFormat');
-      },
-    ),
-    PaneItem(
-      icon: const Icon(FluentIcons.branch_compare),
-      title: const Text('文字比对',
-          style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
-      body: const SizedBox.shrink(),
-      onTap: () {
-        if (router.location != '/comparison') router.goNamed('comparison');
-      },
-    ),
-    PaneItem(
-      icon: const Icon(FluentIcons.library),
-      title:
-          const Text('知识库', style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
-      body: const SizedBox.shrink(),
-      onTap: () {
-        if (router.location != '/ragknowledge') router.goNamed('ragknowledge');
-      },
-    ),
-    PaneItem(
-      icon: const Icon(FluentIcons.game),
-      title: const Text('GAME',
-          style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
-      body: const SizedBox.shrink(),
-      onTap: () {
-        if (router.location != '/game') router.goNamed('game');
-      },
-    ),
-    // PaneItemExpander(
-    //   icon: const Icon(FluentIcons.folder_open),
-    //   title:
-    //       const Text('文件', style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
-    //   body: const SizedBox.shrink(),
-    //   // 不要写 expanded: ...（老版本没有这个参数）
-    //   items: [
-    //     PaneItem(
-    //       icon: const Icon(FluentIcons.reminder_time),
-    //       title: const Text('最近播放',
-    //           style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
-    //       body: const SizedBox.shrink(),
-    //       onTap: () {
-    //         if (router.location != '/recentlyPlayed')
-    //           router.goNamed('recentlyPlayed');
-    //       },
-    //     ),
-    //     PaneItem(
-    //       icon: const Icon(FluentIcons.document_set),
-    //       title: const Text('我的资料',
-    //           style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
-    //       body: const SizedBox.shrink(),
-    //       onTap: () {
-    //         if (router.location != '/myProfile') router.goNamed('myProfile');
-    //       },
-    //     ),
-    //     // 如需更多子项，在这里继续加 PaneItem 即可
-    //   ],
-    // ),
-    PaneItemSeparator(),
-    PaneItem(
-      icon: const Icon(FluentIcons.settings),
-      title:
-          const Text('设置', style: TextStyle(fontSize: 14, fontFamily: "微软雅黑")),
-      body: const SizedBox.shrink(),
-      onTap: () {
-        if (router.location != '/setting') router.goNamed('setting');
-      },
-    ),
-  ];
+      onTap: onTap,
+      tileColor: tileColor,
+      selectedTileColor: selectedTileColor,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
+    final palette = ThemeScope.of(context).palette;
+    final tileColor = ButtonState.resolveWith<Color?>((states) {
+      if (states.isPressing) return palette.navItemSelected;
+      if (states.isHovering) return palette.navItemHover;
+      return Colors.transparent;
+    });
+    final selectedTileColor = ButtonState.all<Color?>(palette.navItemSelected);
 
-    return NavigationView(
-      appBar: NavigationAppBar(
-        height: 36,
-        leading: const Text(""),
-        title: WindowTitleBarBox(child: MoveWindow()),
-        actions: Platform.isWindows
-            ? Container(
-                alignment: Alignment.centerRight,
-                width: 180,
-                child: const WindowButtons(),
-              )
-            : const Text(""),
+    final items = <NavigationPaneItem>[
+      _item(
+        icon: FluentIcons.home,
+        title: '首页',
+        tileColor: tileColor,
+        selectedTileColor: selectedTileColor,
+        onTap: () {
+          if (router.location != '/home') router.goNamed('home');
+        },
       ),
+      _item(
+        icon: FluentIcons.to_do_logo_inverse,
+        title: '待办清单',
+        tileColor: tileColor,
+        selectedTileColor: selectedTileColor,
+        onTap: () {
+          if (router.location != '/todo') router.goNamed('todo');
+        },
+      ),
+      _item(
+        icon: FluentIcons.my_network,
+        title: '网络测速',
+        tileColor: tileColor,
+        selectedTileColor: selectedTileColor,
+        onTap: () {
+          if (router.location != '/speedtestpage') router.goNamed('speedtestpage');
+        },
+      ),
+      _item(
+        icon: FluentIcons.format_painter,
+        title: 'JSON格式化',
+        tileColor: tileColor,
+        selectedTileColor: selectedTileColor,
+        onTap: () {
+          if (router.location != '/jsonFormat') router.goNamed('jsonFormat');
+        },
+      ),
+      _item(
+        icon: FluentIcons.branch_compare,
+        title: '文字比对',
+        tileColor: tileColor,
+        selectedTileColor: selectedTileColor,
+        onTap: () {
+          if (router.location != '/comparison') router.goNamed('comparison');
+        },
+      ),
+      PaneItemHeader(header: const Text('图片工作台')),
+      PaneItemExpander(
+        icon: const Icon(FluentIcons.photo_collection),
+        title: _menuTitle('图片工具'),
+        body: const SizedBox.shrink(),
+        tileColor: tileColor,
+        selectedTileColor: selectedTileColor,
+        items: [
+          _item(
+            icon: FluentIcons.switch_widget,
+            title: '批量转换',
+            tileColor: tileColor,
+            selectedTileColor: selectedTileColor,
+            sub: true,
+            onTap: () {
+              if (router.location != '/imagetools/convert') router.goNamed('imageConvert');
+            },
+          ),
+          _item(
+            icon: FluentIcons.text_box,
+            title: '水印工具',
+            tileColor: tileColor,
+            selectedTileColor: selectedTileColor,
+            sub: true,
+            onTap: () {
+              if (router.location != '/imagetools/watermark') router.goNamed('imageWatermark');
+            },
+          ),
+          _item(
+            icon: FluentIcons.crop,
+            title: '裁剪与尺寸',
+            tileColor: tileColor,
+            selectedTileColor: selectedTileColor,
+            sub: true,
+            onTap: () {
+              if (router.location != '/imagetools/crop') router.goNamed('imageCrop');
+            },
+          ),
+          _item(
+            icon: FluentIcons.color,
+            title: '滤镜增强',
+            tileColor: tileColor,
+            selectedTileColor: selectedTileColor,
+            sub: true,
+            onTap: () {
+              if (router.location != '/imagetools/filter') router.goNamed('imageFilter');
+            },
+          ),
+          _item(
+            icon: FluentIcons.grid_view_medium,
+            title: '拼图九宫格',
+            tileColor: tileColor,
+            selectedTileColor: selectedTileColor,
+            sub: true,
+            onTap: () {
+              if (router.location != '/imagetools/collage') router.goNamed('imageCollage');
+            },
+          ),
+          _item(
+            icon: FluentIcons.search_and_apps,
+            title: '去重与清理',
+            tileColor: tileColor,
+            selectedTileColor: selectedTileColor,
+            sub: true,
+            onTap: () {
+              if (router.location != '/imagetools/dedupe') router.goNamed('imageDedupe');
+            },
+          ),
+        ],
+      ),
+      PaneItemHeader(header: const Text('其他')),
+      _item(
+        icon: FluentIcons.library,
+        title: '知识库',
+        tileColor: tileColor,
+        selectedTileColor: selectedTileColor,
+        onTap: () {
+          if (router.location != '/ragknowledge') router.goNamed('ragknowledge');
+        },
+      ),
+      _item(
+        icon: FluentIcons.game,
+        title: 'GAME',
+        tileColor: tileColor,
+        selectedTileColor: selectedTileColor,
+        onTap: () {
+          if (router.location != '/game') router.goNamed('game');
+        },
+      ),
+      PaneItemSeparator(),
+      _item(
+        icon: FluentIcons.settings,
+        title: '设置',
+        tileColor: tileColor,
+        selectedTileColor: selectedTileColor,
+        onTap: () {
+          if (router.location != '/setting') router.goNamed('setting');
+        },
+      ),
+    ];
 
-      // 右侧的实际内容由外层路由传进来
-      paneBodyBuilder: (item, child) => widget.child,
-
-      pane: NavigationPane(
-        size: const NavigationPaneSize(openWidth: 220),
-        displayMode: PaneDisplayMode.open,
-
-        // 左侧选中态：仅由 onChanged 控制（不与路由耦合，稳定）
-        selected: topIndex,
-        onChanged: (index) => setState(() => topIndex = index),
-
-        items: items,
-
-        // footerItems: [
-        //   PaneItem(
-        //     enabled: false,
-        //     icon: const Icon(FluentIcons.user_window),
-        //     title: const Text('用户123321',
-        //         style: TextStyle(fontSize: 14, color: Colors.grey)),
-        //     body: const SizedBox.shrink(),
-        //     onTap: () {
-        //       if (router.location != '/settings') {
-        //         router.goNamed('settings');
-        //       }
-        //     },
-        //     trailing: MouseRegion(
-        //       cursor: SystemMouseCursors.click,
-        //       child: IconButton(
-        //         icon: const Icon(FluentIcons.settings),
-        //         onPressed: () {
-        //           showMenu(
-        //             context: context,
-        //             position: RelativeRect.fromLTRB(
-        //               200,
-        //               screenSize.height - 280,
-        //               screenSize.width - 200,
-        //               300,
-        //             ),
-        //             items: const [
-        //               PopupMenuItem(
-        //                 height: 44,
-        //                 child: Row(children: [
-        //                   Text("个人中心",
-        //                       style: TextStyle(
-        //                           color: Colors.grey,
-        //                           fontSize: 14,
-        //                           fontFamily: "微软雅黑")),
-        //                 ]),
-        //               ),
-        //               PopupMenuItem(
-        //                 height: 44,
-        //                 child: Row(children: [
-        //                   Text("帮助反馈",
-        //                       style: TextStyle(
-        //                           color: Colors.grey,
-        //                           fontSize: 14,
-        //                           fontFamily: "微软雅黑")),
-        //                 ]),
-        //               ),
-        //               PopupMenuItem(
-        //                 height: 44,
-        //                 child: Row(children: [
-        //                   Text("关于",
-        //                       style: TextStyle(
-        //                           color: Colors.grey,
-        //                           fontSize: 14,
-        //                           fontFamily: "微软雅黑")),
-        //                 ]),
-        //               ),
-        //               PopupMenuItem(
-        //                 height: 44,
-        //                 child: Row(children: [
-        //                   Text("设置",
-        //                       style: TextStyle(
-        //                           color: Colors.grey,
-        //                           fontSize: 14,
-        //                           fontFamily: "微软雅黑")),
-        //                 ]),
-        //               ),
-        //               PopupMenuItem(
-        //                 height: 44,
-        //                 child: Row(children: [
-        //                   Text("退出登录",
-        //                       style: TextStyle(
-        //                           color: Colors.grey,
-        //                           fontSize: 14,
-        //                           fontFamily: "微软雅黑")),
-        //                 ]),
-        //               ),
-        //             ],
-        //           );
-        //         },
-        //       ),
-        //     ),
-        //   ),
-        // ],
+    return Container(
+      margin: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: palette.navBackground,
+        border: Border.all(color: palette.navBorder.withOpacity(0.75), width: 0.8),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          Container(
+            height: 38,
+            decoration: BoxDecoration(
+              color: palette.appBarBackground,
+              border: Border(bottom: BorderSide(color: palette.appBarBorder.withOpacity(0.7), width: 0.8)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: WindowTitleBarBox(
+                    child: MoveWindow(),
+                  ),
+                ),
+                if (Platform.isWindows) const SizedBox(width: 180, child: WindowButtons()),
+              ],
+            ),
+          ),
+          Expanded(
+            child: NavigationView(
+              paneBodyBuilder: (item, child) => widget.child,
+              pane: NavigationPane(
+                size: const NavigationPaneSize(openWidth: 218),
+                displayMode: PaneDisplayMode.open,
+                selected: topIndex,
+                onChanged: (index) => setState(() => topIndex = index),
+                items: items,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-// 你之前的公共容器，原样保留
 class NavigationBodyItem extends StatelessWidget {
-  const NavigationBodyItem({Key? key, this.header, this.content})
-      : super(key: key);
+  const NavigationBodyItem({super.key, this.header, this.content});
+
   final String? header;
   final Widget? content;
 

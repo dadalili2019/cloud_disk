@@ -59,6 +59,7 @@ dependencies:
   audioplayers: ^5.2.1
   just_audio: ^0.9.36
   shared_preferences: ^2.2.3
+  image: ^4.2.0
 
 
 dev_dependencies:

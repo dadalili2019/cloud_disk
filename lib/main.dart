@@ -60,7 +60,9 @@ class MyApp extends StatelessWidget {
           themeMode: theme.mode,
           theme: theme
               .buildTheme(Brightness.light)
-              .copyWith(scaffoldBackgroundColor: Colors.white),
+              .copyWith(
+                scaffoldBackgroundColor: theme.palette.appBackground,
+              ),
           darkTheme: theme.buildTheme(Brightness.dark),
 
           // 如果项目里还混用了少量 Material 组件，打开下面这段可让字体也同步
