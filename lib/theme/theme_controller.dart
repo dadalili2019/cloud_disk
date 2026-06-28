@@ -1,5 +1,4 @@
-﻿import 'package:fluent_ui/fluent_ui.dart';
-import 'package:flutter/foundation.dart';
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemePalette {
@@ -10,6 +9,10 @@ class ThemePalette {
     required this.appBackground,
     required this.navBackground,
     required this.cardBackground,
+    required this.surfaceMuted,
+    required this.softAccent,
+    required this.successSoft,
+    required this.dangerSoft,
     required this.cardBorder,
     required this.navBorder,
     required this.navItemHover,
@@ -25,6 +28,10 @@ class ThemePalette {
   final Color appBackground;
   final Color navBackground;
   final Color cardBackground;
+  final Color surfaceMuted;
+  final Color softAccent;
+  final Color successSoft;
+  final Color dangerSoft;
   final Color cardBorder;
   final Color navBorder;
   final Color navItemHover;
@@ -36,13 +43,14 @@ class ThemePalette {
 
 class ThemeController extends ChangeNotifier {
   ThemeMode _mode = ThemeMode.light;
-  AccentColor _accent = Colors.blue.toAccentColor();
+  AccentColor _accent = Colors.teal.toAccentColor();
   String? _fontFamily;
   String _presetId = 'default';
 
   ThemeMode get mode => _mode;
   AccentColor get accent => _accent;
   String? get fontFamily => _fontFamily;
+  String get effectiveFontFamily => _fontFamily ?? 'Microsoft YaHei UI';
   String get presetId => _presetId;
   ThemePalette get palette => palettes[_presetId] ?? palettes['default']!;
 
@@ -75,8 +83,11 @@ class ThemeController extends ChangeNotifier {
 
   Future<void> load() async {
     final sp = await SharedPreferences.getInstance();
-    _mode = ThemeMode.values[sp.getInt('theme.mode') ?? ThemeMode.light.index];
-    _accent = _accentFromName(sp.getString('theme.accent') ?? 'blue');
+    final modeIndex = sp.getInt('theme.mode') ?? ThemeMode.light.index;
+    final safeModeIndex =
+        modeIndex.clamp(0, ThemeMode.values.length - 1).toInt();
+    _mode = ThemeMode.values[safeModeIndex];
+    _accent = _accentFromName(sp.getString('theme.accent') ?? 'teal');
     _fontFamily = sp.getString('theme.font');
     _presetId = sp.getString('theme.preset') ?? 'default';
     if (!palettes.containsKey(_presetId)) {
@@ -120,67 +131,84 @@ class ThemeController extends ChangeNotifier {
   static final Map<String, ThemePalette> palettes = {
     'default': const ThemePalette(
       id: 'default',
-      label: '默认白',
-      accentName: 'blue',
-      appBackground: Color(0xFFF3F5F8),
-      navBackground: Color(0xFFEFF2F6),
+      label: '奶油薄荷',
+      accentName: 'teal',
+      appBackground: Color(0xFFF8F6F1),
+      navBackground: Color(0xFFFFFBF6),
       cardBackground: Color(0xFFFFFFFF),
-      cardBorder: Color(0xFFE6EAF0),
-      navBorder: Color(0xFFDCE3EC),
-      navItemHover: Color(0xFFF1F4F8),
-      navItemSelected: Color(0xFFE8EEF6),
-      appBarBackground: Color(0xFFF8FAFD),
-      appBarBorder: Color(0xFFDCE3EC),
-      shadow: Color(0x0F0F172A),
+      surfaceMuted: Color(0xFFF4FAF6),
+      softAccent: Color(0xFFEAF5FF),
+      successSoft: Color(0xFFEAF8EF),
+      dangerSoft: Color(0xFFFFF0F4),
+      cardBorder: Color(0xFFF0E8E1),
+      navBorder: Color(0xFFF1EAE2),
+      navItemHover: Color(0xFFFAF5EF),
+      navItemSelected: Color(0xFFF1FAF4),
+      appBarBackground: Color(0xFFFFFCF7),
+      appBarBorder: Color(0xFFF0E8E1),
+      shadow: Color(0xFF6E7D74),
     ),
     'mist_blue': const ThemePalette(
       id: 'mist_blue',
       label: '雾蓝',
       accentName: 'teal',
-      appBackground: Color(0xFFF0F6FA),
-      navBackground: Color(0xFFE7F0F6),
+      appBackground: Color(0xFFF4F8FB),
+      navBackground: Color(0xFFF9FCFE),
       cardBackground: Color(0xFFFFFFFF),
-      cardBorder: Color(0xFFDDE8F0),
-      navBorder: Color(0xFFD2E0EB),
-      navItemHover: Color(0xFFEEF5FA),
-      navItemSelected: Color(0xFFE1EDF7),
-      appBarBackground: Color(0xFFF6FAFD),
-      appBarBorder: Color(0xFFD2E0EB),
-      shadow: Color(0x1020334A),
+      surfaceMuted: Color(0xFFEEF6FA),
+      softAccent: Color(0xFFE6F2FB),
+      successSoft: Color(0xFFEAF8F2),
+      dangerSoft: Color(0xFFFFF0F5),
+      cardBorder: Color(0xFFE8F0F5),
+      navBorder: Color(0xFFE1EBF2),
+      navItemHover: Color(0xFFF4F9FC),
+      navItemSelected: Color(0xFFEDF7FC),
+      appBarBackground: Color(0xFFF7FBFE),
+      appBarBorder: Color(0xFFE3EDF4),
+      shadow: Color(0xFF65798A),
     ),
     'mint': const ThemePalette(
       id: 'mint',
       label: '薄荷绿',
       accentName: 'green',
-      appBackground: Color(0xFFF3F9F6),
-      navBackground: Color(0xFFEAF4EE),
+      appBackground: Color(0xFFF5FAF6),
+      navBackground: Color(0xFFFBFEFC),
       cardBackground: Color(0xFFFFFFFF),
-      cardBorder: Color(0xFFDDEDE4),
-      navBorder: Color(0xFFD3E7DB),
-      navItemHover: Color(0xFFEEF7F2),
-      navItemSelected: Color(0xFFE2F1E8),
-      appBarBackground: Color(0xFFF7FCF9),
-      appBarBorder: Color(0xFFD3E7DB),
-      shadow: Color(0x10213428),
+      surfaceMuted: Color(0xFFECF7F0),
+      softAccent: Color(0xFFEAF5FF),
+      successSoft: Color(0xFFE1F4E8),
+      dangerSoft: Color(0xFFFFF0F4),
+      cardBorder: Color(0xFFE8F1EA),
+      navBorder: Color(0xFFE1EEE5),
+      navItemHover: Color(0xFFF4FAF6),
+      navItemSelected: Color(0xFFEDF8F1),
+      appBarBackground: Color(0xFFF8FCF9),
+      appBarBorder: Color(0xFFE2EFE6),
+      shadow: Color(0xFF6F806F),
     ),
     'sunset': const ThemePalette(
       id: 'sunset',
-      label: '暮紫橙',
+      label: '蜜桃晚霞',
       accentName: 'orange',
-      appBackground: Color(0xFFF7F3F8),
-      navBackground: Color(0xFFF1EAF4),
+      appBackground: Color(0xFFFAF5F7),
+      navBackground: Color(0xFFFFFBFC),
       cardBackground: Color(0xFFFFFFFF),
-      cardBorder: Color(0xFFE9DFF0),
-      navBorder: Color(0xFFE1D2EC),
-      navItemHover: Color(0xFFF6EFFA),
-      navItemSelected: Color(0xFFEEE4F5),
-      appBarBackground: Color(0xFFFCF8FD),
-      appBarBorder: Color(0xFFE1D2EC),
-      shadow: Color(0x121F1530),
+      surfaceMuted: Color(0xFFFFF3EE),
+      softAccent: Color(0xFFF0EBFF),
+      successSoft: Color(0xFFEAF8EF),
+      dangerSoft: Color(0xFFFFEEF4),
+      cardBorder: Color(0xFFF2E6EB),
+      navBorder: Color(0xFFF0E2E8),
+      navItemHover: Color(0xFFFCF3F6),
+      navItemSelected: Color(0xFFFFF3EE),
+      appBarBackground: Color(0xFFFFFAFB),
+      appBarBorder: Color(0xFFF0E2E8),
+      shadow: Color(0xFF856E79),
     ),
   };
 
-  static final AccentColor _pinkAccent = AccentColor.swatch(const <String, Color>{
+  static final AccentColor _pinkAccent =
+      AccentColor.swatch(const <String, Color>{
     'normal': Color(0xFFE75D8D),
     'lighter': Color(0xFFF6A8C5),
     'light': Color(0xFFEE86AB),
@@ -188,25 +216,31 @@ class ThemeController extends ChangeNotifier {
     'darker': Color(0xFFB53E67),
   });
 
-  static AccentColor _accentFromName(String name) => accents[name] ?? Colors.blue.toAccentColor();
+  static AccentColor _accentFromName(String name) =>
+      accents[name] ?? Colors.teal.toAccentColor();
 
   static String _accentName(AccentColor a) {
-    return accents.entries.firstWhere(
-      (e) => e.value == a,
-      orElse: () => accents.entries.first,
-    ).key;
+    return accents.entries
+        .firstWhere(
+          (e) => e.value == a,
+          orElse: () => accents.entries.first,
+        )
+        .key;
   }
 
   FluentThemeData buildTheme(Brightness b) => FluentThemeData(
         brightness: b,
         accentColor: _accent,
-        fontFamily: _fontFamily,
+        fontFamily: effectiveFontFamily,
       );
 }
 
 class ThemeScope extends InheritedNotifier<ThemeController> {
-  const ThemeScope({super.key, required ThemeController controller, required Widget child})
-      : super(notifier: controller, child: child);
+  const ThemeScope({
+    super.key,
+    required ThemeController controller,
+    required Widget child,
+  }) : super(notifier: controller, child: child);
 
   static ThemeController of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<ThemeScope>()!.notifier!;

@@ -12,6 +12,7 @@ class SettingPage extends StatefulWidget {
 class _SettingPageState extends State<SettingPage> {
   static const List<String?> fonts = <String?>[
     null,
+    'Microsoft YaHei UI',
     'Segoe UI',
     'Microsoft YaHei',
     'Roboto',
@@ -22,7 +23,8 @@ class _SettingPageState extends State<SettingPage> {
   Widget build(BuildContext context) {
     final themeCtrl = ThemeScope.of(context);
     final palette = themeCtrl.palette;
-    final brightness = themeCtrl.mode == ThemeMode.dark ? Brightness.dark : Brightness.light;
+    final brightness =
+        themeCtrl.mode == ThemeMode.dark ? Brightness.dark : Brightness.light;
     final currentAccentName = ThemeController.accents.entries
         .firstWhere(
           (e) => e.value == themeCtrl.accent,
@@ -49,7 +51,8 @@ class _SettingPageState extends State<SettingPage> {
                           value: themeCtrl.presetId,
                           isExpanded: true,
                           items: ThemeController.palettes.values
-                              .map((p) => ComboBoxItem<String>(value: p.id, child: Text(p.label)))
+                              .map((p) => ComboBoxItem<String>(
+                                  value: p.id, child: Text(p.label)))
                               .toList(),
                           onChanged: (id) {
                             if (id != null) themeCtrl.presetId = id;
@@ -66,9 +69,12 @@ class _SettingPageState extends State<SettingPage> {
                       value: themeCtrl.mode,
                       isExpanded: true,
                       items: const [
-                        ComboBoxItem(value: ThemeMode.light, child: Text('Light')),
-                        ComboBoxItem(value: ThemeMode.dark, child: Text('Dark')),
-                        ComboBoxItem(value: ThemeMode.system, child: Text('System')),
+                        ComboBoxItem(
+                            value: ThemeMode.light, child: Text('Light')),
+                        ComboBoxItem(
+                            value: ThemeMode.dark, child: Text('Dark')),
+                        ComboBoxItem(
+                            value: ThemeMode.system, child: Text('System')),
                       ],
                       onChanged: (v) {
                         if (v != null) themeCtrl.mode = v;
@@ -84,10 +90,14 @@ class _SettingPageState extends State<SettingPage> {
                             value: currentAccentName,
                             isExpanded: true,
                             items: ThemeController.accents.keys
-                                .map((k) => ComboBoxItem<String>(value: k, child: Text(k)))
+                                .map((k) => ComboBoxItem<String>(
+                                    value: k, child: Text(k)))
                                 .toList(),
                             onChanged: (name) {
-                              if (name != null) themeCtrl.accent = ThemeController.accents[name]!;
+                              if (name != null) {
+                                themeCtrl.accent =
+                                    ThemeController.accents[name]!;
+                              }
                             },
                           ),
                         ),
@@ -98,7 +108,8 @@ class _SettingPageState extends State<SettingPage> {
                           decoration: BoxDecoration(
                             color: themeCtrl.accent.defaultBrushFor(brightness),
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: Colors.black.withOpacity(0.1)),
+                            border: Border.all(
+                                color: Colors.black.withOpacity(0.1)),
                           ),
                         ),
                       ],
@@ -110,22 +121,25 @@ class _SettingPageState extends State<SettingPage> {
                       value: themeCtrl.fontFamily,
                       isExpanded: true,
                       items: fonts
-                          .map((f) => ComboBoxItem<String?>(value: f, child: Text(f ?? 'System Default')))
+                          .map((f) => ComboBoxItem<String?>(
+                              value: f, child: Text(f ?? 'System Default')))
                           .toList(),
                       onChanged: (f) => themeCtrl.fontFamily = f,
                     ),
                   ),
-                  _Card(
+                  const _Card(
                     title: 'Preview',
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           'Theme Preview ABCD 1234',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.w700),
                         ),
                         SizedBox(height: 8),
-                        Text('Preset changes page background, nav background, card border and shadow.'),
+                        Text(
+                            'Preset changes page background, nav background, card border and shadow.'),
                       ],
                     ),
                   ),
@@ -185,7 +199,8 @@ class _SwatchBox extends StatelessWidget {
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: palette.cardBorder.withOpacity(0.75), width: 0.8),
+            border: Border.all(
+                color: palette.cardBorder.withOpacity(0.75), width: 0.8),
           ),
         ),
         const SizedBox(width: 6),
@@ -211,7 +226,8 @@ class _Card extends StatelessWidget {
       decoration: BoxDecoration(
         color: t.resources.cardBackgroundFillColorDefault,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: palette.cardBorder.withOpacity(0.72), width: 0.8),
+        border:
+            Border.all(color: palette.cardBorder.withOpacity(0.72), width: 0.8),
         boxShadow: const [
           BoxShadow(
             blurRadius: 14,
@@ -223,7 +239,9 @@ class _Card extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+          Text(title,
+              style:
+                  const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
           child,
         ],
