@@ -1,8 +1,10 @@
-﻿import 'dart:io';
+import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 
@@ -24,6 +26,188 @@ class _FailedTask {
   final String reason;
 }
 
+img.BitmapFont _imageToolsFontBySize(int size) {
+  if (size <= 14) return img.arial14;
+  if (size <= 24) return img.arial24;
+  if (size <= 48) return img.arial48;
+  return img.arial24;
+}
+
+img.Image _applyImageToolsTransforms(
+  img.Image source,
+  Map<String, dynamic> args,
+) {
+  var target = source;
+
+  final resizeEnabled = args['resizeEnabled'] as bool? ?? false;
+  final maxEdge = args['maxEdge'] as int? ?? 1600;
+  if (resizeEnabled) {
+    final maxSide = target.width > target.height ? target.width : target.height;
+    if (maxSide > maxEdge) {
+      final ratio = maxEdge / maxSide;
+      target = img.copyResize(
+        target,
+        width: (target.width * ratio).round(),
+        height: (target.height * ratio).round(),
+        interpolation: img.Interpolation.average,
+      );
+    }
+  }
+
+  if (args['grayscaleEnabled'] as bool? ?? false) {
+    target = img.grayscale(target);
+  }
+
+  final watermarkEnabled = args['watermarkEnabled'] as bool? ?? false;
+  final text = (args['watermarkText'] as String? ?? '').trim();
+  if (watermarkEnabled && text.isNotEmpty) {
+    final fontSize = args['watermarkFontSize'] as int? ?? 24;
+    final position = args['watermarkPosition'] as int? ?? 3;
+    final opacity = args['watermarkOpacity'] as double? ?? 0.78;
+    final r = args['wmR'] as int? ?? 20;
+    final g = args['wmG'] as int? ?? 20;
+    final b = args['wmB'] as int? ?? 20;
+
+    final padding = (target.width * 0.015).clamp(8.0, 24.0).round();
+    final estimatedW = ((text.length * fontSize) * 0.6).round();
+    final estimatedH = (fontSize * 1.2).round();
+    var x = padding;
+    var y = padding;
+
+    switch (position) {
+      case 0:
+        x = padding;
+        y = padding;
+        break;
+      case 1:
+        x = (target.width - estimatedW - padding).clamp(0, target.width);
+        y = padding;
+        break;
+      case 2:
+        x = padding;
+        y = (target.height - estimatedH - padding).clamp(0, target.height);
+        break;
+      case 4:
+        x = ((target.width - estimatedW) / 2).round().clamp(0, target.width);
+        y = ((target.height - estimatedH) / 2).round().clamp(0, target.height);
+        break;
+      case 3:
+      default:
+        x = (target.width - estimatedW - padding).clamp(0, target.width);
+        y = (target.height - estimatedH - padding).clamp(0, target.height);
+        break;
+    }
+
+    final alpha = (opacity * 255).round().clamp(30, 255);
+    final foreground = img.ColorRgba8(r, g, b, alpha);
+    final brightness = (r + g + b) / 3;
+    final shadow = brightness < 128
+        ? img.ColorRgba8(
+            255,
+            255,
+            255,
+            (alpha * 0.35).round().clamp(20, 180),
+          )
+        : img.ColorRgba8(
+            0,
+            0,
+            0,
+            (alpha * 0.45).round().clamp(20, 200),
+          );
+
+    final font = _imageToolsFontBySize(fontSize);
+    img.drawString(
+      target,
+      text,
+      font: font,
+      x: (x + 1).clamp(0, target.width),
+      y: (y + 1).clamp(0, target.height),
+      color: shadow,
+    );
+    img.drawString(
+      target,
+      text,
+      font: font,
+      x: x,
+      y: y,
+      color: foreground,
+    );
+  }
+
+  return target;
+}
+
+Future<Uint8List?> _buildImageToolsPreview(Map<String, dynamic> args) async {
+  final path = args['path'] as String?;
+  if (path == null || path.isEmpty) return null;
+
+  final bytes = await File(path).readAsBytes();
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) return null;
+
+  var target = decoded;
+  const maxPreviewEdge = 560;
+  final maxSide = target.width > target.height ? target.width : target.height;
+  if (maxSide > maxPreviewEdge) {
+    final ratio = maxPreviewEdge / maxSide;
+    target = img.copyResize(
+      target,
+      width: (target.width * ratio).round(),
+      height: (target.height * ratio).round(),
+      interpolation: img.Interpolation.average,
+    );
+  }
+
+  target = _applyImageToolsTransforms(target, args);
+  return Uint8List.fromList(img.encodePng(target, level: 4));
+}
+
+Future<Map<String, dynamic>> _processImageToolsFile(
+  Map<String, dynamic> args,
+) async {
+  final path = args['path'] as String;
+  final outputDirPath = args['outputDirPath'] as String;
+  final outputFormat = args['outputFormat'] as int? ?? 0;
+  final quality = (args['quality'] as num? ?? 82).round();
+
+  try {
+    final bytes = await File(path).readAsBytes();
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) {
+      return <String, dynamic>{
+        'ok': false,
+        'reason': '无法解析图像',
+        'outputBytes': 0,
+      };
+    }
+
+    final target = _applyImageToolsTransforms(decoded, args);
+    final base = p.basenameWithoutExtension(path);
+    final ext = outputFormat == 0 ? 'jpg' : 'png';
+    final outputPath = p.join(outputDirPath, '${base}_offline.$ext');
+
+    late Uint8List outBytes;
+    if (outputFormat == 0) {
+      outBytes = Uint8List.fromList(img.encodeJpg(target, quality: quality));
+    } else {
+      outBytes = Uint8List.fromList(img.encodePng(target, level: 6));
+    }
+
+    await File(outputPath).writeAsBytes(outBytes, flush: true);
+    return <String, dynamic>{
+      'ok': true,
+      'reason': '',
+      'outputBytes': outBytes.length,
+    };
+  } catch (e) {
+    return <String, dynamic>{
+      'ok': false,
+      'reason': e.toString(),
+      'outputBytes': 0,
+    };
+  }
+}
+
 class _ImageToolsPageState extends State<ImageToolsPage> {
   final List<PlatformFile> _pickedFiles = [];
   final List<_FailedTask> _failedTasks = [];
@@ -40,7 +224,8 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
   int _wmG = 20;
   int _wmB = 20;
   int _maxEdge = 1600;
-  final TextEditingController _watermarkController = TextEditingController(text: 'cloud_disk');
+  final TextEditingController _watermarkController =
+      TextEditingController(text: 'cloud_disk');
 
   bool _running = false;
   double _progress = 0;
@@ -52,10 +237,38 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
   Uint8List? _previewBytes;
   bool _previewLoading = false;
 
+  Timer? _previewDebounce;
+  int _previewRequestId = 0;
+
   @override
   void dispose() {
+    _previewDebounce?.cancel();
     _watermarkController.dispose();
     super.dispose();
+  }
+
+  Map<String, dynamic> _processingArgs() {
+    return <String, dynamic>{
+      'outputFormat': _outputFormat.index,
+      'quality': _quality,
+      'resizeEnabled': _resizeEnabled,
+      'grayscaleEnabled': _grayscaleEnabled,
+      'watermarkEnabled': _watermarkEnabled,
+      'watermarkPosition': _watermarkPosition.index,
+      'watermarkOpacity': _watermarkOpacity,
+      'watermarkFontSize': _watermarkFontSize,
+      'wmR': _wmR,
+      'wmG': _wmG,
+      'wmB': _wmB,
+      'maxEdge': _maxEdge,
+      'watermarkText': _watermarkController.text,
+    };
+  }
+
+  void _schedulePreview({Duration delay = const Duration(milliseconds: 250)}) {
+    _previewDebounce?.cancel();
+    final requestId = ++_previewRequestId;
+    _previewDebounce = Timer(delay, () => _refreshPreview(requestId));
   }
 
   Future<void> _pickImages() async {
@@ -69,6 +282,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
     final files = result.files.where((e) => e.path != null).toList();
     final bytesTotal = await _sumOriginalSize(files);
 
+    if (!mounted) return;
     setState(() {
       _pickedFiles
         ..clear()
@@ -78,7 +292,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
       _outputBytesTotal = 0;
       _status = '已选择 ${_pickedFiles.length} 张图片';
     });
-    _refreshPreview();
+    _schedulePreview(delay: Duration.zero);
   }
 
   Future<int> _sumOriginalSize(List<PlatformFile> files) async {
@@ -97,53 +311,43 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
   }
 
   Future<void> _pickOutputDir() async {
-    final picked = await FilePicker.platform.getDirectoryPath(dialogTitle: '选择输出目录');
+    final picked = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: '选择输出目录',
+    );
     if (picked == null || picked.isEmpty) return;
-    setState(() {
-      _outputDirPath = picked;
-    });
+    if (!mounted) return;
+    setState(() => _outputDirPath = picked);
   }
 
-  Future<void> _refreshPreview() async {
+  Future<void> _refreshPreview(int requestId) async {
     if (_pickedFiles.isEmpty) {
       if (!mounted) return;
       setState(() => _previewBytes = null);
       return;
     }
 
-    final first = _pickedFiles.first;
-    final path = first.path;
+    final path = _pickedFiles.first.path;
     if (path == null) return;
 
-    if (!mounted) return;
+    if (!mounted || requestId != _previewRequestId) return;
     setState(() => _previewLoading = true);
 
+    final args = <String, dynamic>{
+      ..._processingArgs(),
+      'path': path,
+    };
+
     try {
-      final bytes = await File(path).readAsBytes();
-      final decoded = img.decodeImage(bytes);
-      if (decoded == null) return;
-
-      var target = decoded;
-      final maxPreviewEdge = 560;
-      final maxSide = target.width > target.height ? target.width : target.height;
-      if (maxSide > maxPreviewEdge) {
-        final ratio = maxPreviewEdge / maxSide;
-        target = img.copyResize(
-          target,
-          width: (target.width * ratio).round(),
-          height: (target.height * ratio).round(),
-          interpolation: img.Interpolation.average,
-        );
-      }
-
-      target = _applyTransforms(target);
-      final out = Uint8List.fromList(img.encodePng(target, level: 4));
-
-      if (!mounted) return;
+      final out = await compute(_buildImageToolsPreview, args);
+      if (!mounted || requestId != _previewRequestId) return;
       setState(() => _previewBytes = out);
+    } catch (_) {
+      if (!mounted || requestId != _previewRequestId) return;
+      setState(() => _previewBytes = null);
     } finally {
-      if (!mounted) return;
-      setState(() => _previewLoading = false);
+      if (mounted && requestId == _previewRequestId) {
+        setState(() => _previewLoading = false);
+      }
     }
   }
 
@@ -151,6 +355,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
     if (_pickedFiles.isEmpty || _running) return;
 
     final outputDir = await _resolveOutputDir();
+    if (!mounted) return;
     setState(() {
       _running = true;
       _progress = 0;
@@ -186,6 +391,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
     final outputDir = await _resolveOutputDir();
     final retryItems = List<_FailedTask>.from(_failedTasks);
 
+    if (!mounted) return;
     setState(() {
       _running = true;
       _progress = 0;
@@ -216,147 +422,62 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
   Future<Directory> _resolveOutputDir() async {
     if (_outputDirPath != null && _outputDirPath!.isNotEmpty) {
       final custom = Directory(_outputDirPath!);
-      if (!custom.existsSync()) {
-        custom.createSync(recursive: true);
+      if (!await custom.exists()) {
+        await custom.create(recursive: true);
       }
       return custom;
     }
 
     final firstPath = _pickedFiles.first.path!;
     final sourceDir = Directory(p.dirname(firstPath));
-    final outputDir = Directory(p.join(sourceDir.path, 'offline_image_tools_output'));
-    if (!outputDir.existsSync()) {
-      outputDir.createSync(recursive: true);
+    final outputDir =
+        Directory(p.join(sourceDir.path, 'offline_image_tools_output'));
+    if (!await outputDir.exists()) {
+      await outputDir.create(recursive: true);
     }
     return outputDir;
   }
 
-  Future<bool> _processSingleFile(PlatformFile file, Directory outputDir) async {
+  Future<bool> _processSingleFile(
+    PlatformFile file,
+    Directory outputDir,
+  ) async {
     final path = file.path;
     if (path == null) {
-      _failedTasks.add(const _FailedTask(name: 'unknown', path: '', reason: '文件路径为空'));
+      _failedTasks.add(
+        const _FailedTask(name: 'unknown', path: '', reason: '文件路径为空'),
+      );
       return false;
     }
     return _processFilePath(path, file.name, outputDir);
   }
 
-  Future<bool> _processFilePath(String path, String displayName, Directory outputDir) async {
-    try {
-      final bytes = await File(path).readAsBytes();
-      final decoded = img.decodeImage(bytes);
-      if (decoded == null) {
-        _failedTasks.add(_FailedTask(name: displayName, path: path, reason: '无法解析图像'));
-        return false;
-      }
+  Future<bool> _processFilePath(
+    String path,
+    String displayName,
+    Directory outputDir,
+  ) async {
+    final args = <String, dynamic>{
+      ..._processingArgs(),
+      'path': path,
+      'outputDirPath': outputDir.path,
+    };
 
-      var target = decoded;
-      target = _applyTransforms(target);
-
-      final base = p.basenameWithoutExtension(path);
-      final ext = _extFor(_outputFormat);
-      final outputPath = p.join(outputDir.path, '${base}_offline.$ext');
-
-      Uint8List outBytes;
-      switch (_outputFormat) {
-        case _OutputFormat.jpg:
-          outBytes = Uint8List.fromList(img.encodeJpg(target, quality: _quality.round()));
-          break;
-        case _OutputFormat.png:
-          outBytes = Uint8List.fromList(img.encodePng(target, level: 6));
-          break;
-      }
-
-      await File(outputPath).writeAsBytes(outBytes, flush: true);
-      _outputBytesTotal += outBytes.length;
+    final result = await compute(_processImageToolsFile, args);
+    final ok = result['ok'] as bool? ?? false;
+    if (ok) {
+      _outputBytesTotal += result['outputBytes'] as int? ?? 0;
       return true;
-    } catch (e) {
-      _failedTasks.add(_FailedTask(name: displayName, path: path, reason: e.toString()));
-      return false;
-    }
-  }
-
-  String _extFor(_OutputFormat f) {
-    switch (f) {
-      case _OutputFormat.jpg:
-        return 'jpg';
-      case _OutputFormat.png:
-        return 'png';
-    }
-  }
-
-  img.BitmapFont _fontBySize(int size) {
-    if (size <= 14) return img.arial14;
-    if (size <= 24) return img.arial24;
-    if (size <= 48) return img.arial48;
-    return img.arial24;
-  }
-
-  img.Image _applyTransforms(img.Image source) {
-    var target = source;
-    if (_resizeEnabled) {
-      final maxSide = target.width > target.height ? target.width : target.height;
-      if (maxSide > _maxEdge) {
-        final ratio = _maxEdge / maxSide;
-        final newW = (target.width * ratio).round();
-        final newH = (target.height * ratio).round();
-        target = img.copyResize(target, width: newW, height: newH, interpolation: img.Interpolation.average);
-      }
     }
 
-    if (_grayscaleEnabled) {
-      target = img.grayscale(target);
-    }
-
-    if (_watermarkEnabled && _watermarkController.text.trim().isNotEmpty) {
-      final text = _watermarkController.text.trim();
-      final padding = (target.width * 0.015).clamp(8.0, 24.0).round();
-      final estimatedW = ((text.length * _watermarkFontSize) * 0.6).round();
-      final estimatedH = (_watermarkFontSize * 1.2).round();
-      int x = padding;
-      int y = padding;
-
-      switch (_watermarkPosition) {
-        case _WatermarkPosition.topLeft:
-          x = padding;
-          y = padding;
-          break;
-        case _WatermarkPosition.topRight:
-          x = (target.width - estimatedW - padding).clamp(0, target.width);
-          y = padding;
-          break;
-        case _WatermarkPosition.bottomLeft:
-          x = padding;
-          y = (target.height - estimatedH - padding).clamp(0, target.height);
-          break;
-        case _WatermarkPosition.bottomRight:
-          x = (target.width - estimatedW - padding).clamp(0, target.width);
-          y = (target.height - estimatedH - padding).clamp(0, target.height);
-          break;
-        case _WatermarkPosition.center:
-          x = ((target.width - estimatedW) / 2).round().clamp(0, target.width);
-          y = ((target.height - estimatedH) / 2).round().clamp(0, target.height);
-          break;
-      }
-
-      final alpha = (_watermarkOpacity * 255).round().clamp(30, 255);
-      final foreground = img.ColorRgba8(_wmR, _wmG, _wmB, alpha);
-      final brightness = (_wmR + _wmG + _wmB) / 3;
-      final shadow = brightness < 128
-          ? img.ColorRgba8(255, 255, 255, (alpha * 0.35).round().clamp(20, 180))
-          : img.ColorRgba8(0, 0, 0, (alpha * 0.45).round().clamp(20, 200));
-
-      final font = _fontBySize(_watermarkFontSize);
-      img.drawString(
-        target,
-        text,
-        font: font,
-        x: (x + 1).clamp(0, target.width),
-        y: (y + 1).clamp(0, target.height),
-        color: shadow,
-      );
-      img.drawString(target, text, font: font, x: x, y: y, color: foreground);
-    }
-    return target;
+    _failedTasks.add(
+      _FailedTask(
+        name: displayName,
+        path: path,
+        reason: result['reason']?.toString() ?? '未知错误',
+      ),
+    );
+    return false;
   }
 
   String _formatSize(int bytes) {
@@ -373,7 +494,9 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
   Widget build(BuildContext context) {
     final savedBytes = _originalBytesTotal - _outputBytesTotal;
     final savedRatio = _originalBytesTotal > 0
-        ? (savedBytes / _originalBytesTotal * 100).clamp(-999, 999).toStringAsFixed(1)
+        ? (savedBytes / _originalBytesTotal * 100)
+            .clamp(-999, 999)
+            .toStringAsFixed(1)
         : '0.0';
 
     return ScaffoldPage(
@@ -385,7 +508,10 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('1. 选择图片', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                const Text(
+                  '1. 选择图片',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -407,7 +533,10 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                         final f = _pickedFiles[i];
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Text('• ${f.name}', overflow: TextOverflow.ellipsis),
+                          child: Text(
+                            '• ${f.name}',
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         );
                       },
                     ),
@@ -421,7 +550,9 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
-                      color: FluentTheme.of(context).resources.cardBackgroundFillColorSecondary,
+                      color: FluentTheme.of(context)
+                          .resources
+                          .cardBackgroundFillColorSecondary,
                     ),
                     child: _previewLoading
                         ? const ProgressRing()
@@ -429,7 +560,10 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                             ? const Text('暂无预览')
                             : ClipRRect(
                                 borderRadius: BorderRadius.circular(6),
-                                child: Image.memory(_previewBytes!, fit: BoxFit.contain),
+                                child: Image.memory(
+                                  _previewBytes!,
+                                  fit: BoxFit.contain,
+                                ),
                               )),
                   ),
                 ],
@@ -440,7 +574,10 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('2. 处理参数', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                const Text(
+                  '2. 处理参数',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -449,10 +586,18 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                     ComboBox<_OutputFormat>(
                       value: _outputFormat,
                       items: const [
-                        ComboBoxItem(value: _OutputFormat.jpg, child: Text('JPG')),
-                        ComboBoxItem(value: _OutputFormat.png, child: Text('PNG')),
+                        ComboBoxItem(
+                          value: _OutputFormat.jpg,
+                          child: Text('JPG'),
+                        ),
+                        ComboBoxItem(
+                          value: _OutputFormat.png,
+                          child: Text('PNG'),
+                        ),
                       ],
-                      onChanged: _running ? null : (v) => setState(() => _outputFormat = v!),
+                      onChanged: _running
+                          ? null
+                          : (v) => setState(() => _outputFormat = v!),
                     ),
                   ],
                 ),
@@ -466,10 +611,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                   label: _quality.round().toString(),
                   onChanged: _running
                       ? null
-                      : (v) {
-                          setState(() => _quality = v);
-                          _refreshPreview();
-                        },
+                      : (v) => setState(() => _quality = v),
                 ),
                 const SizedBox(height: 6),
                 Checkbox(
@@ -479,7 +621,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                       ? null
                       : (v) {
                           setState(() => _resizeEnabled = v ?? false);
-                          _refreshPreview();
+                          _schedulePreview();
                         },
                 ),
                 Checkbox(
@@ -489,7 +631,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                       ? null
                       : (v) {
                           setState(() => _grayscaleEnabled = v ?? false);
-                          _refreshPreview();
+                          _schedulePreview();
                         },
                 ),
                 Checkbox(
@@ -499,7 +641,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                       ? null
                       : (v) {
                           setState(() => _watermarkEnabled = v ?? false);
-                          _refreshPreview();
+                          _schedulePreview();
                         },
                 ),
                 if (_watermarkEnabled) ...[
@@ -507,7 +649,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                   TextBox(
                     controller: _watermarkController,
                     placeholder: '输入水印文字',
-                    onChanged: (_) => _refreshPreview(),
+                    onChanged: (_) => _schedulePreview(),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -517,17 +659,32 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                       ComboBox<_WatermarkPosition>(
                         value: _watermarkPosition,
                         items: const [
-                          ComboBoxItem(value: _WatermarkPosition.topLeft, child: Text('左上')),
-                          ComboBoxItem(value: _WatermarkPosition.topRight, child: Text('右上')),
-                          ComboBoxItem(value: _WatermarkPosition.bottomLeft, child: Text('左下')),
-                          ComboBoxItem(value: _WatermarkPosition.bottomRight, child: Text('右下')),
-                          ComboBoxItem(value: _WatermarkPosition.center, child: Text('居中')),
+                          ComboBoxItem(
+                            value: _WatermarkPosition.topLeft,
+                            child: Text('左上'),
+                          ),
+                          ComboBoxItem(
+                            value: _WatermarkPosition.topRight,
+                            child: Text('右上'),
+                          ),
+                          ComboBoxItem(
+                            value: _WatermarkPosition.bottomLeft,
+                            child: Text('左下'),
+                          ),
+                          ComboBoxItem(
+                            value: _WatermarkPosition.bottomRight,
+                            child: Text('右下'),
+                          ),
+                          ComboBoxItem(
+                            value: _WatermarkPosition.center,
+                            child: Text('居中'),
+                          ),
                         ],
                         onChanged: _running
                             ? null
                             : (v) {
                                 setState(() => _watermarkPosition = v!);
-                                _refreshPreview();
+                                _schedulePreview();
                               },
                       ),
                     ],
@@ -562,7 +719,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                         ? null
                         : (v) {
                             setState(() => _wmR = v.round());
-                            _refreshPreview();
+                            _schedulePreview();
                           },
                   ),
                   Slider(
@@ -575,7 +732,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                         ? null
                         : (v) {
                             setState(() => _wmG = v.round());
-                            _refreshPreview();
+                            _schedulePreview();
                           },
                   ),
                   Slider(
@@ -588,7 +745,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                         ? null
                         : (v) {
                             setState(() => _wmB = v.round());
-                            _refreshPreview();
+                            _schedulePreview();
                           },
                   ),
                   const SizedBox(height: 8),
@@ -603,7 +760,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                         ? null
                         : (v) {
                             setState(() => _watermarkOpacity = v);
-                            _refreshPreview();
+                            _schedulePreview();
                           },
                   ),
                   const SizedBox(height: 8),
@@ -618,7 +775,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                         ? null
                         : (v) {
                             setState(() => _watermarkFontSize = v.round());
-                            _refreshPreview();
+                            _schedulePreview();
                           },
                   ),
                 ],
@@ -637,7 +794,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                           mode: SpinButtonPlacementMode.inline,
                           onChanged: (v) {
                             setState(() => _maxEdge = (v ?? 1600).round());
-                            _refreshPreview();
+                            _schedulePreview();
                           },
                         ),
                       ),
@@ -654,7 +811,9 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        _outputDirPath == null ? '未设置（默认输出到源目录/offline_image_tools_output）' : _outputDirPath!,
+                        _outputDirPath == null
+                            ? '未设置（默认输出到源目录/offline_image_tools_output）'
+                            : _outputDirPath!,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -667,23 +826,32 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('3. 执行与结果', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                const Text(
+                  '3. 执行与结果',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
                     FilledButton(
-                      onPressed: (_pickedFiles.isEmpty || _running) ? null : _runProcess,
+                      onPressed:
+                          (_pickedFiles.isEmpty || _running) ? null : _runProcess,
                       child: Text(_running ? '处理中...' : '开始处理'),
                     ),
                     const SizedBox(width: 10),
                     Button(
-                      onPressed: (_failedTasks.isEmpty || _running) ? null : _retryFailed,
+                      onPressed:
+                          (_failedTasks.isEmpty || _running) ? null : _retryFailed,
                       child: Text('重试失败项（${_failedTasks.length}）'),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                ProgressBar(value: _running ? _progress : (_progress == 0 ? null : _progress)),
+                ProgressBar(
+                  value: _running
+                      ? _progress
+                      : (_progress == 0 ? null : _progress),
+                ),
                 const SizedBox(height: 8),
                 Text(_status),
                 const SizedBox(height: 12),
@@ -705,7 +873,13 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('失败列表（${_failedTasks.length}）', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  Text(
+                    '失败列表（${_failedTasks.length}）',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   SizedBox(
                     height: 160,
@@ -715,7 +889,10 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                         final f = _failedTasks[i];
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8),
-                          child: Text('• ${f.name}  |  ${f.reason}', overflow: TextOverflow.ellipsis),
+                          child: Text(
+                            '• ${f.name}  |  ${f.reason}',
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         );
                       },
                     ),
@@ -753,7 +930,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                 _wmG = g;
                 _wmB = b;
               });
-              _refreshPreview();
+              _schedulePreview();
             },
       child: Container(
         width: 24,
