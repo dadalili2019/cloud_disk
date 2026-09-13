@@ -1,90 +1,106 @@
 import 'dart:io';
 
 class FilesLoader {
-  /// 读取指定目录下的所有文件和文件夹
+  /// 读取指定目录下的所有文件和文件夹。
+  ///
+  /// 该接口仍保持同步签名，兼容现有调用方；但尽量减少 SMB/磁盘上的
+  /// 同步系统调用次数，避免对每个目录再次 listSync() 造成 N+1 I/O。
   static List<Map<String, String>> loadFilesAndDirectories(
-      String sharedFolderPath,
-      {String? parentPath}) {
-    var sharedDirectory = Directory(sharedFolderPath);
-    List<Map<String, String>> filesList = [];
+    String sharedFolderPath, {
+    String? parentPath,
+  }) {
+    final sharedDirectory = Directory(sharedFolderPath);
+    final filesList = <Map<String, String>>[];
 
-    if (sharedDirectory.existsSync()) {
-      //sharedDirectory.listSync(recursive: true) 表示从 sharedDirectory 这个目录开始，递归地获取所有文件和子目录的信息
-      var files = sharedDirectory.listSync(recursive: false);
+    if (!sharedDirectory.existsSync()) {
+      print('Shared directory not found.');
+      return filesList;
+    }
 
-      for (var entity in files) {
-        if (entity is File) {
-          filesList.add({
-            "id": filesList.length.toString(),
-            "title": entity.path.split(Platform.pathSeparator).last,
-            "updateTime": entity.lastModifiedSync().toString(),
-            "size":
-                '${(entity.lengthSync() / (1024 * 1024)).toStringAsFixed(2)} MB',
-            "path": entity.path, // 添加文件路径信息
-          });
-        } else if (entity is Directory) {
-          String folderPath = entity.path;
-          String path = parentPath != null
-              ? '$parentPath${Platform.pathSeparator}$folderPath'
-              : folderPath;
-          filesList.add({
-            "id": filesList.length.toString(),
-            "title": entity.path.split(Platform.pathSeparator).last,
-            "updateTime": _getLastModifiedTime(entity),
-            "size": 'Directory',
-            "path": path, // 添加文件夹路径信息
-          });
+    try {
+      final entities = sharedDirectory.listSync(recursive: false, followLinks: false);
+
+      for (final entity in entities) {
+        try {
+          final stat = entity.statSync();
+
+          if (entity is File) {
+            filesList.add({
+              'id': filesList.length.toString(),
+              'title': entity.path.split(Platform.pathSeparator).last,
+              'updateTime': stat.modified.toString(),
+              'size': '${(stat.size / (1024 * 1024)).toStringAsFixed(2)} MB',
+              'path': entity.path,
+            });
+          } else if (entity is Directory) {
+            final folderPath = entity.path;
+            final path = parentPath != null
+                ? '$parentPath${Platform.pathSeparator}$folderPath'
+                : folderPath;
+
+            filesList.add({
+              'id': filesList.length.toString(),
+              'title': entity.path.split(Platform.pathSeparator).last,
+              'updateTime': stat.modified.toString(),
+              'size': 'Directory',
+              'path': path,
+            });
+          }
+        } on FileSystemException {
+          // 网络共享目录中单个文件/目录可能瞬时不可访问，跳过即可，
+          // 不要因为一个条目失败导致整个目录加载失败。
+          continue;
         }
       }
-    } else {
-      print('Shared directory not found.');
+    } on FileSystemException catch (e) {
+      print('Failed to list shared directory: $e');
     }
+
     return filesList;
   }
 
-  ///读取指定目录下的指定文件
+  /// 读取指定目录下的指定文件。
   static Future<List<Map<String, String>>> searchFiles(
-      String directoryPath, String fileName) async {
-    Directory directory = Directory(directoryPath);
+    String directoryPath,
+    String fileName,
+  ) async {
+    final directory = Directory(directoryPath);
     if (!await directory.exists()) {
       throw Exception('Directory does not exist');
     }
 
-    List<Map<String, String>> searchResults = [];
+    final searchResults = <Map<String, String>>[];
     await _searchFilesRecursive(directory, fileName, searchResults);
     return searchResults;
   }
 
-  static Future<void> _searchFilesRecursive(Directory directory,
-      String fileName, List<Map<String, String>> searchResults) async {
-    await for (FileSystemEntity entity in directory.list(recursive: false)) {
+  static Future<void> _searchFilesRecursive(
+    Directory directory,
+    String fileName,
+    List<Map<String, String>> searchResults,
+  ) async {
+    await for (final entity in directory.list(recursive: false, followLinks: false)) {
       if (entity is File && entity.path.contains(fileName)) {
-        Map<String, String> fileInfo = {
-          'id': searchResults.length.toString(),
-          'title': entity.path.split(Platform.pathSeparator).last,
-          'updateTime': entity.lastModifiedSync().toString(),
-          'size':
-          '${(entity.lengthSync() / (1024 * 1024)).toStringAsFixed(2)} MB',
-          'path': entity.path,
-          'directoryPath': directory.path, // 添加文件所在的目录路径地址
-        };
-        searchResults.add(fileInfo);
+        try {
+          final stat = await entity.stat();
+          searchResults.add({
+            'id': searchResults.length.toString(),
+            'title': entity.path.split(Platform.pathSeparator).last,
+            'updateTime': stat.modified.toString(),
+            'size': '${(stat.size / (1024 * 1024)).toStringAsFixed(2)} MB',
+            'path': entity.path,
+            'directoryPath': directory.path,
+          });
+        } on FileSystemException {
+          continue;
+        }
       } else if (entity is Directory) {
-        await _searchFilesRecursive(entity, fileName, searchResults);
-      }
-    }
-  }
-
-  static String _getLastModifiedTime(Directory directory) {
-    var latestModifiedTime = DateTime(1900); // 初始时间设置为较早的时间
-    directory.listSync().forEach((entity) {
-      if (entity is File) {
-        var fileModifiedTime = entity.lastModifiedSync();
-        if (fileModifiedTime.isAfter(latestModifiedTime)) {
-          latestModifiedTime = fileModifiedTime;
+        try {
+          await _searchFilesRecursive(entity, fileName, searchResults);
+        } on FileSystemException {
+          continue;
         }
       }
-    });
-    return latestModifiedTime.toString();
+    }
   }
 }
