@@ -3,7 +3,6 @@
 /// @Description: 网络测速
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -36,15 +35,15 @@ class _SpeedTestPageState extends State<SpeedTestPage> {
     String type = '未知';
 
     try {
-      // 获取公网 IP
-      final response = await http.get(Uri.parse('https://v4.ident.me'));
+      final response = await http
+          .get(Uri.parse('https://v4.ident.me'))
+          .timeout(const Duration(seconds: 8));
       if (response.statusCode == 200) {
         ip = response.body.trim();
       } else {
         ip = '获取失败 (${response.statusCode})';
       }
 
-      // 获取本地接口列表
       final interfaces = await NetworkInterface.list(
         includeLinkLocal: false,
         type: InternetAddressType.IPv4,
@@ -54,7 +53,6 @@ class _SpeedTestPageState extends State<SpeedTestPage> {
           interfaces.where((i) => i.addresses.isNotEmpty).toList();
       debugPrint('检测到接口名: ${activeInterfaces.map((e) => e.name).toList()}');
 
-      // 优先匹配：有线 > Wi-Fi > 其他
       for (var iface in activeInterfaces) {
         final name = iface.name.toLowerCase();
 
@@ -69,7 +67,6 @@ class _SpeedTestPageState extends State<SpeedTestPage> {
             name.contains('无线') ||
             name.contains('wifi')) {
           type = 'Wi-Fi  $name';
-          // 不 break，继续看看有没有更高优先级
         } else {
           type = '未知网络';
         }
@@ -83,6 +80,7 @@ class _SpeedTestPageState extends State<SpeedTestPage> {
       type = '检测失败';
     }
 
+    if (!mounted) return;
     setState(() {
       _networkType = type;
       _ipAddress = ip;
@@ -100,31 +98,43 @@ class _SpeedTestPageState extends State<SpeedTestPage> {
 
     try {
       final stopwatch = Stopwatch()..start();
-      final response = await http.get(Uri.parse(testUrl));
+      final response = await http
+          .get(Uri.parse(testUrl))
+          .timeout(const Duration(seconds: 20));
       stopwatch.stop();
 
+      final seconds = stopwatch.elapsedMicroseconds / Duration.microsecondsPerSecond;
+      if (seconds <= 0) {
+        throw StateError('测速耗时异常');
+      }
       final sizeInBits = response.bodyBytes.length * 8;
-      final seconds = stopwatch.elapsedMilliseconds / 1000;
       final download = sizeInBits / seconds / 1024 / 1024;
 
-      final uploadData = utf8.encode(List.filled(2000000, 'A').join());
+      // 这里仍然保留“模拟上传”语义，但不再使用 sleep() 阻塞 UI isolate，
+      // 也不再构造 200 万字符的大字符串。
+      const simulatedUploadBytes = 2 * 1024 * 1024;
       final uploadStopwatch = Stopwatch()..start();
-      sleep(const Duration(seconds: 1)); // 模拟上传
+      await Future<void>.delayed(const Duration(seconds: 1));
       uploadStopwatch.stop();
-      final uploadSeconds = uploadStopwatch.elapsedMilliseconds / 1000;
-      final upload = uploadData.length * 8 / uploadSeconds / 1024 / 1024;
+      final uploadSeconds =
+          uploadStopwatch.elapsedMicroseconds / Duration.microsecondsPerSecond;
+      final upload = simulatedUploadBytes * 8 / uploadSeconds / 1024 / 1024;
 
+      if (!mounted) return;
       setState(() {
         _downloadSpeed = download.toStringAsFixed(2);
         _uploadSpeed = upload.toStringAsFixed(2);
       });
     } catch (_) {
+      if (!mounted) return;
       setState(() {
         _downloadSpeed = '错误';
         _uploadSpeed = '错误';
       });
     } finally {
-      setState(() => _testing = false);
+      if (mounted) {
+        setState(() => _testing = false);
+      }
     }
   }
 
