@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -13,6 +14,49 @@ import '../theme/theme_controller.dart';
 import '../utils/DBHelper.dart';
 import '../widgets/app_surfaces.dart';
 
+Future<int> _countFilesInDirectory(String rootPath) async {
+  var count = 0;
+  try {
+    await for (final entity in Directory(rootPath).list(
+      recursive: true,
+      followLinks: false,
+    )) {
+      if (entity is File) count++;
+    }
+  } catch (_) {
+    return 0;
+  }
+  return count;
+}
+
+_Progress _computeProgress(DateTime now) {
+  double ratio(DateTime a, DateTime b, DateTime c) {
+    final n = a.millisecondsSinceEpoch - b.millisecondsSinceEpoch;
+    final d = c.millisecondsSinceEpoch - b.millisecondsSinceEpoch;
+    return (n / d).clamp(0.0, 1.0).toDouble();
+  }
+
+  final startDay = DateTime(now.year, now.month, now.day);
+  final nextDay = startDay.add(const Duration(days: 1));
+  final day = ratio(now, startDay, nextDay);
+
+  final startWeek = startDay.subtract(Duration(days: now.weekday - 1));
+  final nextWeek = startWeek.add(const Duration(days: 7));
+  final week = ratio(now, startWeek, nextWeek);
+
+  final startMonth = DateTime(now.year, now.month);
+  final nextMonth = now.month == 12
+      ? DateTime(now.year + 1, 1)
+      : DateTime(now.year, now.month + 1);
+  final month = ratio(now, startMonth, nextMonth);
+
+  final startYear = DateTime(now.year);
+  final nextYear = DateTime(now.year + 1);
+  final year = ratio(now, startYear, nextYear);
+
+  return _Progress(day: day, week: week, month: month, year: year);
+}
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -21,8 +65,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  DateTime _now = DateTime.now();
-  Timer? _tick;
   int _todoPendingCount = 0;
   int _todoTotalCount = 0;
   int _localFileCount = 0;
@@ -30,23 +72,14 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() => _now = DateTime.now());
-    });
     _loadQuickStats();
-  }
-
-  @override
-  void dispose() {
-    _tick?.cancel();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
     final palette = ThemeScope.of(context).palette;
-    final progress = _computeProgress(_now);
+    final progress = _computeProgress(DateTime.now());
 
     return ScaffoldPage(
       content: LayoutBuilder(
@@ -65,41 +98,12 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (wide)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _TodayCard(
-                              now: _now,
-                              pendingCount: _todoPendingCount,
-                              showMascot: showMascot,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          SizedBox(
-                            width: 300,
-                            child: _ProgressCard(
-                              now: _now,
-                              progress: progress,
-                              accent: theme.accentColor.normal,
-                            ),
-                          ),
-                        ],
-                      )
-                    else ...[
-                      _TodayCard(
-                        now: _now,
-                        pendingCount: _todoPendingCount,
-                        showMascot: showMascot,
-                      ),
-                      const SizedBox(height: 12),
-                      _ProgressCard(
-                        now: _now,
-                        progress: progress,
-                        accent: theme.accentColor.normal,
-                      ),
-                    ],
+                    _LiveOverview(
+                      pendingCount: _todoPendingCount,
+                      wide: wide,
+                      showMascot: showMascot,
+                      accent: theme.accentColor.normal,
+                    ),
                     const SizedBox(height: 12),
                     CloudCard(
                       padding: const EdgeInsets.all(16),
@@ -134,34 +138,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  _Progress _computeProgress(DateTime now) {
-    double ratio(DateTime a, DateTime b, DateTime c) {
-      final n = a.millisecondsSinceEpoch - b.millisecondsSinceEpoch;
-      final d = c.millisecondsSinceEpoch - b.millisecondsSinceEpoch;
-      return (n / d).clamp(0, 1);
-    }
-
-    final startDay = DateTime(now.year, now.month, now.day);
-    final nextDay = startDay.add(const Duration(days: 1));
-    final day = ratio(now, startDay, nextDay);
-
-    final startWeek = startDay.subtract(Duration(days: now.weekday - 1));
-    final nextWeek = startWeek.add(const Duration(days: 7));
-    final week = ratio(now, startWeek, nextWeek);
-
-    final startMonth = DateTime(now.year, now.month);
-    final nextMonth = now.month == 12
-        ? DateTime(now.year + 1, 1)
-        : DateTime(now.year, now.month + 1);
-    final month = ratio(now, startMonth, nextMonth);
-
-    final startYear = DateTime(now.year);
-    final nextYear = DateTime(now.year + 1);
-    final year = ratio(now, startYear, nextYear);
-
-    return _Progress(day: day, week: week, month: month, year: year);
-  }
-
   Future<void> _loadQuickStats() async {
     await Future.wait([
       _loadTodoStats(),
@@ -179,7 +155,12 @@ class _HomePageState extends State<HomePage> {
       const columnProperties = TodoList.columnsType;
 
       final dbHelper = DBHelper();
-      final db = await dbHelper.initDb(tableName, 1, columns, columnProperties);
+      final db = await dbHelper.initDb(
+        tableName,
+        1,
+        columns,
+        columnProperties,
+      );
       final allRows = await dbHelper.getAll(tableName);
       await db.close();
 
@@ -206,25 +187,104 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadLocalFileStats() async {
     try {
-      final root = Directory.current;
-      var count = 0;
-      await for (final entity
-          in root.list(recursive: true, followLinks: false)) {
-        if (entity is File) {
-          count++;
-        }
-      }
+      final count = await compute(
+        _countFilesInDirectory,
+        Directory.current.path,
+        debugLabel: 'home-file-count',
+      );
 
       if (!mounted) return;
-      setState(() {
-        _localFileCount = count;
-      });
+      setState(() => _localFileCount = count);
     } catch (_) {
       if (!mounted) return;
-      setState(() {
-        _localFileCount = 0;
-      });
+      setState(() => _localFileCount = 0);
     }
+  }
+}
+
+class _LiveOverview extends StatefulWidget {
+  const _LiveOverview({
+    required this.pendingCount,
+    required this.wide,
+    required this.showMascot,
+    required this.accent,
+  });
+
+  final int pendingCount;
+  final bool wide;
+  final bool showMascot;
+  final Color accent;
+
+  @override
+  State<_LiveOverview> createState() => _LiveOverviewState();
+}
+
+class _LiveOverviewState extends State<_LiveOverview> {
+  DateTime _now = DateTime.now();
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _now = DateTime.now());
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = _computeProgress(_now);
+
+    if (widget.wide) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: _TodayCard(
+              now: _now,
+              pendingCount: widget.pendingCount,
+              showMascot: widget.showMascot,
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 300,
+            child: RepaintBoundary(
+              child: _ProgressCard(
+                now: _now,
+                progress: progress,
+                accent: widget.accent,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        _TodayCard(
+          now: _now,
+          pendingCount: widget.pendingCount,
+          showMascot: widget.showMascot,
+        ),
+        const SizedBox(height: 12),
+        RepaintBoundary(
+          child: _ProgressCard(
+            now: _now,
+            progress: progress,
+            accent: widget.accent,
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -315,7 +375,7 @@ class _TodayCard extends StatelessWidget {
           ),
           if (showMascot) ...[
             const SizedBox(width: 16),
-            _MascotBubble(),
+            const _MascotBubble(),
           ],
         ],
       ),
@@ -333,6 +393,8 @@ class _TodayCard extends StatelessWidget {
 }
 
 class _MascotBubble extends StatelessWidget {
+  const _MascotBubble();
+
   @override
   Widget build(BuildContext context) {
     final palette = ThemeScope.of(context).palette;
@@ -436,21 +498,25 @@ class _ProgressCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _ProgressLine(
-              label: '日',
-              percent: progress.day,
-              color: const Color(0xFF6EBB8F)),
+            label: '日',
+            percent: progress.day,
+            color: const Color(0xFF6EBB8F),
+          ),
           _ProgressLine(
-              label: '周',
-              percent: progress.week,
-              color: const Color(0xFF83AEE8)),
+            label: '周',
+            percent: progress.week,
+            color: const Color(0xFF83AEE8),
+          ),
           _ProgressLine(
-              label: '月',
-              percent: progress.month,
-              color: const Color(0xFF7FB79B)),
+            label: '月',
+            percent: progress.month,
+            color: const Color(0xFF7FB79B),
+          ),
           _ProgressLine(
-              label: '年',
-              percent: progress.year,
-              color: const Color(0xFFE29AAF)),
+            label: '年',
+            percent: progress.year,
+            color: const Color(0xFFE29AAF),
+          ),
         ],
       ),
     );
