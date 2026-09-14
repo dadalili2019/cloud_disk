@@ -29,6 +29,30 @@ class DecisionModel {
   final String id; final String workspaceId; final String title; final String decisionText; final String rationale; final String revisitCondition; final String status; final DateTime createdAt; final DateTime updatedAt; final DateTime? archivedAt;
 }
 
+class FocusSessionModel {
+  const FocusSessionModel({
+    required this.id,
+    required this.workspaceId,
+    required this.taskId,
+    required this.startedAt,
+    required this.durationSeconds,
+    required this.note,
+    required this.createdAt,
+    this.endedAt,
+  });
+
+  final String id;
+  final String workspaceId;
+  final String taskId;
+  final DateTime startedAt;
+  final DateTime? endedAt;
+  final int durationSeconds;
+  final String note;
+  final DateTime createdAt;
+
+  bool get isActive => endedAt == null;
+}
+
 class ActivityEventModel {
   const ActivityEventModel({required this.id,required this.workspaceId,required this.eventType,required this.summary,required this.createdAt,this.entityType,this.entityId});
   final String id; final String workspaceId; final String? entityType; final String? entityId; final String eventType; final String summary; final DateTime createdAt;
