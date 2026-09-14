@@ -1,19 +1,21 @@
 import '../core/models.dart';
 import '../domain/decision_repository.dart';
 import '../domain/issue_repository.dart';
+import '../domain/knowledge_repository.dart';
 import '../domain/repositories.dart';
 import '../domain/resource_repository.dart';
 
 /// 统一聚合一个 Task 的工作上下文。
 ///
 /// 页面、Home、Continue 和后续 AI 能力都应优先通过这个服务获取
-/// Note / Issue / Resource / Decision，而不是各自重复查询 entity_links。
+/// Note / Issue / Resource / Decision / Knowledge，而不是各自重复查询 entity_links。
 class TaskContextService {
   const TaskContextService({
     required this.notes,
     required this.issues,
     required this.resources,
     required this.decisions,
+    required this.knowledge,
     required this.links,
     required this.activities,
   });
@@ -22,6 +24,7 @@ class TaskContextService {
   final IssueRepository issues;
   final ResourceRepository resources;
   final DecisionRepository decisions;
+  final KnowledgeRepository knowledge;
   final EntityLinkRepository links;
   final ActivityRepository activities;
 
@@ -54,10 +57,18 @@ class TaskContextService {
       fromType: 'decision',
     );
 
+    final knowledgeIds = await links.listFromIds(
+      toType: 'task',
+      toId: task.id,
+      relationType: 'applies_to',
+      fromType: 'knowledge',
+    );
+
     final linkedNotes = await notes.getByIds(noteIds);
     final linkedIssues = await issues.getByIds(issueIds);
     final linkedResources = await resources.getByIds(resourceIds);
     final linkedDecisions = await decisions.getByIds(decisionIds);
+    final linkedKnowledge = await knowledge.getByIds(knowledgeIds);
     final recentActivity = await activities.listRecent(task.workspaceId, limit: 8);
 
     return TaskContextModel(
@@ -66,6 +77,7 @@ class TaskContextService {
       issues: linkedIssues,
       resources: linkedResources,
       decisions: linkedDecisions,
+      knowledge: linkedKnowledge,
       recentActivity: recentActivity,
     );
   }
