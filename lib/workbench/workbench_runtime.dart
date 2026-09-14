@@ -2,6 +2,7 @@ import 'application/decision_service.dart';
 import 'application/issue_service.dart';
 import 'application/phase2_overview_service.dart';
 import 'application/resource_service.dart';
+import 'application/task_context_service.dart';
 import 'application/workbench_services.dart';
 import 'core/app_paths.dart';
 import 'core/workbench_database.dart';
@@ -21,6 +22,7 @@ class WorkbenchRuntime {
     required this.issueService,
     required this.resourceService,
     required this.decisionService,
+    required this.taskContextService,
     required this.entityLinkService,
     required this.overviewService,
   });
@@ -33,6 +35,7 @@ class WorkbenchRuntime {
   final IssueService issueService;
   final ResourceService resourceService;
   final DecisionService decisionService;
+  final TaskContextService taskContextService;
   final EntityLinkService entityLinkService;
   final Phase2WorkspaceOverviewService overviewService;
 
@@ -53,6 +56,14 @@ class WorkbenchRuntime {
     final activityRepository = SqliteActivityRepository(database);
     final markdownStore = MarkdownStore(paths);
     final entityLinkService = EntityLinkService(entityLinkRepository);
+    final taskContextService = TaskContextService(
+      notes: noteRepository,
+      issues: issueRepository,
+      resources: resourceRepository,
+      decisions: decisionRepository,
+      links: entityLinkRepository,
+      activities: activityRepository,
+    );
 
     return WorkbenchRuntime._(
       paths: paths,
@@ -63,15 +74,12 @@ class WorkbenchRuntime {
       issueService: IssueService(issues: issueRepository, tasks: taskRepository, links: entityLinkRepository, activities: activityRepository),
       resourceService: ResourceService(resources: resourceRepository, tasks: taskRepository, links: entityLinkRepository, activities: activityRepository),
       decisionService: DecisionService(decisions: decisionRepository, tasks: taskRepository, links: entityLinkRepository, activities: activityRepository),
+      taskContextService: taskContextService,
       entityLinkService: entityLinkService,
       overviewService: Phase2WorkspaceOverviewService(
         workspaces: workspaceRepository,
         tasks: taskRepository,
-        notes: noteRepository,
-        issues: issueRepository,
-        resources: resourceRepository,
-        decisions: decisionRepository,
-        links: entityLinkRepository,
+        taskContextService: taskContextService,
         activities: activityRepository,
       ),
     );
