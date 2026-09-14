@@ -2,9 +2,11 @@ import 'application/continue_service.dart';
 import 'application/decision_service.dart';
 import 'application/focus_session_service.dart';
 import 'application/issue_service.dart';
+import 'application/knowledge_service.dart';
 import 'application/phase2_overview_service.dart';
 import 'application/quick_capture_service.dart';
 import 'application/resource_service.dart';
+import 'application/search_service.dart';
 import 'application/task_context_service.dart';
 import 'application/today_service.dart';
 import 'application/workbench_services.dart';
@@ -15,8 +17,10 @@ import 'data/markdown_store.dart';
 import 'data/sqlite_decision_repository.dart';
 import 'data/sqlite_focus_session_repository.dart';
 import 'data/sqlite_issue_repository.dart';
+import 'data/sqlite_knowledge_repository.dart';
 import 'data/sqlite_repositories.dart';
 import 'data/sqlite_resource_repository.dart';
+import 'data/sqlite_search_index_repository.dart';
 
 class WorkbenchRuntime {
   WorkbenchRuntime._({
@@ -29,6 +33,8 @@ class WorkbenchRuntime {
     required this.issueService,
     required this.resourceService,
     required this.decisionService,
+    required this.knowledgeService,
+    required this.searchService,
     required this.taskContextService,
     required this.continueService,
     required this.quickCaptureService,
@@ -47,6 +53,8 @@ class WorkbenchRuntime {
   final IssueService issueService;
   final ResourceService resourceService;
   final DecisionService decisionService;
+  final KnowledgeService knowledgeService;
+  final SearchService searchService;
   final TaskContextService taskContextService;
   final ContinueService continueService;
   final QuickCaptureService quickCaptureService;
@@ -68,9 +76,11 @@ class WorkbenchRuntime {
     final issueRepository = SqliteIssueRepository(database);
     final resourceRepository = SqliteResourceRepository(database);
     final decisionRepository = SqliteDecisionRepository(database);
+    final knowledgeRepository = SqliteKnowledgeRepository(database);
     final focusSessionRepository = SqliteFocusSessionRepository(database);
     final entityLinkRepository = SqliteEntityLinkRepository(database);
     final activityRepository = SqliteActivityRepository(database);
+    final searchIndexRepository = SqliteSearchIndexRepository(database);
     final markdownStore = MarkdownStore(paths);
 
     final entityLinkService = EntityLinkService(entityLinkRepository);
@@ -92,11 +102,30 @@ class WorkbenchRuntime {
       links: entityLinkService,
       activities: activityRepository,
     );
+    final knowledgeService = KnowledgeService(
+      paths: paths,
+      store: markdownStore,
+      knowledge: knowledgeRepository,
+      links: entityLinkRepository,
+      searchIndex: searchIndexRepository,
+    );
+    final searchService = SearchService(
+      workspaces: workspaceRepository,
+      tasks: taskRepository,
+      notes: noteRepository,
+      issues: issueRepository,
+      resources: resourceRepository,
+      decisions: decisionRepository,
+      knowledge: knowledgeRepository,
+      markdownStore: markdownStore,
+      index: searchIndexRepository,
+    );
     final taskContextService = TaskContextService(
       notes: noteRepository,
       issues: issueRepository,
       resources: resourceRepository,
       decisions: decisionRepository,
+      knowledge: knowledgeRepository,
       links: entityLinkRepository,
       activities: activityRepository,
     );
@@ -146,6 +175,8 @@ class WorkbenchRuntime {
         links: entityLinkRepository,
         activities: activityRepository,
       ),
+      knowledgeService: knowledgeService,
+      searchService: searchService,
       taskContextService: taskContextService,
       continueService: continueService,
       quickCaptureService: quickCaptureService,
