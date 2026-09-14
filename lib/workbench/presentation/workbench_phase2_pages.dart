@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/models.dart';
 import '../workbench_runtime.dart';
+import 'workbench_workspace_admin_dialog.dart';
 
 class WorkbenchWorkspaceFrameV2 extends StatelessWidget {
   const WorkbenchWorkspaceFrameV2({super.key, required this.workspaceId, required this.section, required this.child});
@@ -64,6 +65,16 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
   const WorkbenchOverviewPageV2({super.key, required this.workspaceId});
   final String workspaceId;
 
+  Future<void> _openSettings(BuildContext context, WorkspaceModel workspace) async {
+    final result = await showWorkspaceSettingsDialog(context, workspace);
+    if (!context.mounted || result == null) return;
+    if (result == 'archived') {
+      context.go('/workspace');
+    } else if (result == 'saved') {
+      context.go('/workspace/$workspaceId/overview');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldPage(
@@ -79,6 +90,8 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
             children: [
               Row(children: [
                 Expanded(child: Text(overview.workspace.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700))),
+                Button(onPressed: () => _openSettings(context, overview.workspace), child: const Text('工作区设置')),
+                const SizedBox(width: 10),
                 Button(onPressed: () => context.go('/workspace'), child: const Text('切换工作区')),
               ]),
               const SizedBox(height: 18),
@@ -135,6 +148,9 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
   String _activityText(ActivityEventModel activity) {
     switch (activity.eventType) {
       case 'workspace_created': return '创建工作区 · ${activity.summary.replaceFirst('Created workspace ', '')}';
+      case 'workspace_renamed': return '重命名工作区 · ${activity.summary}';
+      case 'workspace_archived': return '归档工作区 · ${activity.summary}';
+      case 'workspace_restored': return '恢复工作区 · ${activity.summary}';
       case 'task_created': return '新建任务 · ${activity.summary}';
       case 'task_set_current': return '设为当前任务 · ${activity.summary}';
       case 'task_updated': return '更新任务 · ${activity.summary}';
