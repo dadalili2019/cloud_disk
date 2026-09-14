@@ -80,7 +80,7 @@ class WorkbenchRuntime {
         tasks: taskRepository,
         notes: noteRepository,
         issues: issueRepository,
-        links: entityLinkService,
+        links: entityLinkRepository,
         activities: activityRepository,
       ),
     );
