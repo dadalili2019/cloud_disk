@@ -153,7 +153,7 @@ class TaskService {
       progress: normalizedProgress,
       nextStep: nextStep.trim(),
       priority: task.priority,
-      isCurrent: task.isCurrent,
+      isCurrent: status == 'done' ? false : task.isCurrent,
       dueAt: task.dueAt,
       createdAt: task.createdAt,
       updatedAt: now,
@@ -218,6 +218,15 @@ class EntityLinkService {
       fromType: 'note',
     );
   }
+
+  Future<List<String>> linkedTaskIds(String noteId) {
+    return links.listToIds(
+      fromType: 'note',
+      fromId: noteId,
+      relationType: 'linked_to',
+      toType: 'task',
+    );
+  }
 }
 
 class NoteService {
@@ -243,6 +252,17 @@ class NoteService {
       notes.listByWorkspace(workspaceId);
 
   Future<String> readContent(NoteModel note) => store.read(note.filePath);
+
+  Future<List<TaskModel>> linkedTasks(NoteModel note) async {
+    final ids = await links.linkedTaskIds(note.id);
+    if (ids.isEmpty) return const [];
+    final result = <TaskModel>[];
+    for (final id in ids) {
+      final task = await tasks.getById(id);
+      if (task != null) result.add(task);
+    }
+    return result;
+  }
 
   Future<NoteModel> create({
     required String workspaceId,
