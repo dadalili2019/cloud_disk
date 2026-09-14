@@ -28,6 +28,7 @@ import '../pages/shareFolder/shareFolder.dart' deferred as share;
 import '../pages/speedtestpage/speedtestpage.dart' deferred as speed;
 import '../pages/subscribe.dart';
 import '../pages/todo.dart';
+import '../workbench/presentation/workbench_notes_editor_page.dart';
 import '../workbench/presentation/workbench_pages.dart';
 
 class DeferredWidget extends StatelessWidget {
@@ -122,7 +123,7 @@ final router = GoRouter(
               child: WorkbenchWorkspaceFrame(
                 workspaceId: workspaceId,
                 section: 'notes',
-                child: WorkbenchNotesPage(workspaceId: workspaceId),
+                child: WorkbenchNotesEditorPage(workspaceId: workspaceId),
               ),
             );
           },
