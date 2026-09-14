@@ -61,6 +61,10 @@ class AppPaths {
     return p.posix.join('workspaces', workspaceSlug, 'notes', fileName);
   }
 
+  String knowledgeRelativePath(String fileName) {
+    return p.posix.join('knowledge', fileName);
+  }
+
   String resolveRelative(String relativePath) {
     final normalized = relativePath.replaceAll('\\', '/');
     return p.joinAll([root.path, ...p.posix.split(normalized)]);
