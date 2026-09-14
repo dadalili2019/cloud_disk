@@ -23,6 +23,7 @@ class WorkbenchWorkspaceFrameV2 extends StatelessWidget {
           _Tab(label: '笔记', selected: section == 'notes', onTap: () => context.go('/workspace/$workspaceId/notes')),
           _Tab(label: '问题', selected: section == 'issues', onTap: () => context.go('/workspace/$workspaceId/issues')),
           _Tab(label: '资源', selected: section == 'resources', onTap: () => context.go('/workspace/$workspaceId/resources')),
+          _Tab(label: '决策', selected: section == 'decisions', onTap: () => context.go('/workspace/$workspaceId/decisions')),
         ]),
       ),
       Expanded(child: child),
@@ -104,6 +105,22 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
               ]),
               const SizedBox(height: 14),
               _Panel(
+                title: '最近决策',
+                emptyText: '暂无相关决策',
+                children: overview.linkedDecisions.map((decision) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(decision.title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    if (decision.decisionText.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: Text(decision.decisionText, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: FluentTheme.of(context).typography.body?.color?.withOpacity(0.58))),
+                      ),
+                  ],
+                )).toList(),
+              ),
+              const SizedBox(height: 14),
+              _Panel(
                 title: '最近动态',
                 emptyText: '暂无动态',
                 children: overview.recentActivity.map((activity) => Text(_activityText(activity), style: const TextStyle(fontSize: 12))).toList(),
@@ -130,6 +147,9 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
       case 'resource_created': return '新建资源 · ${activity.summary}';
       case 'resource_updated': return '更新资源 · ${activity.summary}';
       case 'resource_linked_task': return '关联资源到任务 · ${activity.summary}';
+      case 'decision_created': return '新建决策 · ${activity.summary}';
+      case 'decision_updated': return '更新决策 · ${activity.summary}';
+      case 'decision_linked_task': return '关联决策到任务 · ${activity.summary}';
       default: return activity.summary;
     }
   }
