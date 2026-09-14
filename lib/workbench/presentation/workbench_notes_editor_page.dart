@@ -161,7 +161,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
       final result = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => ContentDialog(
-          title: const Text('New Markdown Note'),
+          title: const Text('新建 Markdown 笔记'),
           content: SizedBox(
             width: 440,
             child: Column(
@@ -169,13 +169,13 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
               children: [
                 TextBox(
                   controller: titleController,
-                  placeholder: 'Note title',
+                  placeholder: '笔记标题',
                   autofocus: true,
                 ),
                 const SizedBox(height: 12),
                 TextBox(
                   controller: fileNameController,
-                  placeholder: 'File name (optional, e.g. notes.md)',
+                  placeholder: '文件名（可选，例如 notes.md）',
                 ),
               ],
             ),
@@ -183,11 +183,11 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
           actions: [
             Button(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
+              child: const Text('取消'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Create'),
+              child: const Text('创建'),
             ),
           ],
         ),
@@ -221,7 +221,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
       return const Center(child: ProgressRing());
     }
     if (_error != null && _notes.isEmpty) {
-      return Center(child: Text(_error!));
+      return Center(child: Text('加载失败：$_error'));
     }
 
     return ScaffoldPage(
@@ -229,16 +229,16 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
       content: Row(
         children: [
           SizedBox(
-            width: 260,
+            width: 250,
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(12),
                   child: SizedBox(
                     width: double.infinity,
                     child: FilledButton(
                       onPressed: _createNote,
-                      child: const Text('New Note'),
+                      child: const Text('新建笔记'),
                     ),
                   ),
                 ),
@@ -249,7 +249,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                       final note = _notes[index];
                       final selected = note.id == _selected?.id;
                       return Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 2, 10, 2),
+                        padding: const EdgeInsets.fromLTRB(9, 2, 9, 2),
                         child: Button(
                           onPressed: () => _selectNote(note),
                           style: ButtonStyle(
@@ -258,13 +258,13 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                                   ? FluentTheme.of(context)
                                       .accentColor
                                       .normal
-                                      .withOpacity(0.12)
+                                      .withOpacity(0.10)
                                   : Colors.transparent,
                             ),
                             padding: ButtonState.all(
                               const EdgeInsets.symmetric(
                                 horizontal: 10,
-                                vertical: 10,
+                                vertical: 9,
                               ),
                             ),
                           ),
@@ -278,13 +278,24 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.left,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
                                   note.filePath.split('/').last,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 10),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: FluentTheme.of(context)
+                                        .typography
+                                        .body
+                                        ?.color
+                                        ?.withOpacity(0.50),
+                                  ),
                                 ),
                               ],
                             ),
@@ -299,13 +310,13 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
           ),
           Container(
             width: 1,
-            color: FluentTheme.of(context).inactiveColor.withOpacity(0.16),
+            color: FluentTheme.of(context).inactiveColor.withOpacity(0.14),
           ),
           Expanded(
             child: _selected == null
-                ? const Center(child: Text('Create a Markdown note'))
+                ? const Center(child: Text('新建一条 Markdown 笔记开始记录'))
                 : Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -325,13 +336,20 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                                   const SizedBox(height: 3),
                                   Text(
                                     _selected!.filePath,
-                                    style: const TextStyle(fontSize: 10),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: FluentTheme.of(context)
+                                          .typography
+                                          .body
+                                          ?.color
+                                          ?.withOpacity(0.48),
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
                             Text(
-                              _saving ? 'Saving...' : 'Saved',
+                              _saving ? '保存中…' : '已保存',
                               style: const TextStyle(fontSize: 11),
                             ),
                           ],
@@ -344,12 +362,15 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                             minLines: null,
                             maxLines: null,
                             textAlignVertical: TextAlignVertical.top,
-                            placeholder: 'Markdown',
+                            placeholder: '输入 Markdown 内容',
                           ),
                         ),
                         if (_error != null) ...[
                           const SizedBox(height: 8),
-                          Text(_error!, style: const TextStyle(fontSize: 11)),
+                          Text(
+                            '保存失败：$_error',
+                            style: const TextStyle(fontSize: 11),
+                          ),
                         ],
                       ],
                     ),
@@ -365,12 +386,12 @@ Future<void> _showError(BuildContext context, Object error) {
   return showDialog<void>(
     context: context,
     builder: (dialogContext) => ContentDialog(
-      title: const Text('Unable to complete action'),
+      title: const Text('操作失败'),
       content: Text(error.toString()),
       actions: [
         FilledButton(
           onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('OK'),
+          child: const Text('确定'),
         ),
       ],
     ),
