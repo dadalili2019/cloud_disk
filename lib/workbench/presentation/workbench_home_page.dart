@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../application/continue_service.dart';
 import '../workbench_runtime.dart';
+import 'focus_today_card.dart';
 import 'quick_capture_card.dart';
 
 class WorkbenchHomePage extends StatefulWidget {
@@ -75,6 +76,8 @@ class _WorkbenchHomePageState extends State<WorkbenchHomePage> {
                 defaultWorkspace: primary?.workspace,
                 onCaptured: _reloadAfterCapture,
               ),
+              const SizedBox(height: 14),
+              FocusTodayCard(primary: primary),
               if (data.others.isNotEmpty) ...[
                 const SizedBox(height: 26),
                 const Text(
