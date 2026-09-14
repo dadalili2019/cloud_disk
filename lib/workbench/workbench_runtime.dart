@@ -2,6 +2,7 @@ import 'application/continue_service.dart';
 import 'application/decision_service.dart';
 import 'application/issue_service.dart';
 import 'application/phase2_overview_service.dart';
+import 'application/quick_capture_service.dart';
 import 'application/resource_service.dart';
 import 'application/task_context_service.dart';
 import 'application/workbench_services.dart';
@@ -27,6 +28,7 @@ class WorkbenchRuntime {
     required this.decisionService,
     required this.taskContextService,
     required this.continueService,
+    required this.quickCaptureService,
     required this.entityLinkService,
     required this.overviewService,
   });
@@ -42,6 +44,7 @@ class WorkbenchRuntime {
   final DecisionService decisionService;
   final TaskContextService taskContextService;
   final ContinueService continueService;
+  final QuickCaptureService quickCaptureService;
   final EntityLinkService entityLinkService;
   final Phase2WorkspaceOverviewService overviewService;
 
@@ -61,7 +64,26 @@ class WorkbenchRuntime {
     final entityLinkRepository = SqliteEntityLinkRepository(database);
     final activityRepository = SqliteActivityRepository(database);
     final markdownStore = MarkdownStore(paths);
+
     final entityLinkService = EntityLinkService(entityLinkRepository);
+    final workspaceService = WorkspaceService(
+      paths: paths,
+      workspaces: workspaceRepository,
+      activities: activityRepository,
+    );
+    final taskService = TaskService(
+      tasks: taskRepository,
+      activities: activityRepository,
+    );
+    final noteService = NoteService(
+      paths: paths,
+      store: markdownStore,
+      workspaces: workspaceRepository,
+      tasks: taskRepository,
+      notes: noteRepository,
+      links: entityLinkService,
+      activities: activityRepository,
+    );
     final taskContextService = TaskContextService(
       notes: noteRepository,
       issues: issueRepository,
@@ -75,32 +97,22 @@ class WorkbenchRuntime {
       tasks: taskRepository,
       taskContextService: taskContextService,
     );
+    final quickCaptureService = QuickCaptureService(
+      workspaces: workspaceService,
+      tasks: taskService,
+      notes: noteService,
+    );
 
     return WorkbenchRuntime._(
       paths: paths,
       database: database,
-      workspaceService: WorkspaceService(
-        paths: paths,
-        workspaces: workspaceRepository,
-        activities: activityRepository,
-      ),
+      workspaceService: workspaceService,
       workspaceAdminService: WorkspaceAdminService(
         workspaces: workspaceRepository,
         activities: activityRepository,
       ),
-      taskService: TaskService(
-        tasks: taskRepository,
-        activities: activityRepository,
-      ),
-      noteService: NoteService(
-        paths: paths,
-        store: markdownStore,
-        workspaces: workspaceRepository,
-        tasks: taskRepository,
-        notes: noteRepository,
-        links: entityLinkService,
-        activities: activityRepository,
-      ),
+      taskService: taskService,
+      noteService: noteService,
       issueService: IssueService(
         issues: issueRepository,
         tasks: taskRepository,
@@ -121,6 +133,7 @@ class WorkbenchRuntime {
       ),
       taskContextService: taskContextService,
       continueService: continueService,
+      quickCaptureService: quickCaptureService,
       entityLinkService: entityLinkService,
       overviewService: Phase2WorkspaceOverviewService(
         workspaces: workspaceRepository,
