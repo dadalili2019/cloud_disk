@@ -10,6 +10,7 @@ import 'application/issue_service.dart';
 import 'application/knowledge_distill_service.dart';
 import 'application/knowledge_service.dart';
 import 'application/phase2_overview_service.dart';
+import 'application/preview_ai_provider.dart';
 import 'application/quick_capture_service.dart';
 import 'application/resource_service.dart';
 import 'application/search_service.dart';
@@ -28,6 +29,7 @@ import 'data/sqlite_knowledge_repository.dart';
 import 'data/sqlite_repositories.dart';
 import 'data/sqlite_resource_repository.dart';
 import 'data/sqlite_search_index_repository.dart';
+import 'domain/ai_provider.dart';
 
 class WorkbenchRuntime {
   WorkbenchRuntime._({
@@ -49,6 +51,7 @@ class WorkbenchRuntime {
     required this.aiContextPreviewService,
     required this.aiPromptBuilder,
     required this.aiConversationService,
+    required this.aiProvider,
     required this.continueService,
     required this.quickCaptureService,
     required this.focusSessionService,
@@ -75,6 +78,7 @@ class WorkbenchRuntime {
   final AIContextPreviewService aiContextPreviewService;
   final AIPromptBuilder aiPromptBuilder;
   final AIConversationService aiConversationService;
+  final AIProvider aiProvider;
   final ContinueService continueService;
   final QuickCaptureService quickCaptureService;
   final FocusSessionService focusSessionService;
@@ -187,6 +191,7 @@ class WorkbenchRuntime {
       tasks: taskRepository,
       knowledge: knowledgeRepository,
     );
+    const aiProvider = PreviewAIProvider();
     final continueService = ContinueService(
       workspaces: workspaceRepository,
       tasks: taskRepository,
@@ -242,6 +247,7 @@ class WorkbenchRuntime {
       aiContextPreviewService: aiContextPreviewService,
       aiPromptBuilder: aiPromptBuilder,
       aiConversationService: aiConversationService,
+      aiProvider: aiProvider,
       continueService: continueService,
       quickCaptureService: quickCaptureService,
       focusSessionService: focusSessionService,
