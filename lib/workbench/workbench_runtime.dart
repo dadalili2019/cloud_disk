@@ -1,6 +1,8 @@
 import 'application/ai_context_builder.dart';
 import 'application/ai_context_budget.dart';
 import 'application/ai_context_preview_service.dart';
+import 'application/ai_conversation_service.dart';
+import 'application/ai_prompt_builder.dart';
 import 'application/continue_service.dart';
 import 'application/decision_service.dart';
 import 'application/focus_session_service.dart';
@@ -18,6 +20,7 @@ import 'application/workspace_admin_service.dart';
 import 'core/app_paths.dart';
 import 'core/workbench_database.dart';
 import 'data/markdown_store.dart';
+import 'data/sqlite_ai_conversation_repository.dart';
 import 'data/sqlite_decision_repository.dart';
 import 'data/sqlite_focus_session_repository.dart';
 import 'data/sqlite_issue_repository.dart';
@@ -44,6 +47,8 @@ class WorkbenchRuntime {
     required this.aiContextBuilder,
     required this.aiContextBudget,
     required this.aiContextPreviewService,
+    required this.aiPromptBuilder,
+    required this.aiConversationService,
     required this.continueService,
     required this.quickCaptureService,
     required this.focusSessionService,
@@ -68,6 +73,8 @@ class WorkbenchRuntime {
   final AIContextBuilder aiContextBuilder;
   final AIContextBudget aiContextBudget;
   final AIContextPreviewService aiContextPreviewService;
+  final AIPromptBuilder aiPromptBuilder;
+  final AIConversationService aiConversationService;
   final ContinueService continueService;
   final QuickCaptureService quickCaptureService;
   final FocusSessionService focusSessionService;
@@ -93,6 +100,8 @@ class WorkbenchRuntime {
     final entityLinkRepository = SqliteEntityLinkRepository(database);
     final activityRepository = SqliteActivityRepository(database);
     final searchIndexRepository = SqliteSearchIndexRepository(database);
+    final aiThreadRepository = SqliteAIThreadRepository(database);
+    final aiMessageRepository = SqliteAIMessageRepository(database);
     final markdownStore = MarkdownStore(paths);
 
     final entityLinkService = EntityLinkService(entityLinkRepository);
@@ -170,6 +179,14 @@ class WorkbenchRuntime {
       builder: aiContextBuilder,
       budget: aiContextBudget,
     );
+    const aiPromptBuilder = AIPromptBuilder();
+    final aiConversationService = AIConversationService(
+      threads: aiThreadRepository,
+      messages: aiMessageRepository,
+      workspaces: workspaceRepository,
+      tasks: taskRepository,
+      knowledge: knowledgeRepository,
+    );
     final continueService = ContinueService(
       workspaces: workspaceRepository,
       tasks: taskRepository,
@@ -223,6 +240,8 @@ class WorkbenchRuntime {
       aiContextBuilder: aiContextBuilder,
       aiContextBudget: aiContextBudget,
       aiContextPreviewService: aiContextPreviewService,
+      aiPromptBuilder: aiPromptBuilder,
+      aiConversationService: aiConversationService,
       continueService: continueService,
       quickCaptureService: quickCaptureService,
       focusSessionService: focusSessionService,
