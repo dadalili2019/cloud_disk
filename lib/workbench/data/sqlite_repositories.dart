@@ -20,6 +20,18 @@ ORDER BY updated_at DESC
   }
 
   @override
+  Future<List<WorkspaceModel>> listArchived() async {
+    final rows = await db.select(
+      '''
+SELECT * FROM workspaces
+WHERE archived_at IS NOT NULL OR status = 'archived'
+ORDER BY archived_at DESC, updated_at DESC
+''',
+    );
+    return rows.map(_workspaceFromRow).toList();
+  }
+
+  @override
   Future<WorkspaceModel?> getById(String id) async {
     final rows = await db.select(
       'SELECT * FROM workspaces WHERE id = ? LIMIT 1',
@@ -55,6 +67,25 @@ INSERT INTO workspaces (
         workspace.archivedAt?.toUtc().toIso8601String(),
       ],
     );
+  }
+
+  @override
+  Future<void> update(WorkspaceModel workspace) async {
+    final count = await db.update(
+      '''
+UPDATE workspaces
+SET name = ?, status = ?, updated_at = ?, archived_at = ?
+WHERE id = ?
+''',
+      [
+        workspace.name,
+        workspace.status,
+        workspace.updatedAt.toUtc().toIso8601String(),
+        workspace.archivedAt?.toUtc().toIso8601String(),
+        workspace.id,
+      ],
+    );
+    if (count != 1) throw StateError('Workspace not found: ${workspace.id}');
   }
 }
 
