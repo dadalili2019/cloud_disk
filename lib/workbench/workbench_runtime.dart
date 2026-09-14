@@ -1,5 +1,6 @@
 import 'application/ai_context_builder.dart';
 import 'application/ai_context_budget.dart';
+import 'application/ai_context_preview_service.dart';
 import 'application/continue_service.dart';
 import 'application/decision_service.dart';
 import 'application/focus_session_service.dart';
@@ -42,6 +43,7 @@ class WorkbenchRuntime {
     required this.taskContextService,
     required this.aiContextBuilder,
     required this.aiContextBudget,
+    required this.aiContextPreviewService,
     required this.continueService,
     required this.quickCaptureService,
     required this.focusSessionService,
@@ -65,6 +67,7 @@ class WorkbenchRuntime {
   final TaskContextService taskContextService;
   final AIContextBuilder aiContextBuilder;
   final AIContextBudget aiContextBudget;
+  final AIContextPreviewService aiContextPreviewService;
   final ContinueService continueService;
   final QuickCaptureService quickCaptureService;
   final FocusSessionService focusSessionService;
@@ -163,6 +166,10 @@ class WorkbenchRuntime {
       searchService: searchService,
     );
     const aiContextBudget = AIContextBudget();
+    final aiContextPreviewService = AIContextPreviewService(
+      builder: aiContextBuilder,
+      budget: aiContextBudget,
+    );
     final continueService = ContinueService(
       workspaces: workspaceRepository,
       tasks: taskRepository,
@@ -215,6 +222,7 @@ class WorkbenchRuntime {
       taskContextService: taskContextService,
       aiContextBuilder: aiContextBuilder,
       aiContextBudget: aiContextBudget,
+      aiContextPreviewService: aiContextPreviewService,
       continueService: continueService,
       quickCaptureService: quickCaptureService,
       focusSessionService: focusSessionService,
