@@ -102,6 +102,13 @@ class _NavigationPageState extends State<NavigationPage> {
         onTap: () => _go('/workspace', 'workbenchWorkspace'),
       ),
       _item(
+        icon: FluentIcons.library,
+        title: '知识与搜索',
+        tileColor: tileColor,
+        selectedTileColor: selectedTileColor,
+        onTap: () => _go('/knowledge', 'workbenchKnowledge'),
+      ),
+      _item(
         icon: FluentIcons.to_do_logo_inverse,
         title: '待办清单',
         tileColor: tileColor,
@@ -189,8 +196,8 @@ class _NavigationPageState extends State<NavigationPage> {
       ),
       PaneItemHeader(header: _groupHeader('其他')),
       _item(
-        icon: FluentIcons.library,
-        title: '知识库',
+        icon: FluentIcons.chat_bot,
+        title: 'RAG 知识库',
         tileColor: tileColor,
         selectedTileColor: selectedTileColor,
         onTap: () => _go('/ragknowledge', 'ragknowledge'),
