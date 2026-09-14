@@ -1,3 +1,5 @@
+import 'application/ai_context_builder.dart';
+import 'application/ai_context_budget.dart';
 import 'application/continue_service.dart';
 import 'application/decision_service.dart';
 import 'application/focus_session_service.dart';
@@ -38,6 +40,8 @@ class WorkbenchRuntime {
     required this.knowledgeDistillService,
     required this.searchService,
     required this.taskContextService,
+    required this.aiContextBuilder,
+    required this.aiContextBudget,
     required this.continueService,
     required this.quickCaptureService,
     required this.focusSessionService,
@@ -59,6 +63,8 @@ class WorkbenchRuntime {
   final KnowledgeDistillService knowledgeDistillService;
   final SearchService searchService;
   final TaskContextService taskContextService;
+  final AIContextBuilder aiContextBuilder;
+  final AIContextBudget aiContextBudget;
   final ContinueService continueService;
   final QuickCaptureService quickCaptureService;
   final FocusSessionService focusSessionService;
@@ -142,6 +148,21 @@ class WorkbenchRuntime {
       links: entityLinkRepository,
       activities: activityRepository,
     );
+    final aiContextBuilder = AIContextBuilder(
+      workspaces: workspaceRepository,
+      tasks: taskRepository,
+      notes: noteRepository,
+      issues: issueRepository,
+      resources: resourceRepository,
+      decisions: decisionRepository,
+      knowledge: knowledgeRepository,
+      activities: activityRepository,
+      markdownStore: markdownStore,
+      taskContextService: taskContextService,
+      knowledgeService: knowledgeService,
+      searchService: searchService,
+    );
+    const aiContextBudget = AIContextBudget();
     final continueService = ContinueService(
       workspaces: workspaceRepository,
       tasks: taskRepository,
@@ -192,6 +213,8 @@ class WorkbenchRuntime {
       knowledgeDistillService: knowledgeDistillService,
       searchService: searchService,
       taskContextService: taskContextService,
+      aiContextBuilder: aiContextBuilder,
+      aiContextBudget: aiContextBudget,
       continueService: continueService,
       quickCaptureService: quickCaptureService,
       focusSessionService: focusSessionService,
