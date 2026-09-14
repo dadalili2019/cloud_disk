@@ -1,44 +1,44 @@
-﻿import 'package:fluent_ui/fluent_ui.dart';
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:go_router/go_router.dart';
 
-// 杞婚〉闈紙鐩存帴 import锛?
 import '../menu/navigationPage.dart';
 import '../pages/capacityInformation.dart';
 import '../pages/comparison/comparison.dart' deferred as cmp;
 import '../pages/deviceInformation.dart';
 import '../pages/favorites.dart';
 import '../pages/file.dart';
+import '../pages/game/game.dart' deferred as game;
 import '../pages/home.dart';
-import '../pages/jsonformat/jsonformat.dart' deferred as jf;
+import '../pages/imagetools/collage_tool.dart' deferred as collagetool;
+import '../pages/imagetools/crop_tool.dart' deferred as croptool;
+import '../pages/imagetools/dedupe_tool.dart' deferred as dedupetool;
+import '../pages/imagetools/filter_tool.dart' deferred as filtertool;
 import '../pages/imagetools/imagetools.dart' deferred as imagetools;
 import '../pages/imagetools/watermark_tool.dart' deferred as watermarktool;
-import '../pages/imagetools/crop_tool.dart' deferred as croptool;
-import '../pages/imagetools/filter_tool.dart' deferred as filtertool;
-import '../pages/imagetools/collage_tool.dart' deferred as collagetool;
-import '../pages/imagetools/dedupe_tool.dart' deferred as dedupetool;
+import '../pages/jsonformat/jsonformat.dart' deferred as jf;
 import '../pages/login.dart';
 import '../pages/myProfile.dart';
 import '../pages/password.dart';
-import '../pages/setting/setting.dart';
-
-// 閲嶉〉闈紙deferred import锛屾寜闇€鍔犺浇锛?
 import '../pages/photo.dart' deferred as photo;
+import '../pages/ragknowledge/ragknowledge.dart' deferred as ragknowledge;
 import '../pages/recently_played.dart';
 import '../pages/recyclePage.dart';
+import '../pages/setting/setting.dart';
 import '../pages/shareFolder/shareFolder.dart' deferred as share;
 import '../pages/speedtestpage/speedtestpage.dart' deferred as speed;
-import '../pages/ragknowledge/ragknowledge.dart' deferred as ragknowledge;
 import '../pages/subscribe.dart';
 import '../pages/todo.dart';
-import '../pages/game/game.dart' deferred as game;
+import '../workbench/presentation/workbench_pages.dart';
 
-/// 寤惰繜鍔犺浇鍗犱綅缁勪欢
 class DeferredWidget extends StatelessWidget {
+  const DeferredWidget({
+    super.key,
+    required this.loader,
+    required this.builder,
+  });
+
   final Future<void> Function() loader;
   final Widget Function() builder;
-
-  const DeferredWidget(
-      {super.key, required this.loader, required this.builder});
 
   @override
   Widget build(BuildContext context) {
@@ -59,15 +59,16 @@ class DeferredWidget extends StatelessWidget {
 final router = GoRouter(
   initialLocation: '/login',
   routes: [
-    // 鐧诲綍椤?
+    GoRoute(
+      path: '/',
+      redirect: (context, state) => '/home',
+    ),
     GoRoute(
       name: 'login',
       path: '/login',
       pageBuilder: (context, state) =>
           const NoTransitionPage(child: LoginPage()),
     ),
-
-    // 鐧诲綍鍚庝富妗嗘灦
     ShellRoute(
       builder: (context, state, child) => NavigationPage(child: child),
       routes: <RouteBase>[
@@ -76,6 +77,55 @@ final router = GoRouter(
           path: '/home',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: HomePage()),
+        ),
+        GoRoute(
+          name: 'workbenchWorkspace',
+          path: '/workspace',
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: WorkbenchWorkspaceListPage(),
+          ),
+        ),
+        GoRoute(
+          name: 'workbenchOverview',
+          path: '/workspace/:workspaceId/overview',
+          pageBuilder: (context, state) {
+            final workspaceId = state.params['workspaceId']!;
+            return NoTransitionPage(
+              child: WorkbenchWorkspaceFrame(
+                workspaceId: workspaceId,
+                section: 'overview',
+                child: WorkbenchOverviewPage(workspaceId: workspaceId),
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          name: 'workbenchTasks',
+          path: '/workspace/:workspaceId/tasks',
+          pageBuilder: (context, state) {
+            final workspaceId = state.params['workspaceId']!;
+            return NoTransitionPage(
+              child: WorkbenchWorkspaceFrame(
+                workspaceId: workspaceId,
+                section: 'tasks',
+                child: WorkbenchTasksPage(workspaceId: workspaceId),
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          name: 'workbenchNotes',
+          path: '/workspace/:workspaceId/notes',
+          pageBuilder: (context, state) {
+            final workspaceId = state.params['workspaceId']!;
+            return NoTransitionPage(
+              child: WorkbenchWorkspaceFrame(
+                workspaceId: workspaceId,
+                section: 'notes',
+                child: WorkbenchNotesPage(workspaceId: workspaceId),
+              ),
+            );
+          },
         ),
         GoRoute(
           name: 'file',
@@ -125,12 +175,6 @@ final router = GoRouter(
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: RecyclePage()),
         ),
-        // GoRoute(
-        //   name: 'transferList',
-        //   path: '/transferList',
-        //   pageBuilder: (context, state) =>
-        //       const NoTransitionPage(child: TransferListPage()),
-        // ),
         GoRoute(
           name: 'deviceInformation',
           path: '/deviceInformation',
@@ -143,8 +187,6 @@ final router = GoRouter(
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: CapacityInformation()),
         ),
-
-        // ===== 寤惰繜鍔犺浇鐨勨€滈噸椤甸潰鈥?=====
         GoRoute(
           name: 'photo',
           path: '/photo',
@@ -254,8 +296,6 @@ final router = GoRouter(
             builder: () => share.ShareFolder(),
           ),
         ),
-
-        // todo 淇濇寔杞婚噺
         GoRoute(
           name: 'todo',
           path: '/todo',
@@ -266,4 +306,3 @@ final router = GoRouter(
     ),
   ],
 );
-
