@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../application/continue_service.dart';
 import '../workbench_runtime.dart';
+import 'quick_capture_card.dart';
 
 class WorkbenchHomePage extends StatefulWidget {
   const WorkbenchHomePage({super.key});
@@ -24,6 +25,11 @@ class _WorkbenchHomePageState extends State<WorkbenchHomePage> {
     _snapshot = WorkbenchRuntime.instance.then(
       (runtime) => runtime.continueService.load(),
     );
+  }
+
+  void _reloadAfterCapture() {
+    if (!mounted) return;
+    setState(_reload);
   }
 
   void _continueTo(ContinueItem item) {
@@ -64,6 +70,11 @@ class _WorkbenchHomePageState extends State<WorkbenchHomePage> {
                   item: primary,
                   onContinue: () => _continueTo(primary),
                 ),
+              const SizedBox(height: 14),
+              QuickCaptureCard(
+                defaultWorkspace: primary?.workspace,
+                onCaptured: _reloadAfterCapture,
+              ),
               if (data.others.isNotEmpty) ...[
                 const SizedBox(height: 26),
                 const Text(
