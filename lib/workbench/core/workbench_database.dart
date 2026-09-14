@@ -33,7 +33,7 @@ abstract interface class WorkbenchSqlExecutor {
 class WorkbenchDatabase implements WorkbenchSqlExecutor {
   WorkbenchDatabase._(this._executor, this._executorUser);
 
-  static const int schemaVersion = 4;
+  static const int schemaVersion = 5;
 
   final QueryExecutor _executor;
   final _WorkbenchExecutorUser _executorUser;
@@ -150,6 +150,7 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
       await _createSchema(executor, _schemaV2);
       await _createSchema(executor, _schemaV3);
       await _createSchema(executor, _schemaV4);
+      await _createSchema(executor, _schemaV5);
       return;
     }
 
@@ -179,6 +180,9 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
           break;
         case 3:
           await _createSchema(executor, _schemaV4);
+          break;
+        case 4:
+          await _createSchema(executor, _schemaV5);
           break;
         default:
           throw StateError(
@@ -416,5 +420,61 @@ CREATE VIRTUAL TABLE IF NOT EXISTS search_index USING fts5(
   body,
   tokenize = 'unicode61'
 )
+''',
+];
+
+const List<String> _schemaV5 = [
+  '''
+CREATE TABLE IF NOT EXISTS ai_threads (
+  id TEXT PRIMARY KEY,
+  scope TEXT NOT NULL CHECK (scope IN ('task', 'workspace', 'knowledge', 'global')),
+  title TEXT NOT NULL DEFAULT '',
+  workspace_id TEXT,
+  task_id TEXT,
+  knowledge_id TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  archived_at TEXT,
+  CHECK (
+    (scope = 'task' AND task_id IS NOT NULL) OR
+    (scope = 'workspace' AND workspace_id IS NOT NULL) OR
+    (scope = 'knowledge' AND knowledge_id IS NOT NULL) OR
+    scope = 'global'
+  ),
+  FOREIGN KEY (workspace_id) REFERENCES workspaces(id),
+  FOREIGN KEY (task_id) REFERENCES tasks(id),
+  FOREIGN KEY (knowledge_id) REFERENCES knowledge(id)
+)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_ai_threads_updated
+ON ai_threads(archived_at, updated_at DESC)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_ai_threads_task
+ON ai_threads(task_id, updated_at DESC)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_ai_threads_workspace
+ON ai_threads(workspace_id, updated_at DESC)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_ai_threads_knowledge
+ON ai_threads(knowledge_id, updated_at DESC)
+''',
+  '''
+CREATE TABLE IF NOT EXISTS ai_messages (
+  id TEXT PRIMARY KEY,
+  thread_id TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
+  content TEXT NOT NULL,
+  context_snapshot_json TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (thread_id) REFERENCES ai_threads(id) ON DELETE CASCADE
+)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_ai_messages_thread_created
+ON ai_messages(thread_id, created_at ASC)
 ''',
 ];
