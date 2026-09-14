@@ -26,6 +26,21 @@ abstract interface class NoteRepository {
   Future<void> touchUpdatedAt(String noteId, DateTime updatedAt);
 }
 
+abstract interface class FocusSessionRepository {
+  Future<FocusSessionModel?> getActive();
+  Future<List<FocusSessionModel>> listBetween(
+    DateTime startInclusive,
+    DateTime endExclusive,
+  );
+  Future<void> insert(FocusSessionModel session);
+  Future<void> finish({
+    required String id,
+    required DateTime endedAt,
+    required int durationSeconds,
+    String note = '',
+  });
+}
+
 abstract interface class EntityLinkRepository {
   Future<void> link({
     required String id,
