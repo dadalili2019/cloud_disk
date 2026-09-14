@@ -4,6 +4,7 @@ import 'application/phase2_overview_service.dart';
 import 'application/resource_service.dart';
 import 'application/task_context_service.dart';
 import 'application/workbench_services.dart';
+import 'application/workspace_admin_service.dart';
 import 'core/app_paths.dart';
 import 'core/workbench_database.dart';
 import 'data/markdown_store.dart';
@@ -17,6 +18,7 @@ class WorkbenchRuntime {
     required this.paths,
     required this.database,
     required this.workspaceService,
+    required this.workspaceAdminService,
     required this.taskService,
     required this.noteService,
     required this.issueService,
@@ -30,6 +32,7 @@ class WorkbenchRuntime {
   final AppPaths paths;
   final WorkbenchDatabase database;
   final WorkspaceService workspaceService;
+  final WorkspaceAdminService workspaceAdminService;
   final TaskService taskService;
   final NoteService noteService;
   final IssueService issueService;
@@ -68,12 +71,46 @@ class WorkbenchRuntime {
     return WorkbenchRuntime._(
       paths: paths,
       database: database,
-      workspaceService: WorkspaceService(paths: paths, workspaces: workspaceRepository, activities: activityRepository),
-      taskService: TaskService(tasks: taskRepository, activities: activityRepository),
-      noteService: NoteService(paths: paths, store: markdownStore, workspaces: workspaceRepository, tasks: taskRepository, notes: noteRepository, links: entityLinkService, activities: activityRepository),
-      issueService: IssueService(issues: issueRepository, tasks: taskRepository, links: entityLinkRepository, activities: activityRepository),
-      resourceService: ResourceService(resources: resourceRepository, tasks: taskRepository, links: entityLinkRepository, activities: activityRepository),
-      decisionService: DecisionService(decisions: decisionRepository, tasks: taskRepository, links: entityLinkRepository, activities: activityRepository),
+      workspaceService: WorkspaceService(
+        paths: paths,
+        workspaces: workspaceRepository,
+        activities: activityRepository,
+      ),
+      workspaceAdminService: WorkspaceAdminService(
+        workspaces: workspaceRepository,
+        activities: activityRepository,
+      ),
+      taskService: TaskService(
+        tasks: taskRepository,
+        activities: activityRepository,
+      ),
+      noteService: NoteService(
+        paths: paths,
+        store: markdownStore,
+        workspaces: workspaceRepository,
+        tasks: taskRepository,
+        notes: noteRepository,
+        links: entityLinkService,
+        activities: activityRepository,
+      ),
+      issueService: IssueService(
+        issues: issueRepository,
+        tasks: taskRepository,
+        links: entityLinkRepository,
+        activities: activityRepository,
+      ),
+      resourceService: ResourceService(
+        resources: resourceRepository,
+        tasks: taskRepository,
+        links: entityLinkRepository,
+        activities: activityRepository,
+      ),
+      decisionService: DecisionService(
+        decisions: decisionRepository,
+        tasks: taskRepository,
+        links: entityLinkRepository,
+        activities: activityRepository,
+      ),
       taskContextService: taskContextService,
       entityLinkService: entityLinkService,
       overviewService: Phase2WorkspaceOverviewService(
