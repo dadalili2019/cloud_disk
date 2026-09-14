@@ -108,3 +108,37 @@ class AIContextModel {
         'entities': includedRefs.map((ref) => ref.toJson()).toList(),
       };
 }
+
+class AIContextPreviewItem {
+  const AIContextPreviewItem({
+    required this.ref,
+    required this.priority,
+    required this.reason,
+    required this.characterCount,
+    required this.preview,
+  });
+
+  final AIContextRef ref;
+  final int priority;
+  final String reason;
+  final int characterCount;
+  final String preview;
+}
+
+class AIContextPreviewModel {
+  const AIContextPreviewModel({
+    required this.scope,
+    required this.included,
+    required this.excluded,
+    required this.totalCharacters,
+    this.anchor,
+    this.workspace,
+  });
+
+  final AIContextScope scope;
+  final AIContextRef? anchor;
+  final WorkspaceModel? workspace;
+  final List<AIContextPreviewItem> included;
+  final List<AIContextRef> excluded;
+  final int totalCharacters;
+}
