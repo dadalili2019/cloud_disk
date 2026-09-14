@@ -126,6 +126,33 @@ INSERT INTO tasks (
   }
 
   @override
+  Future<void> update(TaskModel task) async {
+    final updated = await database.update(
+      '''
+UPDATE tasks
+SET title = ?, description = ?, status = ?, progress = ?, next_step = ?,
+    priority = ?, due_at = ?, updated_at = ?
+WHERE id = ? AND workspace_id = ? AND archived_at IS NULL
+''',
+      [
+        task.title,
+        task.description,
+        task.status,
+        task.progress,
+        task.nextStep,
+        task.priority,
+        task.dueAt?.toUtc().toIso8601String(),
+        task.updatedAt.toUtc().toIso8601String(),
+        task.id,
+        task.workspaceId,
+      ],
+    );
+    if (updated != 1) {
+      throw StateError('Task not found or archived: ${task.id}');
+    }
+  }
+
+  @override
   Future<void> setCurrent(String workspaceId, String taskId) async {
     final now = DateTime.now().toUtc().toIso8601String();
     await database.transaction((tx) async {
