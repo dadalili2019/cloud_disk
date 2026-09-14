@@ -6,6 +6,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import '../router/router.dart';
 import '../theme/theme_controller.dart';
 import '../widgets/windowButtons.dart';
+import '../workbench/presentation/global_ai_drawer.dart';
 
 class NavigationPage extends StatefulWidget {
   const NavigationPage({super.key, required this.child});
@@ -18,6 +19,7 @@ class NavigationPage extends StatefulWidget {
 
 class _NavigationPageState extends State<NavigationPage> {
   int topIndex = 0;
+  bool _aiOpen = false;
 
   Text _menuTitle(String text, {bool sub = false}) {
     return Text(
@@ -219,85 +221,111 @@ class _NavigationPageState extends State<NavigationPage> {
       ),
     ];
 
-    return Container(
-      color: palette.appBackground,
-      child: Column(
-        children: [
-          Container(
-            height: 42,
-            decoration: BoxDecoration(
-              color: palette.appBarBackground,
-              border: Border(
-                bottom: BorderSide(
-                  color: palette.appBarBorder.withOpacity(0.45),
-                  width: 0.8,
+    return Stack(
+      children: [
+        Container(
+          color: palette.appBackground,
+          child: Column(
+            children: [
+              Container(
+                height: 42,
+                decoration: BoxDecoration(
+                  color: palette.appBarBackground,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: palette.appBarBorder.withOpacity(0.45),
+                      width: 0.8,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            child: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 14, right: 12),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 22,
-                        height: 22,
-                        decoration: BoxDecoration(
-                          color: palette.successSoft,
-                          borderRadius: BorderRadius.circular(7),
-                          border: Border.all(
-                            color: accent.withOpacity(0.16),
-                            width: 0.8,
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 14, right: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              color: palette.successSoft,
+                              borderRadius: BorderRadius.circular(7),
+                              border: Border.all(
+                                color: accent.withOpacity(0.16),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Icon(
+                              FluentIcons.cloud,
+                              size: 14,
+                              color: accent,
+                            ),
                           ),
-                        ),
-                        child: Icon(
-                          FluentIcons.cloud,
-                          size: 14,
-                          color: accent,
-                        ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            '个人工作台',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0,
+                              color: Color(0xFF202124),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        '个人工作台',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0,
-                          color: Color(0xFF202124),
-                        ),
+                    ),
+                    Expanded(
+                      child: WindowTitleBarBox(
+                        child: MoveWindow(),
                       ),
-                    ],
-                  ),
+                    ),
+                    Tooltip(
+                      message: 'Workbench AI',
+                      child: IconButton(
+                        icon: Icon(
+                          FluentIcons.chat_bot,
+                          size: 16,
+                          color: _aiOpen ? accent : const Color(0xFF3F464B),
+                        ),
+                        onPressed: () => setState(() => _aiOpen = !_aiOpen),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    if (Platform.isWindows)
+                      const SizedBox(width: 168, child: WindowButtons()),
+                  ],
                 ),
-                Expanded(
-                  child: WindowTitleBarBox(
-                    child: MoveWindow(),
-                  ),
-                ),
-                if (Platform.isWindows)
-                  const SizedBox(width: 168, child: WindowButtons()),
-              ],
-            ),
-          ),
-          Expanded(
-            child: NavigationView(
-              paneBodyBuilder: (item, child) => widget.child,
-              pane: NavigationPane(
-                size: const NavigationPaneSize(openWidth: 220),
-                displayMode: PaneDisplayMode.open,
-                indicator: const StickyNavigationIndicator(
-                  color: Color(0xFF8CCBA4),
-                  indicatorSize: 2,
-                ),
-                selected: topIndex,
-                onChanged: (index) => setState(() => topIndex = index),
-                items: items,
               ),
+              Expanded(
+                child: NavigationView(
+                  paneBodyBuilder: (item, child) => widget.child,
+                  pane: NavigationPane(
+                    size: const NavigationPaneSize(openWidth: 220),
+                    displayMode: PaneDisplayMode.open,
+                    indicator: const StickyNavigationIndicator(
+                      color: Color(0xFF8CCBA4),
+                      indicatorSize: 2,
+                    ),
+                    selected: topIndex,
+                    onChanged: (index) => setState(() => topIndex = index),
+                    items: items,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_aiOpen)
+          Positioned(
+            top: 42,
+            right: 0,
+            bottom: 0,
+            child: GlobalAiDrawer(
+              currentLocation: router.location,
+              onClose: () => setState(() => _aiOpen = false),
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 }
