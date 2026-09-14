@@ -1,3 +1,4 @@
+import 'application/continue_service.dart';
 import 'application/decision_service.dart';
 import 'application/issue_service.dart';
 import 'application/phase2_overview_service.dart';
@@ -25,6 +26,7 @@ class WorkbenchRuntime {
     required this.resourceService,
     required this.decisionService,
     required this.taskContextService,
+    required this.continueService,
     required this.entityLinkService,
     required this.overviewService,
   });
@@ -39,6 +41,7 @@ class WorkbenchRuntime {
   final ResourceService resourceService;
   final DecisionService decisionService;
   final TaskContextService taskContextService;
+  final ContinueService continueService;
   final EntityLinkService entityLinkService;
   final Phase2WorkspaceOverviewService overviewService;
 
@@ -66,6 +69,11 @@ class WorkbenchRuntime {
       decisions: decisionRepository,
       links: entityLinkRepository,
       activities: activityRepository,
+    );
+    final continueService = ContinueService(
+      workspaces: workspaceRepository,
+      tasks: taskRepository,
+      taskContextService: taskContextService,
     );
 
     return WorkbenchRuntime._(
@@ -112,6 +120,7 @@ class WorkbenchRuntime {
         activities: activityRepository,
       ),
       taskContextService: taskContextService,
+      continueService: continueService,
       entityLinkService: entityLinkService,
       overviewService: Phase2WorkspaceOverviewService(
         workspaces: workspaceRepository,
