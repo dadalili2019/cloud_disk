@@ -50,7 +50,7 @@ INSERT INTO search_index (
     final normalized = query.trim();
     if (normalized.isEmpty) return const [];
 
-    final safeLimit = limit.clamp(1, 100);
+    final safeLimit = limit.clamp(1, 100).toInt();
     final filters = <String>[];
     final filterArgs = <Object?>[];
 
@@ -65,6 +65,8 @@ INSERT INTO search_index (
     }
 
     final whereSuffix = filters.isEmpty ? '' : ' AND ${filters.join(' AND ')}';
+    final merged = <String, SearchResultModel>{};
+    final resultOrder = <String>[];
     final ftsQuery = _toFtsQuery(normalized);
 
     if (ftsQuery.isNotEmpty) {
@@ -81,13 +83,23 @@ LIMIT ?
 ''',
           [ftsQuery, ...filterArgs, safeLimit],
         );
-        if (rows.isNotEmpty) return rows.map(_searchResultFromRow).toList();
+        for (final row in rows) {
+          final result = _searchResultFromRow(row);
+          final key = _resultKey(result);
+          if (!merged.containsKey(key)) {
+            merged[key] = result;
+            resultOrder.add(key);
+          }
+        }
       } catch (_) {
-        // Some punctuation-heavy or CJK queries can be awkward for FTS syntax.
-        // Fall through to LIKE so search remains useful rather than failing hard.
+        // FTS may reject punctuation-heavy or some CJK queries.
+        // LIKE below still guarantees a useful fallback path.
       }
     }
 
+    // Always supplement FTS with substring matching. FTS token matching is
+    // intentionally strict, so a query such as "123" would otherwise miss
+    // titles like "12323213" once any exact-token FTS result exists.
     final like = '%${_escapeLike(normalized)}%';
     final rows = await db.select(
       '''
@@ -104,9 +116,25 @@ LIMIT ?
 ''',
       [like, like, like, ...filterArgs, safeLimit],
     );
-    return rows.map(_searchResultFromRow).toList();
+
+    for (final row in rows) {
+      final result = _searchResultFromRow(row);
+      final key = _resultKey(result);
+      if (!merged.containsKey(key)) {
+        merged[key] = result;
+        resultOrder.add(key);
+      }
+    }
+
+    return resultOrder
+        .take(safeLimit)
+        .map((key) => merged[key]!)
+        .toList(growable: false);
   }
 }
+
+String _resultKey(SearchResultModel result) =>
+    '${result.entityType}:${result.entityId}';
 
 String _toFtsQuery(String query) {
   final terms = query
