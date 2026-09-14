@@ -1,6 +1,7 @@
 import '../core/models.dart';
 import '../domain/issue_repository.dart';
 import '../domain/repositories.dart';
+import '../domain/resource_repository.dart';
 
 class Phase2WorkspaceOverviewService {
   const Phase2WorkspaceOverviewService({
@@ -8,6 +9,7 @@ class Phase2WorkspaceOverviewService {
     required this.tasks,
     required this.notes,
     required this.issues,
+    required this.resources,
     required this.links,
     required this.activities,
   });
@@ -16,6 +18,7 @@ class Phase2WorkspaceOverviewService {
   final TaskRepository tasks;
   final NoteRepository notes;
   final IssueRepository issues;
+  final ResourceRepository resources;
   final EntityLinkRepository links;
   final ActivityRepository activities;
 
@@ -26,9 +29,9 @@ class Phase2WorkspaceOverviewService {
     }
 
     final currentTask = await tasks.getCurrent(workspaceId);
-
     var linkedNotes = <NoteModel>[];
     var currentBlockers = <IssueModel>[];
+    var linkedResources = <ResourceModel>[];
 
     if (currentTask != null) {
       final noteIds = await links.listFromIds(
@@ -47,6 +50,14 @@ class Phase2WorkspaceOverviewService {
       );
       final linkedIssues = await issues.getByIds(blockerIds);
       currentBlockers = linkedIssues.where((issue) => issue.isOpen).toList();
+
+      final resourceIds = await links.listFromIds(
+        toType: 'task',
+        toId: currentTask.id,
+        relationType: 'supports',
+        fromType: 'resource',
+      );
+      linkedResources = await resources.getByIds(resourceIds);
     }
 
     final recentActivity = await activities.listRecent(workspaceId, limit: 8);
@@ -56,6 +67,7 @@ class Phase2WorkspaceOverviewService {
       currentTask: currentTask,
       linkedNotes: linkedNotes,
       currentBlockers: currentBlockers,
+      linkedResources: linkedResources,
       recentActivity: recentActivity,
     );
   }
