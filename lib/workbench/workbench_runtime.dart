@@ -1,11 +1,13 @@
 import 'application/issue_service.dart';
 import 'application/phase2_overview_service.dart';
+import 'application/resource_service.dart';
 import 'application/workbench_services.dart';
 import 'core/app_paths.dart';
 import 'core/workbench_database.dart';
 import 'data/markdown_store.dart';
 import 'data/sqlite_issue_repository.dart';
 import 'data/sqlite_repositories.dart';
+import 'data/sqlite_resource_repository.dart';
 
 class WorkbenchRuntime {
   WorkbenchRuntime._({
@@ -15,6 +17,7 @@ class WorkbenchRuntime {
     required this.taskService,
     required this.noteService,
     required this.issueService,
+    required this.resourceService,
     required this.entityLinkService,
     required this.overviewService,
   });
@@ -25,23 +28,22 @@ class WorkbenchRuntime {
   final TaskService taskService;
   final NoteService noteService;
   final IssueService issueService;
+  final ResourceService resourceService;
   final EntityLinkService entityLinkService;
   final Phase2WorkspaceOverviewService overviewService;
 
   static Future<WorkbenchRuntime>? _instance;
 
-  static Future<WorkbenchRuntime> get instance {
-    return _instance ??= _create();
-  }
+  static Future<WorkbenchRuntime> get instance => _instance ??= _create();
 
   static Future<WorkbenchRuntime> _create() async {
     final paths = await AppPaths.create();
     final database = await WorkbenchDatabase.open(paths.databasePath);
-
     final workspaceRepository = SqliteWorkspaceRepository(database);
     final taskRepository = SqliteTaskRepository(database);
     final noteRepository = SqliteNoteRepository(database);
     final issueRepository = SqliteIssueRepository(database);
+    final resourceRepository = SqliteResourceRepository(database);
     final entityLinkRepository = SqliteEntityLinkRepository(database);
     final activityRepository = SqliteActivityRepository(database);
     final markdownStore = MarkdownStore(paths);
@@ -50,36 +52,18 @@ class WorkbenchRuntime {
     return WorkbenchRuntime._(
       paths: paths,
       database: database,
-      workspaceService: WorkspaceService(
-        paths: paths,
-        workspaces: workspaceRepository,
-        activities: activityRepository,
-      ),
-      taskService: TaskService(
-        tasks: taskRepository,
-        activities: activityRepository,
-      ),
-      noteService: NoteService(
-        paths: paths,
-        store: markdownStore,
-        workspaces: workspaceRepository,
-        tasks: taskRepository,
-        notes: noteRepository,
-        links: entityLinkService,
-        activities: activityRepository,
-      ),
-      issueService: IssueService(
-        issues: issueRepository,
-        tasks: taskRepository,
-        links: entityLinkRepository,
-        activities: activityRepository,
-      ),
+      workspaceService: WorkspaceService(paths: paths, workspaces: workspaceRepository, activities: activityRepository),
+      taskService: TaskService(tasks: taskRepository, activities: activityRepository),
+      noteService: NoteService(paths: paths, store: markdownStore, workspaces: workspaceRepository, tasks: taskRepository, notes: noteRepository, links: entityLinkService, activities: activityRepository),
+      issueService: IssueService(issues: issueRepository, tasks: taskRepository, links: entityLinkRepository, activities: activityRepository),
+      resourceService: ResourceService(resources: resourceRepository, tasks: taskRepository, links: entityLinkRepository, activities: activityRepository),
       entityLinkService: entityLinkService,
       overviewService: Phase2WorkspaceOverviewService(
         workspaces: workspaceRepository,
         tasks: taskRepository,
         notes: noteRepository,
         issues: issueRepository,
+        resources: resourceRepository,
         links: entityLinkRepository,
         activities: activityRepository,
       ),
