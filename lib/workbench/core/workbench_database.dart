@@ -33,7 +33,7 @@ abstract interface class WorkbenchSqlExecutor {
 class WorkbenchDatabase implements WorkbenchSqlExecutor {
   WorkbenchDatabase._(this._executor, this._executorUser);
 
-  static const int schemaVersion = 3;
+  static const int schemaVersion = 4;
 
   final QueryExecutor _executor;
   final _WorkbenchExecutorUser _executorUser;
@@ -149,6 +149,7 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
       await _createSchema(executor, _schemaV1);
       await _createSchema(executor, _schemaV2);
       await _createSchema(executor, _schemaV3);
+      await _createSchema(executor, _schemaV4);
       return;
     }
 
@@ -175,6 +176,9 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
           break;
         case 2:
           await _createSchema(executor, _schemaV3);
+          break;
+        case 3:
+          await _createSchema(executor, _schemaV4);
           break;
         default:
           throw StateError(
@@ -381,5 +385,36 @@ ON focus_sessions(started_at DESC)
   '''
 CREATE INDEX IF NOT EXISTS ix_focus_sessions_task
 ON focus_sessions(task_id, started_at DESC)
+''',
+];
+
+const List<String> _schemaV4 = [
+  '''
+CREATE TABLE IF NOT EXISTS knowledge (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT '',
+  summary TEXT NOT NULL DEFAULT '',
+  use_when TEXT NOT NULL DEFAULT '',
+  file_path TEXT NOT NULL UNIQUE,
+  is_pinned INTEGER NOT NULL DEFAULT 0 CHECK (is_pinned IN (0, 1)),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  archived_at TEXT
+)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_knowledge_category_updated
+ON knowledge(category, is_pinned DESC, updated_at DESC)
+''',
+  '''
+CREATE VIRTUAL TABLE IF NOT EXISTS search_index USING fts5(
+  entity_type UNINDEXED,
+  entity_id UNINDEXED,
+  workspace_id UNINDEXED,
+  title,
+  body,
+  tokenize = 'unicode61'
+)
 ''',
 ];
