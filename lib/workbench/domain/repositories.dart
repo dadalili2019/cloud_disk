@@ -12,6 +12,7 @@ abstract interface class TaskRepository {
   Future<TaskModel?> getById(String id);
   Future<TaskModel?> getCurrent(String workspaceId);
   Future<void> insert(TaskModel task);
+  Future<void> update(TaskModel task);
   Future<void> setCurrent(String workspaceId, String taskId);
 }
 
