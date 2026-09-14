@@ -1,51 +1,11 @@
 class WorkspaceModel {
-  const WorkspaceModel({
-    required this.id,
-    required this.name,
-    required this.slug,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    this.archivedAt,
-  });
-  final String id;
-  final String name;
-  final String slug;
-  final String status;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final DateTime? archivedAt;
+  const WorkspaceModel({required this.id,required this.name,required this.slug,required this.status,required this.createdAt,required this.updatedAt,this.archivedAt});
+  final String id; final String name; final String slug; final String status; final DateTime createdAt; final DateTime updatedAt; final DateTime? archivedAt;
 }
 
 class TaskModel {
-  const TaskModel({
-    required this.id,
-    required this.workspaceId,
-    required this.title,
-    required this.description,
-    required this.status,
-    required this.progress,
-    required this.nextStep,
-    required this.priority,
-    required this.isCurrent,
-    required this.createdAt,
-    required this.updatedAt,
-    this.dueAt,
-    this.archivedAt,
-  });
-  final String id;
-  final String workspaceId;
-  final String title;
-  final String description;
-  final String status;
-  final int progress;
-  final String nextStep;
-  final int priority;
-  final bool isCurrent;
-  final DateTime? dueAt;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final DateTime? archivedAt;
+  const TaskModel({required this.id,required this.workspaceId,required this.title,required this.description,required this.status,required this.progress,required this.nextStep,required this.priority,required this.isCurrent,required this.createdAt,required this.updatedAt,this.dueAt,this.archivedAt});
+  final String id; final String workspaceId; final String title; final String description; final String status; final int progress; final String nextStep; final int priority; final bool isCurrent; final DateTime? dueAt; final DateTime createdAt; final DateTime updatedAt; final DateTime? archivedAt;
 }
 
 class NoteModel {
@@ -81,6 +41,7 @@ class WorkspaceOverviewModel {
     required this.linkedNotes,
     this.currentBlockers = const [],
     this.linkedResources = const [],
+    this.linkedDecisions = const [],
     required this.recentActivity,
   });
   final WorkspaceModel workspace;
@@ -88,6 +49,7 @@ class WorkspaceOverviewModel {
   final List<NoteModel> linkedNotes;
   final List<IssueModel> currentBlockers;
   final List<ResourceModel> linkedResources;
+  final List<DecisionModel> linkedDecisions;
   final List<ActivityEventModel> recentActivity;
   String get nextStep => currentTask?.nextStep ?? '';
 }
