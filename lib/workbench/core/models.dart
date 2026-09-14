@@ -181,7 +181,7 @@ class WorkspaceOverviewModel {
     required this.workspace,
     required this.currentTask,
     required this.linkedNotes,
-    required this.currentBlockers,
+    this.currentBlockers = const [],
     required this.recentActivity,
   });
 
