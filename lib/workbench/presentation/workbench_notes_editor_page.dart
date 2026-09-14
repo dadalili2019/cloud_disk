@@ -161,7 +161,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
       final result = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => ContentDialog(
-          title: const Text('新建 Markdown 笔记'),
+          title: const Text('新建笔记'),
           content: SizedBox(
             width: 440,
             child: Column(
@@ -224,103 +224,114 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
       return Center(child: Text('加载失败：$_error'));
     }
 
+    final theme = FluentTheme.of(context);
+    final textColor = theme.typography.body?.color;
+
     return ScaffoldPage(
       padding: EdgeInsets.zero,
       content: Row(
         children: [
-          SizedBox(
-            width: 250,
+          Container(
+            width: 238,
+            decoration: BoxDecoration(
+              border: Border(
+                right: BorderSide(
+                  color: theme.inactiveColor.withOpacity(0.14),
+                ),
+              ),
+            ),
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _createNote,
-                      child: const Text('新建笔记'),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _notes.length,
-                    itemBuilder: (context, index) {
-                      final note = _notes[index];
-                      final selected = note.id == _selected?.id;
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(9, 2, 9, 2),
-                        child: Button(
-                          onPressed: () => _selectNote(note),
-                          style: ButtonStyle(
-                            backgroundColor: ButtonState.all(
-                              selected
-                                  ? FluentTheme.of(context)
-                                      .accentColor
-                                      .normal
-                                      .withOpacity(0.10)
-                                  : Colors.transparent,
-                            ),
-                            padding: ButtonState.all(
-                              const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 9,
-                              ),
-                            ),
-                          ),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  note.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.left,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  note.filePath.split('/').last,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: FluentTheme.of(context)
-                                        .typography
-                                        .body
-                                        ?.color
-                                        ?.withOpacity(0.50),
-                                  ),
-                                ),
-                              ],
+                SizedBox(
+                  height: 56,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            '全部笔记',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                      );
-                    },
+                        Text(
+                          '${_notes.length}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: textColor?.withOpacity(0.48),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Button(
+                          onPressed: _createNote,
+                          style: ButtonStyle(
+                            padding: ButtonState.all(
+                              const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(FluentIcons.add, size: 12),
+                              SizedBox(width: 5),
+                              Text('新建'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                ),
+                Container(
+                  height: 1,
+                  color: theme.inactiveColor.withOpacity(0.10),
+                ),
+                Expanded(
+                  child: _notes.isEmpty
+                      ? Center(
+                          child: Button(
+                            onPressed: _createNote,
+                            child: const Text('新建第一条笔记'),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          itemCount: _notes.length,
+                          itemBuilder: (context, index) {
+                            final note = _notes[index];
+                            final selected = note.id == _selected?.id;
+                            return _NoteListItem(
+                              note: note,
+                              selected: selected,
+                              onPressed: () => _selectNote(note),
+                            );
+                          },
+                        ),
                 ),
               ],
             ),
           ),
-          Container(
-            width: 1,
-            color: FluentTheme.of(context).inactiveColor.withOpacity(0.14),
-          ),
           Expanded(
             child: _selected == null
-                ? const Center(child: Text('新建一条 Markdown 笔记开始记录'))
+                ? Center(
+                    child: Button(
+                      onPressed: _createNote,
+                      child: const Text('新建笔记'),
+                    ),
+                  )
                 : Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                    padding: const EdgeInsets.fromLTRB(24, 18, 24, 22),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
                               child: Column(
@@ -329,32 +340,35 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                                   Text(
                                     _selected!.title,
                                     style: const TextStyle(
-                                      fontSize: 18,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    _selected!.filePath,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: FluentTheme.of(context)
-                                          .typography
-                                          .body
-                                          ?.color
-                                          ?.withOpacity(0.48),
-                                    ),
+                                  const SizedBox(height: 5),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        FluentIcons.page,
+                                        size: 11,
+                                        color: textColor?.withOpacity(0.42),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        _selected!.filePath.split('/').last,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: textColor?.withOpacity(0.46),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
                             ),
-                            Text(
-                              _saving ? '保存中…' : '已保存',
-                              style: const TextStyle(fontSize: 11),
-                            ),
+                            _SaveState(saving: _saving),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 14),
                         Expanded(
                           child: TextBox(
                             controller: _editor,
@@ -375,6 +389,112 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                       ],
                     ),
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NoteListItem extends StatelessWidget {
+  const _NoteListItem({
+    required this.note,
+    required this.selected,
+    required this.onPressed,
+  });
+
+  final NoteModel note;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FluentTheme.of(context);
+    final accent = theme.accentColor.normal;
+    final textColor = theme.typography.body?.color;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onPressed,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
+            decoration: BoxDecoration(
+              color: selected ? accent.withOpacity(0.08) : Colors.transparent,
+              borderRadius: BorderRadius.circular(6),
+              border: Border(
+                left: BorderSide(
+                  color: selected ? accent : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  note.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  note.filePath.split('/').last,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: textColor?.withOpacity(0.44),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SaveState extends StatelessWidget {
+  const _SaveState({required this.saving});
+
+  final bool saving;
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = FluentTheme.of(context).typography.body?.color;
+    return Padding(
+      padding: const EdgeInsets.only(top: 3),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (saving)
+            const SizedBox(
+              width: 10,
+              height: 10,
+              child: ProgressRing(strokeWidth: 1.2),
+            )
+          else
+            Icon(
+              FluentIcons.check_mark,
+              size: 10,
+              color: textColor?.withOpacity(0.46),
+            ),
+          const SizedBox(width: 5),
+          Text(
+            saving ? '保存中…' : '已保存',
+            style: TextStyle(
+              fontSize: 10,
+              color: textColor?.withOpacity(0.48),
+            ),
           ),
         ],
       ),
