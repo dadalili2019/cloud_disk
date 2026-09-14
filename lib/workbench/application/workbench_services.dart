@@ -28,9 +28,9 @@ class WorkspaceService {
       throw ArgumentError.value(name, 'name', 'Workspace name is required.');
     }
 
-    final resolvedSlug = slugifyWorkspace(slug?.trim().isNotEmpty == true
-        ? slug!.trim()
-        : trimmedName);
+    final resolvedSlug = slugifyWorkspace(
+      slug?.trim().isNotEmpty == true ? slug!.trim() : trimmedName,
+    );
     final existing = await workspaces.getBySlug(resolvedSlug);
     if (existing != null) {
       throw StateError('Workspace slug already exists: $resolvedSlug');
@@ -192,6 +192,7 @@ class NoteService {
   Future<NoteModel> create({
     required String workspaceId,
     required String title,
+    String? fileName,
     String initialContent = '',
     bool linkToCurrentTask = true,
   }) async {
@@ -207,10 +208,28 @@ class NoteService {
 
     await paths.ensureWorkspaceDirectories(workspace.slug);
     final noteId = newWorkbenchId();
-    final baseName = markdownFileName(trimmedTitle);
-    final suffix = noteId.substring(0, 8);
-    final fileName = baseName.replaceFirst('.md', '-$suffix.md');
-    final relativePath = paths.workspaceNoteRelativePath(workspace.slug, fileName);
+    final requestedFileName = normalizeMarkdownFileName(
+      fileName ?? '',
+      fallbackTitle: trimmedTitle,
+    );
+    var resolvedFileName = requestedFileName;
+    var relativePath = paths.workspaceNoteRelativePath(
+      workspace.slug,
+      resolvedFileName,
+    );
+
+    if (await store.exists(relativePath)) {
+      final suffix = noteId.substring(0, 8);
+      final stem = requestedFileName.toLowerCase().endsWith('.md')
+          ? requestedFileName.substring(0, requestedFileName.length - 3)
+          : requestedFileName;
+      resolvedFileName = '$stem-$suffix.md';
+      relativePath = paths.workspaceNoteRelativePath(
+        workspace.slug,
+        resolvedFileName,
+      );
+    }
+
     final now = DateTime.now().toUtc();
     final note = NoteModel(
       id: noteId,
