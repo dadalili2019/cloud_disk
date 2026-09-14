@@ -107,6 +107,22 @@ class _WorkbenchTaskListPageState extends State<WorkbenchTaskListPage> {
     }
   }
 
+  Future<void> _editTask(TaskModel task) async {
+    final changed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => _TaskEditDrawer(
+        task: task,
+        onSaved: () => Navigator.pop(dialogContext, true),
+        onCancel: () => Navigator.pop(dialogContext, false),
+      ),
+    );
+
+    if (changed == true && mounted) {
+      setState(_reload);
+    }
+  }
+
   Future<void> _showError(Object error) {
     return showDialog<void>(
       context: context,
@@ -162,6 +178,7 @@ class _WorkbenchTaskListPageState extends State<WorkbenchTaskListPage> {
               final task = tasks[index];
               return _TaskTile(
                 task: task,
+                onTap: () => _editTask(task),
                 onSetCurrent: () => _setCurrent(task),
               );
             },
@@ -175,10 +192,12 @@ class _WorkbenchTaskListPageState extends State<WorkbenchTaskListPage> {
 class _TaskTile extends StatelessWidget {
   const _TaskTile({
     required this.task,
+    required this.onTap,
     required this.onSetCurrent,
   });
 
   final TaskModel task;
+  final VoidCallback onTap;
   final VoidCallback onSetCurrent;
 
   String get _statusText {
@@ -199,104 +218,407 @@ class _TaskTile extends StatelessWidget {
     final theme = FluentTheme.of(context);
     final accent = theme.accentColor.normal;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: task.isCurrent ? accent.withOpacity(0.045) : theme.cardColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: task.isCurrent
-              ? accent.withOpacity(0.28)
-              : theme.inactiveColor.withOpacity(0.16),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Container(
-              width: 7,
-              height: 7,
-              decoration: BoxDecoration(
-                color: task.isCurrent
-                    ? accent
-                    : theme.inactiveColor.withOpacity(0.45),
-                shape: BoxShape.circle,
-              ),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: task.isCurrent ? accent.withOpacity(0.045) : theme.cardColor,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: task.isCurrent
+                  ? accent.withOpacity(0.28)
+                  : theme.inactiveColor.withOpacity(0.16),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: task.isCurrent
+                        ? accent
+                        : theme.inactiveColor.withOpacity(0.45),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            task.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        _Badge(text: _statusText),
+                        const SizedBox(width: 6),
+                        _Badge(text: '${task.progress}%'),
+                      ],
+                    ),
+                    if (task.nextStep.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '下一步',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  theme.typography.body?.color?.withOpacity(0.58),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              task.nextStep,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+              if (task.isCurrent)
+                Padding(
+                  padding: const EdgeInsets.only(top: 1),
+                  child: Text(
+                    '当前任务',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: accent,
+                    ),
+                  ),
+                )
+              else
+                Button(
+                  onPressed: () {
+                    // 阻止卡片点击和按钮操作混淆。
+                    onSetCurrent();
+                  },
+                  child: const Text('设为当前'),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TaskEditDrawer extends StatefulWidget {
+  const _TaskEditDrawer({
+    required this.task,
+    required this.onSaved,
+    required this.onCancel,
+  });
+
+  final TaskModel task;
+  final VoidCallback onSaved;
+  final VoidCallback onCancel;
+
+  @override
+  State<_TaskEditDrawer> createState() => _TaskEditDrawerState();
+}
+
+class _TaskEditDrawerState extends State<_TaskEditDrawer> {
+  late final TextEditingController _titleController;
+  late final TextEditingController _nextStepController;
+  late String _status;
+  late double _progress;
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.task.title);
+    _nextStepController = TextEditingController(text: widget.task.nextStep);
+    _status = _normalizeStatus(widget.task.status);
+    _progress = widget.task.progress.toDouble();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _nextStepController.dispose();
+    super.dispose();
+  }
+
+  String _normalizeStatus(String status) {
+    switch (status) {
+      case 'doing':
+      case 'in_progress':
+        return 'doing';
+      case 'done':
+      case 'completed':
+        return 'done';
+      default:
+        return 'todo';
+    }
+  }
+
+  String _statusText(String value) {
+    switch (value) {
+      case 'doing':
+        return '进行中';
+      case 'done':
+        return '已完成';
+      default:
+        return '待办';
+    }
+  }
+
+  Future<void> _save() async {
+    if (_saving) return;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+
+    try {
+      final runtime = await WorkbenchRuntime.instance;
+      await runtime.taskService.update(
+        task: widget.task,
+        title: _titleController.text,
+        status: _status,
+        progress: _progress.round(),
+        nextStep: _nextStepController.text,
+      );
+      if (!mounted) return;
+      widget.onSaved();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = error.toString();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FluentTheme.of(context);
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Container(
+        width: 430,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          border: Border(
+            left: BorderSide(color: theme.inactiveColor.withOpacity(0.16)),
+          ),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 18,
+              spreadRadius: 1,
+              color: Colors.black.withOpacity(0.10),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 20, 14, 14),
+                child: Row(
+                  children: [
+                    const Expanded(
                       child: Text(
-                        task.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                        '编辑任务',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    _Badge(text: _statusText),
-                    const SizedBox(width: 6),
-                    _Badge(text: '${task.progress}%'),
+                    IconButton(
+                      icon: const Icon(FluentIcons.chrome_close, size: 14),
+                      onPressed: widget.onCancel,
+                    ),
                   ],
                 ),
-                if (task.nextStep.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '下一步',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: theme.typography.body?.color?.withOpacity(0.58),
+              ),
+              Container(
+                height: 1,
+                color: theme.inactiveColor.withOpacity(0.12),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(22, 20, 22, 24),
+                  children: [
+                    const _FieldLabel('任务名称'),
+                    const SizedBox(height: 7),
+                    TextBox(
+                      controller: _titleController,
+                      placeholder: '任务名称',
+                    ),
+                    const SizedBox(height: 20),
+                    const _FieldLabel('状态'),
+                    const SizedBox(height: 7),
+                    ComboBox<String>(
+                      value: _status,
+                      isExpanded: true,
+                      items: const [
+                        ComboBoxItem(value: 'todo', child: Text('待办')),
+                        ComboBoxItem(value: 'doing', child: Text('进行中')),
+                        ComboBoxItem(value: 'done', child: Text('已完成')),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() {
+                          _status = value;
+                          if (value == 'done') {
+                            _progress = 100;
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        const Expanded(child: _FieldLabel('进度')),
+                        Text(
+                          '${_progress.round()}%',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color:
+                                theme.typography.body?.color?.withOpacity(0.62),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          task.nextStep,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Slider(
+                      value: _progress,
+                      min: 0,
+                      max: 100,
+                      divisions: 20,
+                      onChanged: _status == 'done'
+                          ? null
+                          : (value) => setState(() => _progress = value),
+                    ),
+                    const SizedBox(height: 20),
+                    const _FieldLabel('下一步'),
+                    const SizedBox(height: 7),
+                    TextBox(
+                      controller: _nextStepController,
+                      placeholder: '下一步要做什么',
+                      minLines: 4,
+                      maxLines: 6,
+                    ),
+                    if (widget.task.isCurrent) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.accentColor.normal.withOpacity(0.07),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              FluentIcons.radio_bullet,
+                              size: 13,
+                              color: theme.accentColor.normal,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '当前任务',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: theme.accentColor.normal,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 14),
-          if (task.isCurrent)
-            Padding(
-              padding: const EdgeInsets.only(top: 1),
-              child: Text(
-                '当前任务',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: accent,
+                    if (_error != null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        '保存失败：$_error',
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-            )
-          else
-            Button(
-              onPressed: onSetCurrent,
-              child: const Text('设为当前'),
-            ),
-        ],
+              Container(
+                padding: const EdgeInsets.fromLTRB(22, 12, 22, 18),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: theme.inactiveColor.withOpacity(0.12),
+                    ),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Button(
+                      onPressed: _saving ? null : widget.onCancel,
+                      child: const Text('取消'),
+                    ),
+                    const SizedBox(width: 10),
+                    FilledButton(
+                      onPressed: _saving ? null : _save,
+                      child: Text(_saving ? '保存中…' : '保存'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
       ),
     );
   }
