@@ -8,7 +8,6 @@ import '../pages/deviceInformation.dart';
 import '../pages/favorites.dart';
 import '../pages/file.dart';
 import '../pages/game/game.dart' deferred as game;
-import '../pages/home.dart';
 import '../pages/imagetools/collage_tool.dart' deferred as collagetool;
 import '../pages/imagetools/crop_tool.dart' deferred as croptool;
 import '../pages/imagetools/dedupe_tool.dart' deferred as dedupetool;
@@ -29,6 +28,7 @@ import '../pages/speedtestpage/speedtestpage.dart' deferred as speed;
 import '../pages/subscribe.dart';
 import '../pages/todo.dart';
 import '../workbench/presentation/workbench_decision_page.dart';
+import '../workbench/presentation/workbench_home_page.dart';
 import '../workbench/presentation/workbench_issue_page.dart';
 import '../workbench/presentation/workbench_notes_editor_page.dart';
 import '../workbench/presentation/workbench_phase2_pages.dart';
@@ -60,7 +60,7 @@ final router = GoRouter(
     ShellRoute(
       builder: (context, state, child) => NavigationPage(child: child),
       routes: <RouteBase>[
-        GoRoute(name: 'home', path: '/home', pageBuilder: (context, state) => const NoTransitionPage(child: HomePage())),
+        GoRoute(name: 'home', path: '/home', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchHomePage())),
         GoRoute(name: 'workbenchWorkspace', path: '/workspace', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchWorkspaceListPageV2())),
         GoRoute(
           name: 'workbenchOverview', path: '/workspace/:workspaceId/overview',
