@@ -217,6 +217,7 @@ class AIConversationService {
         if (workspaceId != null && workspaceId != task.workspaceId) {
           throw StateError('taskId does not belong to workspaceId.');
         }
+        return;
       case AIContextScope.workspace:
         if (workspaceId == null || workspaceId.trim().isEmpty) {
           throw ArgumentError('workspace scope requires workspaceId.');
@@ -225,6 +226,7 @@ class AIConversationService {
         if (workspace == null || workspace.archivedAt != null) {
           throw StateError('Workspace not found or archived: $workspaceId');
         }
+        return;
       case AIContextScope.knowledge:
         if (knowledgeId == null || knowledgeId.trim().isEmpty) {
           throw ArgumentError('knowledge scope requires knowledgeId.');
@@ -233,6 +235,7 @@ class AIConversationService {
         if (item == null || item.archivedAt != null) {
           throw StateError('Knowledge not found or archived: $knowledgeId');
         }
+        return;
       case AIContextScope.global:
         return;
     }
