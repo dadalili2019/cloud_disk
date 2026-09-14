@@ -181,12 +181,14 @@ class WorkspaceOverviewModel {
     required this.workspace,
     required this.currentTask,
     required this.linkedNotes,
+    required this.currentBlockers,
     required this.recentActivity,
   });
 
   final WorkspaceModel workspace;
   final TaskModel? currentTask;
   final List<NoteModel> linkedNotes;
+  final List<IssueModel> currentBlockers;
   final List<ActivityEventModel> recentActivity;
 
   String get nextStep => currentTask?.nextStep ?? '';
