@@ -2,9 +2,11 @@ import '../core/models.dart';
 
 abstract interface class WorkspaceRepository {
   Future<List<WorkspaceModel>> listActive();
+  Future<List<WorkspaceModel>> listArchived();
   Future<WorkspaceModel?> getById(String id);
   Future<WorkspaceModel?> getBySlug(String slug);
   Future<void> insert(WorkspaceModel workspace);
+  Future<void> update(WorkspaceModel workspace);
 }
 
 abstract interface class TaskRepository {
