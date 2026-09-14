@@ -19,6 +19,9 @@ class IssueService {
   Future<List<IssueModel>> listByWorkspace(String workspaceId) =>
       issues.listByWorkspace(workspaceId);
 
+  Future<TaskModel?> currentTask(String workspaceId) =>
+      tasks.getCurrent(workspaceId);
+
   Future<List<IssueModel>> linkedToTask(String taskId) async {
     final ids = await links.listFromIds(
       toType: 'task',
@@ -27,6 +30,53 @@ class IssueService {
       fromType: 'issue',
     );
     return issues.getByIds(ids);
+  }
+
+  Future<List<TaskModel>> linkedTasks(IssueModel issue) async {
+    final ids = await links.listToIds(
+      fromType: 'issue',
+      fromId: issue.id,
+      relationType: 'blocks',
+      toType: 'task',
+    );
+    if (ids.isEmpty) return const [];
+
+    final result = <TaskModel>[];
+    for (final id in ids) {
+      final task = await tasks.getById(id);
+      if (task != null) result.add(task);
+    }
+    return result;
+  }
+
+  Future<void> linkToCurrentTask(IssueModel issue) async {
+    final currentTask = await tasks.getCurrent(issue.workspaceId);
+    if (currentTask == null) {
+      throw StateError('当前工作区暂无当前任务，无法建立关联。');
+    }
+
+    final now = DateTime.now().toUtc();
+    await links.link(
+      id: newWorkbenchId(),
+      fromType: 'issue',
+      fromId: issue.id,
+      relationType: 'blocks',
+      toType: 'task',
+      toId: currentTask.id,
+      createdAt: now,
+    );
+
+    await activities.insert(
+      ActivityEventModel(
+        id: newWorkbenchId(),
+        workspaceId: issue.workspaceId,
+        entityType: 'issue',
+        entityId: issue.id,
+        eventType: 'issue_linked_task',
+        summary: '${issue.title} → ${currentTask.title}',
+        createdAt: now,
+      ),
+    );
   }
 
   Future<IssueModel> create({
