@@ -2,6 +2,18 @@ import '../core/models.dart';
 import '../core/workbench_utils.dart';
 import '../domain/repositories.dart';
 
+class TodayFocusEntry {
+  const TodayFocusEntry({
+    required this.session,
+    required this.workspace,
+    required this.task,
+  });
+
+  final FocusSessionModel session;
+  final WorkspaceModel? workspace;
+  final TaskModel? task;
+}
+
 class TodayFocusSnapshot {
   const TodayFocusSnapshot({
     required this.active,
@@ -9,8 +21,8 @@ class TodayFocusSnapshot {
     required this.totalSeconds,
   });
 
-  final FocusSessionModel? active;
-  final List<FocusSessionModel> sessions;
+  final TodayFocusEntry? active;
+  final List<TodayFocusEntry> sessions;
   final int totalSeconds;
 }
 
@@ -109,7 +121,27 @@ class FocusSessionService {
     final startLocal = DateTime(now.year, now.month, now.day);
     final endLocal = startLocal.add(const Duration(days: 1));
     final today = await sessions.listBetween(startLocal, endLocal);
-    final active = await sessions.getActive();
+    final activeModel = await sessions.getActive();
+
+    final entries = <TodayFocusEntry>[];
+    for (final session in today) {
+      entries.add(
+        TodayFocusEntry(
+          session: session,
+          workspace: await workspaces.getById(session.workspaceId),
+          task: await tasks.getById(session.taskId),
+        ),
+      );
+    }
+
+    TodayFocusEntry? active;
+    if (activeModel != null) {
+      active = TodayFocusEntry(
+        session: activeModel,
+        workspace: await workspaces.getById(activeModel.workspaceId),
+        task: await tasks.getById(activeModel.taskId),
+      );
+    }
 
     var total = 0;
     final nowUtc = DateTime.now().toUtc();
@@ -124,7 +156,7 @@ class FocusSessionService {
 
     return TodayFocusSnapshot(
       active: active,
-      sessions: today,
+      sessions: entries,
       totalSeconds: total,
     );
   }
