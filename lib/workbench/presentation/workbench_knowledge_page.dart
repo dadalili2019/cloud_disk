@@ -701,7 +701,10 @@ class _KnowledgeEditorDialogState extends State<_KnowledgeEditorDialog> {
               const SizedBox(height: 8),
               Text(
                 _validation!,
-                style: const TextStyle(color: Colors.red, fontSize: 11),
+                style: const TextStyle(
+                  color: Color(0xFFD13438),
+                  fontSize: 11,
+                ),
               ),
             ],
           ],
