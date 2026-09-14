@@ -1,7 +1,6 @@
 import '../core/models.dart';
 import '../domain/issue_repository.dart';
 import '../domain/repositories.dart';
-import 'workbench_services.dart';
 
 class Phase2WorkspaceOverviewService {
   const Phase2WorkspaceOverviewService({
@@ -17,7 +16,7 @@ class Phase2WorkspaceOverviewService {
   final TaskRepository tasks;
   final NoteRepository notes;
   final IssueRepository issues;
-  final EntityLinkService links;
+  final EntityLinkRepository links;
   final ActivityRepository activities;
 
   Future<WorkspaceOverviewModel> loadOverview(String workspaceId) async {
@@ -32,11 +31,15 @@ class Phase2WorkspaceOverviewService {
     var currentBlockers = <IssueModel>[];
 
     if (currentTask != null) {
-      linkedNotes = await notes.getByIds(
-        await links.linkedNoteIds(currentTask.id),
+      final noteIds = await links.listFromIds(
+        toType: 'task',
+        toId: currentTask.id,
+        relationType: 'linked_to',
+        fromType: 'note',
       );
+      linkedNotes = await notes.getByIds(noteIds);
 
-      final blockerIds = await links.links.listFromIds(
+      final blockerIds = await links.listFromIds(
         toType: 'task',
         toId: currentTask.id,
         relationType: 'blocks',
