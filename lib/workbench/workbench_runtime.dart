@@ -1,4 +1,5 @@
 import 'application/issue_service.dart';
+import 'application/phase2_overview_service.dart';
 import 'application/workbench_services.dart';
 import 'core/app_paths.dart';
 import 'core/workbench_database.dart';
@@ -25,7 +26,7 @@ class WorkbenchRuntime {
   final NoteService noteService;
   final IssueService issueService;
   final EntityLinkService entityLinkService;
-  final WorkspaceOverviewService overviewService;
+  final Phase2WorkspaceOverviewService overviewService;
 
   static Future<WorkbenchRuntime>? _instance;
 
@@ -74,10 +75,11 @@ class WorkbenchRuntime {
         activities: activityRepository,
       ),
       entityLinkService: entityLinkService,
-      overviewService: WorkspaceOverviewService(
+      overviewService: Phase2WorkspaceOverviewService(
         workspaces: workspaceRepository,
         tasks: taskRepository,
         notes: noteRepository,
+        issues: issueRepository,
         links: entityLinkService,
         activities: activityRepository,
       ),
