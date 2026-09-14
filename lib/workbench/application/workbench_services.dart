@@ -78,6 +78,8 @@ class TaskService {
   Future<TaskModel?> getCurrent(String workspaceId) =>
       tasks.getCurrent(workspaceId);
 
+  Future<TaskModel?> getById(String taskId) => tasks.getById(taskId);
+
   Future<TaskModel> create({
     required String workspaceId,
     required String title,
@@ -118,6 +120,59 @@ class TaskService {
       ),
     );
     return task;
+  }
+
+  Future<TaskModel> update({
+    required TaskModel task,
+    required String title,
+    required String status,
+    required int progress,
+    required String nextStep,
+  }) async {
+    final trimmedTitle = title.trim();
+    if (trimmedTitle.isEmpty) {
+      throw ArgumentError.value(title, 'title', 'Task title is required.');
+    }
+    if (!const {'todo', 'doing', 'done'}.contains(status)) {
+      throw ArgumentError.value(status, 'status', 'Unsupported task status.');
+    }
+    if (progress < 0 || progress > 100) {
+      throw ArgumentError.value(progress, 'progress', 'Progress must be 0-100.');
+    }
+
+    var normalizedProgress = progress;
+    if (status == 'done') normalizedProgress = 100;
+
+    final now = DateTime.now().toUtc();
+    final updatedTask = TaskModel(
+      id: task.id,
+      workspaceId: task.workspaceId,
+      title: trimmedTitle,
+      description: task.description,
+      status: status,
+      progress: normalizedProgress,
+      nextStep: nextStep.trim(),
+      priority: task.priority,
+      isCurrent: task.isCurrent,
+      dueAt: task.dueAt,
+      createdAt: task.createdAt,
+      updatedAt: now,
+      archivedAt: task.archivedAt,
+    );
+
+    await tasks.update(updatedTask);
+    await activities.insert(
+      ActivityEventModel(
+        id: newWorkbenchId(),
+        workspaceId: task.workspaceId,
+        entityType: 'task',
+        entityId: task.id,
+        eventType: status == 'done' ? 'task_completed' : 'task_updated',
+        summary: updatedTask.title,
+        createdAt: now,
+      ),
+    );
+    return updatedTask;
   }
 
   Future<void> setCurrent(String workspaceId, String taskId) async {
