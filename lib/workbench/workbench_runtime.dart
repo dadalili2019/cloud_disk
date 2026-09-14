@@ -2,6 +2,7 @@ import 'application/continue_service.dart';
 import 'application/decision_service.dart';
 import 'application/focus_session_service.dart';
 import 'application/issue_service.dart';
+import 'application/knowledge_distill_service.dart';
 import 'application/knowledge_service.dart';
 import 'application/phase2_overview_service.dart';
 import 'application/quick_capture_service.dart';
@@ -34,6 +35,7 @@ class WorkbenchRuntime {
     required this.resourceService,
     required this.decisionService,
     required this.knowledgeService,
+    required this.knowledgeDistillService,
     required this.searchService,
     required this.taskContextService,
     required this.continueService,
@@ -54,6 +56,7 @@ class WorkbenchRuntime {
   final ResourceService resourceService;
   final DecisionService decisionService;
   final KnowledgeService knowledgeService;
+  final KnowledgeDistillService knowledgeDistillService;
   final SearchService searchService;
   final TaskContextService taskContextService;
   final ContinueService continueService;
@@ -108,6 +111,16 @@ class WorkbenchRuntime {
       knowledge: knowledgeRepository,
       links: entityLinkRepository,
       searchIndex: searchIndexRepository,
+    );
+    final knowledgeDistillService = KnowledgeDistillService(
+      workspaces: workspaceRepository,
+      tasks: taskRepository,
+      notes: noteRepository,
+      issues: issueRepository,
+      resources: resourceRepository,
+      decisions: decisionRepository,
+      store: markdownStore,
+      knowledge: knowledgeService,
     );
     final searchService = SearchService(
       workspaces: workspaceRepository,
@@ -176,6 +189,7 @@ class WorkbenchRuntime {
         activities: activityRepository,
       ),
       knowledgeService: knowledgeService,
+      knowledgeDistillService: knowledgeDistillService,
       searchService: searchService,
       taskContextService: taskContextService,
       continueService: continueService,
