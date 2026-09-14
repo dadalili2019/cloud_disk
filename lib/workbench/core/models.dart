@@ -29,6 +29,50 @@ class DecisionModel {
   final String id; final String workspaceId; final String title; final String decisionText; final String rationale; final String revisitCondition; final String status; final DateTime createdAt; final DateTime updatedAt; final DateTime? archivedAt;
 }
 
+class KnowledgeModel {
+  const KnowledgeModel({
+    required this.id,
+    required this.title,
+    required this.category,
+    required this.summary,
+    required this.useWhen,
+    required this.filePath,
+    required this.isPinned,
+    required this.createdAt,
+    required this.updatedAt,
+    this.archivedAt,
+  });
+
+  final String id;
+  final String title;
+  final String category;
+  final String summary;
+  final String useWhen;
+  final String filePath;
+  final bool isPinned;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? archivedAt;
+}
+
+class SearchResultModel {
+  const SearchResultModel({
+    required this.entityType,
+    required this.entityId,
+    required this.title,
+    required this.snippet,
+    required this.score,
+    this.workspaceId,
+  });
+
+  final String entityType;
+  final String entityId;
+  final String title;
+  final String snippet;
+  final String? workspaceId;
+  final double score;
+}
+
 class FocusSessionModel {
   const FocusSessionModel({
     required this.id,
@@ -65,6 +109,7 @@ class TaskContextModel {
     this.issues = const [],
     this.resources = const [],
     this.decisions = const [],
+    this.knowledge = const [],
     this.recentActivity = const [],
   });
 
@@ -73,6 +118,7 @@ class TaskContextModel {
   final List<IssueModel> issues;
   final List<ResourceModel> resources;
   final List<DecisionModel> decisions;
+  final List<KnowledgeModel> knowledge;
   final List<ActivityEventModel> recentActivity;
 
   List<IssueModel> get openIssues => issues.where((issue) => issue.isOpen).toList();
