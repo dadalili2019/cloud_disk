@@ -22,6 +22,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
   final TextEditingController _editor = TextEditingController();
   Timer? _saveDebounce;
   List<NoteModel> _notes = const [];
+  List<TaskModel> _linkedTasks = const [];
   NoteModel? _selected;
   bool _loading = true;
   bool _saving = false;
@@ -73,6 +74,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
 
       if (notes.isEmpty) {
         _selected = null;
+        _linkedTasks = const [];
         _replaceEditorText('');
         return;
       }
@@ -104,12 +106,16 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
     await _flushPendingSave();
 
     final runtime = await WorkbenchRuntime.instance;
-    final content = await runtime.noteService.readContent(note);
+    final results = await Future.wait([
+      runtime.noteService.readContent(note),
+      runtime.noteService.linkedTasks(note),
+    ]);
     if (!mounted) return;
 
-    _replaceEditorText(content);
+    _replaceEditorText(results[0] as String);
     setState(() {
       _selected = note;
+      _linkedTasks = results[1] as List<TaskModel>;
       _error = null;
     });
   }
@@ -362,6 +368,30 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                                       ),
                                     ],
                                   ),
+                                  if (_linkedTasks.isNotEmpty) ...[
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          FluentIcons.link,
+                                          size: 11,
+                                          color: textColor?.withOpacity(0.42),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Expanded(
+                                          child: Text(
+                                            '关联任务：${_linkedTasks.map((task) => task.title).join('、')}',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: textColor?.withOpacity(0.52),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
