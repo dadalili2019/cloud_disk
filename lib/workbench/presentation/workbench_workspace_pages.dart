@@ -791,6 +791,10 @@ class _ActivityRow extends StatelessWidget {
         return '新建任务 · ${activity.summary}';
       case 'task_set_current':
         return '设为当前任务 · ${activity.summary}';
+      case 'task_updated':
+        return '更新任务 · ${activity.summary}';
+      case 'task_completed':
+        return '完成任务 · ${activity.summary}';
       case 'note_created':
         return '新建笔记 · ${activity.summary}';
       default:
