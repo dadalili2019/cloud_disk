@@ -41,6 +41,13 @@ abstract interface class EntityLinkRepository {
     required String relationType,
     required String fromType,
   });
+
+  Future<List<String>> listToIds({
+    required String fromType,
+    required String fromId,
+    required String relationType,
+    required String toType,
+  });
 }
 
 abstract interface class ActivityRepository {
