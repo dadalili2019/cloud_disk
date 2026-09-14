@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../application/knowledge_distill_service.dart';
 import '../core/models.dart';
 import '../workbench_runtime.dart';
+import 'workbench_knowledge_distill_dialog.dart';
 
 class WorkbenchKnowledgePage extends StatefulWidget {
   const WorkbenchKnowledgePage({super.key});
@@ -88,18 +90,31 @@ class _WorkbenchKnowledgePageState extends State<WorkbenchKnowledgePage> {
     }
   }
 
+  Future<void> _distillFromWorkspace() async {
+    final changed = await showKnowledgeDistillDialog(context);
+    if (!changed || !mounted) return;
+    await _load();
+    if (_searchController.text.trim().isNotEmpty) {
+      await _search(_searchController.text);
+    }
+  }
+
   Future<void> _openEditor([KnowledgeModel? existing]) async {
     final runtime = await WorkbenchRuntime.instance;
     final markdown = existing == null
         ? ''
         : await runtime.knowledgeService.readContent(existing);
+    final sources = existing == null
+        ? const <KnowledgeSourceContext>[]
+        : await runtime.knowledgeDistillService.sourceContexts(existing);
     if (!mounted) return;
 
     final draft = await showDialog<_KnowledgeDraft>(
       context: context,
-      builder: (dialogContext) => _KnowledgeEditorDialog(
+      builder: (_) => _KnowledgeEditorDialog(
         existing: existing,
         markdown: markdown,
+        sources: sources,
       ),
     );
     if (draft == null) return;
@@ -198,6 +213,11 @@ class _WorkbenchKnowledgePageState extends State<WorkbenchKnowledgePage> {
                   ],
                 ),
               ),
+              Button(
+                onPressed: _distillFromWorkspace,
+                child: const Text('从工作区沉淀'),
+              ),
+              const SizedBox(width: 8),
               Button(
                 onPressed: _rebuilding ? null : () => _load(rebuildIndex: true),
                 child: Text(_rebuilding ? '正在重建…' : '重建索引'),
@@ -360,11 +380,9 @@ class _KnowledgeCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  if (item.category.isNotEmpty)
-                    _Tag(label: item.category),
+                  if (item.category.isNotEmpty) _Tag(label: item.category),
                   const Spacer(),
-                  if (item.isPinned)
-                    const Icon(FluentIcons.pinned, size: 12),
+                  if (item.isPinned) const Icon(FluentIcons.pinned, size: 12),
                 ],
               ),
               const SizedBox(height: 12),
@@ -436,9 +454,7 @@ class _SearchResults extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: theme.cardColor,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: theme.inactiveColor.withOpacity(0.13),
-                    ),
+                    border: Border.all(color: theme.inactiveColor.withOpacity(0.13)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,24 +467,18 @@ class _SearchResults extends StatelessWidget {
                           children: [
                             Text(
                               result.title,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                             ),
                             if (result.snippet.trim().isNotEmpty) ...[
                               const SizedBox(height: 5),
                               Text(
-                                result.snippet
-                                    .replaceAll('[', '')
-                                    .replaceAll(']', ''),
+                                result.snippet.replaceAll('[', '').replaceAll(']', ''),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 11,
                                   height: 1.45,
-                                  color: theme.typography.body?.color
-                                      ?.withOpacity(0.60),
+                                  color: theme.typography.body?.color?.withOpacity(0.60),
                                 ),
                               ),
                             ],
@@ -490,11 +500,7 @@ class _SearchResults extends StatelessWidget {
 }
 
 class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+  const _FilterChip({required this.label, required this.selected, required this.onTap});
 
   final String label;
   final bool selected;
@@ -508,9 +514,7 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
         decoration: BoxDecoration(
-          color: selected
-              ? theme.accentColor.withOpacity(0.12)
-              : theme.cardColor,
+          color: selected ? theme.accentColor.withOpacity(0.12) : theme.cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected
@@ -526,7 +530,6 @@ class _FilterChip extends StatelessWidget {
 
 class _Tag extends StatelessWidget {
   const _Tag({required this.label});
-
   final String label;
 
   @override
@@ -540,10 +543,7 @@ class _Tag extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 10,
-          color: theme.typography.body?.color?.withOpacity(0.62),
-        ),
+        style: TextStyle(fontSize: 10, color: theme.typography.body?.color?.withOpacity(0.62)),
       ),
     );
   }
@@ -551,7 +551,6 @@ class _Tag extends StatelessWidget {
 
 class _EmptyKnowledge extends StatelessWidget {
   const _EmptyKnowledge({required this.onCreate});
-
   final VoidCallback onCreate;
 
   @override
@@ -591,10 +590,15 @@ class _KnowledgeDraft {
 }
 
 class _KnowledgeEditorDialog extends StatefulWidget {
-  const _KnowledgeEditorDialog({required this.existing, required this.markdown});
+  const _KnowledgeEditorDialog({
+    required this.existing,
+    required this.markdown,
+    required this.sources,
+  });
 
   final KnowledgeModel? existing;
   final String markdown;
+  final List<KnowledgeSourceContext> sources;
 
   @override
   State<_KnowledgeEditorDialog> createState() => _KnowledgeEditorDialogState();
@@ -652,11 +656,28 @@ class _KnowledgeEditorDialogState extends State<_KnowledgeEditorDialog> {
   Widget build(BuildContext context) {
     return ContentDialog(
       title: Text(widget.existing == null ? '新建知识' : '编辑知识'),
-      constraints: const BoxConstraints(maxWidth: 680, maxHeight: 720),
+      constraints: const BoxConstraints(maxWidth: 700, maxHeight: 760),
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (widget.sources.isNotEmpty) ...[
+              const Text('Source Context', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 7),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: widget.sources
+                    .map(
+                      (source) => _SourceChip(
+                        type: source.entityType,
+                        title: source.title,
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 16),
+            ],
             const Text('标题', style: TextStyle(fontSize: 11)),
             const SizedBox(height: 5),
             TextBox(controller: _title, autofocus: true),
@@ -667,21 +688,11 @@ class _KnowledgeEditorDialogState extends State<_KnowledgeEditorDialog> {
             const SizedBox(height: 12),
             const Text('Summary', style: TextStyle(fontSize: 11)),
             const SizedBox(height: 5),
-            TextBox(
-              controller: _summary,
-              minLines: 2,
-              maxLines: 4,
-              placeholder: '这条知识说明了什么？',
-            ),
+            TextBox(controller: _summary, minLines: 2, maxLines: 4, placeholder: '这条知识说明了什么？'),
             const SizedBox(height: 12),
             const Text('Use When', style: TextStyle(fontSize: 11)),
             const SizedBox(height: 5),
-            TextBox(
-              controller: _useWhen,
-              minLines: 2,
-              maxLines: 4,
-              placeholder: '什么情况下值得复用它？',
-            ),
+            TextBox(controller: _useWhen, minLines: 2, maxLines: 4, placeholder: '什么情况下值得复用它？'),
             const SizedBox(height: 12),
             const Text('Reusable Pattern / Markdown', style: TextStyle(fontSize: 11)),
             const SizedBox(height: 5),
@@ -701,22 +712,42 @@ class _KnowledgeEditorDialogState extends State<_KnowledgeEditorDialog> {
               const SizedBox(height: 8),
               Text(
                 _validation!,
-                style: const TextStyle(
-                  color: Color(0xFFD13438),
-                  fontSize: 11,
-                ),
+                style: const TextStyle(color: Color(0xFFD13438), fontSize: 11),
               ),
             ],
           ],
         ),
       ),
       actions: [
-        Button(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
+        Button(onPressed: () => Navigator.of(context).pop(), child: const Text('取消')),
         FilledButton(onPressed: _save, child: const Text('保存')),
       ],
+    );
+  }
+}
+
+class _SourceChip extends StatelessWidget {
+  const _SourceChip({required this.type, required this.title});
+
+  final String type;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FluentTheme.of(context);
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 260),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: theme.inactiveColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Text(
+        '${_entityLabel(type)} · $title',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 10),
+      ),
     );
   }
 }
