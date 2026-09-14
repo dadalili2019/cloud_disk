@@ -34,7 +34,7 @@ import '../workbench/presentation/workbench_notes_editor_page.dart';
 import '../workbench/presentation/workbench_phase2_pages.dart';
 import '../workbench/presentation/workbench_resource_page.dart';
 import '../workbench/presentation/workbench_task_list_page.dart';
-import '../workbench/presentation/workbench_workspace_pages.dart';
+import '../workbench/presentation/workbench_workspace_list_v2_page.dart';
 
 class DeferredWidget extends StatelessWidget {
   const DeferredWidget({super.key, required this.loader, required this.builder});
@@ -61,7 +61,7 @@ final router = GoRouter(
       builder: (context, state, child) => NavigationPage(child: child),
       routes: <RouteBase>[
         GoRoute(name: 'home', path: '/home', pageBuilder: (context, state) => const NoTransitionPage(child: HomePage())),
-        GoRoute(name: 'workbenchWorkspace', path: '/workspace', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchWorkspaceListPage())),
+        GoRoute(name: 'workbenchWorkspace', path: '/workspace', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchWorkspaceListPageV2())),
         GoRoute(
           name: 'workbenchOverview', path: '/workspace/:workspaceId/overview',
           pageBuilder: (context, state) {
