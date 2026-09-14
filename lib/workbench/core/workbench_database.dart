@@ -33,7 +33,7 @@ abstract interface class WorkbenchSqlExecutor {
 class WorkbenchDatabase implements WorkbenchSqlExecutor {
   WorkbenchDatabase._(this._executor, this._executorUser);
 
-  static const int schemaVersion = 2;
+  static const int schemaVersion = 3;
 
   final QueryExecutor _executor;
   final _WorkbenchExecutorUser _executorUser;
@@ -49,41 +49,31 @@ class WorkbenchDatabase implements WorkbenchSqlExecutor {
   Future<List<Map<String, Object?>>> select(
     String statement, [
     List<Object?> args = const [],
-  ]) {
-    return _executor.runSelect(statement, args);
-  }
+  ]) => _executor.runSelect(statement, args);
 
   @override
   Future<int> insert(
     String statement, [
     List<Object?> args = const [],
-  ]) {
-    return _executor.runInsert(statement, args);
-  }
+  ]) => _executor.runInsert(statement, args);
 
   @override
   Future<int> update(
     String statement, [
     List<Object?> args = const [],
-  ]) {
-    return _executor.runUpdate(statement, args);
-  }
+  ]) => _executor.runUpdate(statement, args);
 
   @override
   Future<int> delete(
     String statement, [
     List<Object?> args = const [],
-  ]) {
-    return _executor.runDelete(statement, args);
-  }
+  ]) => _executor.runDelete(statement, args);
 
   @override
   Future<void> custom(
     String statement, [
     List<Object?> args = const [],
-  ]) {
-    return _executor.runCustom(statement, args);
-  }
+  ]) => _executor.runCustom(statement, args);
 
   Future<T> transaction<T>(
     Future<T> Function(WorkbenchSqlExecutor tx) action,
@@ -91,7 +81,6 @@ class WorkbenchDatabase implements WorkbenchSqlExecutor {
     final transaction = _executor.beginTransaction();
     await transaction.ensureOpen(_executorUser);
     final session = _TransactionSession(transaction);
-
     try {
       final result = await action(session);
       await transaction.send();
@@ -151,7 +140,6 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
     OpeningDetails details,
   ) async {
     await executor.ensureOpen(this);
-
     await executor.runCustom('PRAGMA foreign_keys = ON');
     await executor.runCustom('PRAGMA busy_timeout = 5000');
     await executor.runCustom('PRAGMA journal_mode = WAL');
@@ -160,13 +148,13 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
     if (from == null) {
       await _createSchema(executor, _schemaV1);
       await _createSchema(executor, _schemaV2);
+      await _createSchema(executor, _schemaV3);
       return;
     }
 
     if (from > schemaVersion) {
       throw StateError(
-        'workbench.db schema version $from is newer than supported '
-        'version $schemaVersion.',
+        'workbench.db schema version $from is newer than supported version $schemaVersion.',
       );
     }
 
@@ -175,11 +163,7 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
     }
   }
 
-  Future<void> _migrate(
-    QueryExecutor executor,
-    int from,
-    int to,
-  ) async {
+  Future<void> _migrate(QueryExecutor executor, int from, int to) async {
     var version = from;
     while (version < to) {
       switch (version) {
@@ -188,6 +172,9 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
           break;
         case 1:
           await _createSchema(executor, _schemaV2);
+          break;
+        case 2:
+          await _createSchema(executor, _schemaV3);
           break;
         default:
           throw StateError(
@@ -369,5 +356,30 @@ CREATE TABLE IF NOT EXISTS decisions (
   '''
 CREATE INDEX IF NOT EXISTS ix_decisions_workspace_status_updated
 ON decisions(workspace_id, status, updated_at DESC)
+''',
+];
+
+const List<String> _schemaV3 = [
+  '''
+CREATE TABLE IF NOT EXISTS focus_sessions (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL,
+  task_id TEXT NOT NULL,
+  started_at TEXT NOT NULL,
+  ended_at TEXT,
+  duration_seconds INTEGER NOT NULL DEFAULT 0,
+  note TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (workspace_id) REFERENCES workspaces(id),
+  FOREIGN KEY (task_id) REFERENCES tasks(id)
+)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_focus_sessions_started
+ON focus_sessions(started_at DESC)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_focus_sessions_task
+ON focus_sessions(task_id, started_at DESC)
 ''',
 ];
