@@ -3,7 +3,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import '../core/models.dart';
 import '../workbench_runtime.dart';
 
-Future<bool> showWorkspaceSettingsDialog(
+Future<String?> showWorkspaceSettingsDialog(
   BuildContext context,
   WorkspaceModel workspace,
 ) async {
@@ -29,17 +29,11 @@ Future<bool> showWorkspaceSettingsDialog(
                 const SizedBox(height: 18),
                 const Text('目录标识', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 7),
-                TextBox(
-                  controller: TextEditingController(text: workspace.slug),
-                  enabled: false,
-                ),
+                SelectableText(workspace.slug, style: const TextStyle(fontSize: 12)),
                 const SizedBox(height: 6),
                 Text(
                   '目录标识在当前阶段保持只读，避免移动已有 Markdown 文件。',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: FluentTheme.of(context).typography.body?.color?.withOpacity(0.50),
-                  ),
+                  style: TextStyle(fontSize: 11, color: FluentTheme.of(context).typography.body?.color?.withOpacity(0.50)),
                 ),
                 if (error != null) ...[
                   const SizedBox(height: 14),
@@ -65,9 +59,7 @@ Future<bool> showWorkspaceSettingsDialog(
                         ),
                       ),
                       Button(
-                        onPressed: saving
-                            ? null
-                            : () => Navigator.pop(dialogContext, 'archive'),
+                        onPressed: saving ? null : () => Navigator.pop(dialogContext, 'archive'),
                         child: const Text('归档'),
                       ),
                     ],
@@ -78,15 +70,10 @@ Future<bool> showWorkspaceSettingsDialog(
           ),
           actions: [
             Button(
-              onPressed: () async {
-                Navigator.pop(dialogContext, 'archived_list');
-              },
+              onPressed: () => Navigator.pop(dialogContext, 'archived_list'),
               child: const Text('已归档工作区'),
             ),
-            Button(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('取消'),
-            ),
+            Button(onPressed: () => Navigator.pop(dialogContext), child: const Text('取消')),
             FilledButton(
               onPressed: saving
                   ? null
@@ -97,13 +84,8 @@ Future<bool> showWorkspaceSettingsDialog(
                       });
                       try {
                         final runtime = await WorkbenchRuntime.instance;
-                        await runtime.workspaceAdminService.rename(
-                          workspace: workspace,
-                          name: name.text,
-                        );
-                        if (dialogContext.mounted) {
-                          Navigator.pop(dialogContext, 'saved');
-                        }
+                        await runtime.workspaceAdminService.rename(workspace: workspace, name: name.text);
+                        if (dialogContext.mounted) Navigator.pop(dialogContext, 'saved');
                       } catch (e) {
                         setState(() {
                           saving = false;
@@ -133,13 +115,17 @@ Future<bool> showWorkspaceSettingsDialog(
       if (confirmed == true) {
         final runtime = await WorkbenchRuntime.instance;
         await runtime.workspaceAdminService.archive(workspace);
-        return true;
+        return 'archived';
       }
-    } else if (result == 'archived_list') {
-      await showArchivedWorkspacesDialog(context);
+      return null;
     }
 
-    return result == 'saved';
+    if (result == 'archived_list') {
+      await showArchivedWorkspacesDialog(context);
+      return null;
+    }
+
+    return result == 'saved' ? 'saved' : null;
   } finally {
     name.dispose();
   }
@@ -148,7 +134,6 @@ Future<bool> showWorkspaceSettingsDialog(
 Future<void> showArchivedWorkspacesDialog(BuildContext context) async {
   final runtime = await WorkbenchRuntime.instance;
   var archived = await runtime.workspaceAdminService.listArchived();
-
   if (!context.mounted) return;
 
   await showDialog<void>(
@@ -199,10 +184,7 @@ Future<void> showArchivedWorkspacesDialog(BuildContext context) async {
                 ),
         ),
         actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('完成'),
-          ),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('完成')),
         ],
       ),
     ),
