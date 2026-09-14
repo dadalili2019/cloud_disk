@@ -252,7 +252,7 @@ class _NavigationPageState extends State<NavigationPage> {
                       ),
                       const SizedBox(width: 8),
                       const Text(
-                        'Personal Workbench',
+                        '个人工作台',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -304,7 +304,7 @@ class NavigationBodyItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScaffoldPage.withPadding(
-      header: PageHeader(title: Text(header ?? 'This is a header text')),
+      header: PageHeader(title: Text(header ?? '页面标题')),
       content: content ?? const SizedBox.shrink(),
     );
   }
