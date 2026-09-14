@@ -30,6 +30,7 @@ import '../pages/todo.dart';
 import '../workbench/presentation/workbench_decision_page.dart';
 import '../workbench/presentation/workbench_home_page.dart';
 import '../workbench/presentation/workbench_issue_page.dart';
+import '../workbench/presentation/workbench_knowledge_page.dart';
 import '../workbench/presentation/workbench_notes_editor_page.dart';
 import '../workbench/presentation/workbench_phase2_pages.dart';
 import '../workbench/presentation/workbench_resource_page.dart';
@@ -62,6 +63,7 @@ final router = GoRouter(
       routes: <RouteBase>[
         GoRoute(name: 'home', path: '/home', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchHomePage())),
         GoRoute(name: 'workbenchWorkspace', path: '/workspace', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchWorkspaceListPageV2())),
+        GoRoute(name: 'workbenchKnowledge', path: '/knowledge', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchKnowledgePage())),
         GoRoute(
           name: 'workbenchOverview', path: '/workspace/:workspaceId/overview',
           pageBuilder: (context, state) {
