@@ -33,7 +33,7 @@ abstract interface class WorkbenchSqlExecutor {
 class WorkbenchDatabase implements WorkbenchSqlExecutor {
   WorkbenchDatabase._(this._executor, this._executorUser);
 
-  static const int schemaVersion = 1;
+  static const int schemaVersion = 2;
 
   final QueryExecutor _executor;
   final _WorkbenchExecutorUser _executorUser;
@@ -114,41 +114,31 @@ class _TransactionSession implements WorkbenchSqlExecutor {
   Future<List<Map<String, Object?>>> select(
     String statement, [
     List<Object?> args = const [],
-  ]) {
-    return _executor.runSelect(statement, args);
-  }
+  ]) => _executor.runSelect(statement, args);
 
   @override
   Future<int> insert(
     String statement, [
     List<Object?> args = const [],
-  ]) {
-    return _executor.runInsert(statement, args);
-  }
+  ]) => _executor.runInsert(statement, args);
 
   @override
   Future<int> update(
     String statement, [
     List<Object?> args = const [],
-  ]) {
-    return _executor.runUpdate(statement, args);
-  }
+  ]) => _executor.runUpdate(statement, args);
 
   @override
   Future<int> delete(
     String statement, [
     List<Object?> args = const [],
-  ]) {
-    return _executor.runDelete(statement, args);
-  }
+  ]) => _executor.runDelete(statement, args);
 
   @override
   Future<void> custom(
     String statement, [
     List<Object?> args = const [],
-  ]) {
-    return _executor.runCustom(statement, args);
-  }
+  ]) => _executor.runCustom(statement, args);
 }
 
 class _WorkbenchExecutorUser extends QueryExecutorUser {
@@ -160,9 +150,6 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
     QueryExecutor executor,
     OpeningDetails details,
   ) async {
-    // Drift passes a special executor into beforeOpen. When using the low-level
-    // QueryExecutor API directly, it still needs to be marked as opened before
-    // executing PRAGMAs or migration SQL in debug mode.
     await executor.ensureOpen(this);
 
     await executor.runCustom('PRAGMA foreign_keys = ON');
@@ -171,7 +158,8 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
 
     final from = details.versionBefore;
     if (from == null) {
-      await _createV1(executor);
+      await _createSchema(executor, _schemaV1);
+      await _createSchema(executor, _schemaV2);
       return;
     }
 
@@ -196,7 +184,10 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
     while (version < to) {
       switch (version) {
         case 0:
-          await _createV1(executor);
+          await _createSchema(executor, _schemaV1);
+          break;
+        case 1:
+          await _createSchema(executor, _schemaV2);
           break;
         default:
           throw StateError(
@@ -207,11 +198,14 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
     }
   }
 
-  Future<void> _createV1(QueryExecutor executor) async {
+  Future<void> _createSchema(
+    QueryExecutor executor,
+    List<String> statements,
+  ) async {
     final tx = executor.beginTransaction();
     await tx.ensureOpen(this);
     try {
-      for (final statement in _schemaV1) {
+      for (final statement in statements) {
         await tx.runCustom(statement);
       }
       await tx.send();
@@ -313,5 +307,67 @@ CREATE TABLE IF NOT EXISTS activity_events (
   '''
 CREATE INDEX IF NOT EXISTS ix_activity_workspace_created
 ON activity_events(workspace_id, created_at DESC)
+''',
+];
+
+const List<String> _schemaV2 = [
+  '''
+CREATE TABLE IF NOT EXISTS issues (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open',
+  severity TEXT NOT NULL DEFAULT 'medium',
+  impact TEXT NOT NULL DEFAULT '',
+  hypothesis TEXT NOT NULL DEFAULT '',
+  next_investigation_step TEXT NOT NULL DEFAULT '',
+  resolution TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  archived_at TEXT,
+  FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_issues_workspace_status_updated
+ON issues(workspace_id, status, updated_at DESC)
+''',
+  '''
+CREATE TABLE IF NOT EXISTS resources (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  resource_type TEXT NOT NULL DEFAULT 'other',
+  uri TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  is_pinned INTEGER NOT NULL DEFAULT 0 CHECK (is_pinned IN (0, 1)),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  archived_at TEXT,
+  FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_resources_workspace_updated
+ON resources(workspace_id, is_pinned DESC, updated_at DESC)
+''',
+  '''
+CREATE TABLE IF NOT EXISTS decisions (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  decision_text TEXT NOT NULL DEFAULT '',
+  rationale TEXT NOT NULL DEFAULT '',
+  revisit_condition TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  archived_at TEXT,
+  FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_decisions_workspace_status_updated
+ON decisions(workspace_id, status, updated_at DESC)
 ''',
 ];
