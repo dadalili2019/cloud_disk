@@ -34,6 +34,26 @@ class ActivityEventModel {
   final String id; final String workspaceId; final String? entityType; final String? entityId; final String eventType; final String summary; final DateTime createdAt;
 }
 
+class TaskContextModel {
+  const TaskContextModel({
+    required this.task,
+    this.notes = const [],
+    this.issues = const [],
+    this.resources = const [],
+    this.decisions = const [],
+    this.recentActivity = const [],
+  });
+
+  final TaskModel task;
+  final List<NoteModel> notes;
+  final List<IssueModel> issues;
+  final List<ResourceModel> resources;
+  final List<DecisionModel> decisions;
+  final List<ActivityEventModel> recentActivity;
+
+  List<IssueModel> get openIssues => issues.where((issue) => issue.isOpen).toList();
+}
+
 class WorkspaceOverviewModel {
   const WorkspaceOverviewModel({
     required this.workspace,
