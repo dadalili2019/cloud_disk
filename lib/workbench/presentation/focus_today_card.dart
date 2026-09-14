@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:fluent_ui/fluent_ui.dart';
 
 import '../application/continue_service.dart';
-import '../application/focus_session_service.dart';
+import '../application/today_service.dart';
 import '../workbench_runtime.dart';
 
 class FocusTodayCard extends StatefulWidget {
@@ -19,7 +19,7 @@ class FocusTodayCard extends StatefulWidget {
 }
 
 class _FocusTodayCardState extends State<FocusTodayCard> {
-  late Future<TodayFocusSnapshot> _snapshot;
+  late Future<TodaySnapshot> _snapshot;
   Timer? _ticker;
   bool _busy = false;
 
@@ -40,7 +40,7 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
 
   void _reload() {
     _snapshot = WorkbenchRuntime.instance.then(
-      (runtime) => runtime.focusSessionService.loadToday(),
+      (runtime) => runtime.todayService.load(),
     );
   }
 
@@ -127,7 +127,7 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
   @override
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
-    return FutureBuilder<TodayFocusSnapshot>(
+    return FutureBuilder<TodaySnapshot>(
       future: _snapshot,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
@@ -144,7 +144,8 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
         }
 
         final data = snapshot.data!;
-        final active = data.active;
+        final focus = data.focus;
+        final active = focus.active;
         final elapsed = active == null
             ? Duration.zero
             : DateTime.now().toUtc().difference(active.session.startedAt.toUtc());
@@ -161,12 +162,21 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   const Spacer(),
-                  Text(
-                    '今日 ${_formatDuration(Duration(seconds: data.totalSeconds))}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: theme.typography.body?.color?.withOpacity(0.58),
+                  _SummaryValue(
+                    label: '今日专注',
+                    value: _formatDuration(
+                      Duration(seconds: focus.totalSeconds),
                     ),
+                  ),
+                  const SizedBox(width: 18),
+                  _SummaryValue(
+                    label: '工作区',
+                    value: '${data.workspaceCount}',
+                  ),
+                  const SizedBox(width: 18),
+                  _SummaryValue(
+                    label: '完成专注',
+                    value: '${data.completedSessionCount}',
                   ),
                 ],
               ),
@@ -223,14 +233,14 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
                   ],
                 ),
               ],
-              if (data.sessions.isNotEmpty) ...[
+              if (focus.sessions.isNotEmpty) ...[
                 const SizedBox(height: 18),
                 const Text(
                   '今日时间线',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
-                ...data.sessions.take(6).map(
+                ...focus.sessions.take(6).map(
                   (entry) => Padding(
                     padding: const EdgeInsets.only(bottom: 7),
                     child: Row(
@@ -309,5 +319,34 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
     String hhmm(DateTime value) =>
         '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
     return end == null ? '${hhmm(start)} - 现在' : '${hhmm(start)} - ${hhmm(end)}';
+  }
+}
+
+class _SummaryValue extends StatelessWidget {
+  const _SummaryValue({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FluentTheme.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: theme.typography.body?.color?.withOpacity(0.5),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
   }
 }
