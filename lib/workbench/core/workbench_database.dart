@@ -160,6 +160,11 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
     QueryExecutor executor,
     OpeningDetails details,
   ) async {
+    // Drift passes a special executor into beforeOpen. When using the low-level
+    // QueryExecutor API directly, it still needs to be marked as opened before
+    // executing PRAGMAs or migration SQL in debug mode.
+    await executor.ensureOpen(this);
+
     await executor.runCustom('PRAGMA foreign_keys = ON');
     await executor.runCustom('PRAGMA busy_timeout = 5000');
     await executor.runCustom('PRAGMA journal_mode = WAL');
