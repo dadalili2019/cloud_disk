@@ -131,7 +131,8 @@ INSERT INTO tasks (
       '''
 UPDATE tasks
 SET title = ?, description = ?, status = ?, progress = ?, next_step = ?,
-    priority = ?, due_at = ?, updated_at = ?
+    priority = ?, due_at = ?, updated_at = ?,
+    is_current = CASE WHEN ? = 'done' THEN 0 ELSE is_current END
 WHERE id = ? AND workspace_id = ? AND archived_at IS NULL
 ''',
       [
@@ -143,6 +144,7 @@ WHERE id = ? AND workspace_id = ? AND archived_at IS NULL
         task.priority,
         task.dueAt?.toUtc().toIso8601String(),
         task.updatedAt.toUtc().toIso8601String(),
+        task.status,
         task.id,
         task.workspaceId,
       ],
@@ -170,12 +172,12 @@ UPDATE tasks
 SET is_current = 1,
     status = CASE WHEN status = 'todo' THEN 'doing' ELSE status END,
     updated_at = ?
-WHERE id = ? AND workspace_id = ? AND archived_at IS NULL
+WHERE id = ? AND workspace_id = ? AND archived_at IS NULL AND status != 'done'
 ''',
         [now, taskId, workspaceId],
       );
       if (updated != 1) {
-        throw StateError('Task not found or archived: $taskId');
+        throw StateError('Task not found, archived, or completed: $taskId');
       }
     });
   }
@@ -306,6 +308,24 @@ ORDER BY created_at DESC
       [toType, toId, relationType, fromType],
     );
     return rows.map((row) => row['from_id']! as String).toList();
+  }
+
+  @override
+  Future<List<String>> listToIds({
+    required String fromType,
+    required String fromId,
+    required String relationType,
+    required String toType,
+  }) async {
+    final rows = await db.select(
+      '''
+SELECT to_id FROM entity_links
+WHERE from_type = ? AND from_id = ? AND relation_type = ? AND to_type = ?
+ORDER BY created_at DESC
+''',
+      [fromType, fromId, relationType, toType],
+    );
+    return rows.map((row) => row['to_id']! as String).toList();
   }
 }
 
