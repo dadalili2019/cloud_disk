@@ -95,6 +95,13 @@ class _NavigationPageState extends State<NavigationPage> {
         onTap: () => _go('/home', 'home'),
       ),
       _item(
+        icon: FluentIcons.open_folder_horizontal,
+        title: '工作台',
+        tileColor: tileColor,
+        selectedTileColor: selectedTileColor,
+        onTap: () => _go('/workspace', 'workbenchWorkspace'),
+      ),
+      _item(
         icon: FluentIcons.to_do_logo_inverse,
         title: '待办清单',
         tileColor: tileColor,
@@ -245,7 +252,7 @@ class _NavigationPageState extends State<NavigationPage> {
                       ),
                       const SizedBox(width: 8),
                       const Text(
-                        'cloud_disk',
+                        'Personal Workbench',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
