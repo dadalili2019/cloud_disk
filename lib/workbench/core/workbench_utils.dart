@@ -16,22 +16,15 @@ String newWorkbenchId() {
       '${value.substring(20)}';
 }
 
-String utcNowIso() => DateTime.now().toUtc().toIso8601String();
-
-DateTime parseUtc(String value) => DateTime.parse(value).toUtc();
-
-DateTime? parseNullableUtc(Object? value) {
-  final raw = value as String?;
-  return raw == null ? null : DateTime.parse(raw).toUtc();
-}
-
 String slugifyWorkspace(String value) {
   final normalized = value
       .trim()
       .toLowerCase()
       .replaceAll(RegExp(r'[^a-z0-9\u4e00-\u9fff]+'), '-')
       .replaceAll(RegExp(r'^-+|-+$'), '');
-  return normalized.isEmpty ? 'workspace-${DateTime.now().millisecondsSinceEpoch}' : normalized;
+  return normalized.isEmpty
+      ? 'workspace-${DateTime.now().millisecondsSinceEpoch}'
+      : normalized;
 }
 
 String markdownFileName(String value) {
@@ -40,6 +33,24 @@ String markdownFileName(String value) {
       .toLowerCase()
       .replaceAll(RegExp(r'[^a-z0-9\u4e00-\u9fff]+'), '-')
       .replaceAll(RegExp(r'^-+|-+$'), '');
-  final stem = normalized.isEmpty ? 'note-${DateTime.now().millisecondsSinceEpoch}' : normalized;
+  final stem = normalized.isEmpty
+      ? 'note-${DateTime.now().millisecondsSinceEpoch}'
+      : normalized;
   return '$stem.md';
+}
+
+String normalizeMarkdownFileName(String value, {required String fallbackTitle}) {
+  var normalized = value.trim().replaceAll(RegExp(r'[\\/]+'), '-');
+  normalized = normalized.replaceAll(RegExp(r'[<>:"|?*]'), '-');
+  normalized = normalized.replaceAll(RegExp(r'\s+'), '-');
+  normalized = normalized.replaceAll(RegExp(r'-+'), '-');
+  normalized = normalized.replaceAll(RegExp(r'^[-.]+|[-.]+$'), '');
+
+  if (normalized.isEmpty) {
+    return markdownFileName(fallbackTitle);
+  }
+  if (!normalized.toLowerCase().endsWith('.md')) {
+    normalized = '$normalized.md';
+  }
+  return normalized;
 }
