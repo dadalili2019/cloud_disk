@@ -28,7 +28,9 @@ import '../pages/shareFolder/shareFolder.dart' deferred as share;
 import '../pages/speedtestpage/speedtestpage.dart' deferred as speed;
 import '../pages/subscribe.dart';
 import '../pages/todo.dart';
+import '../workbench/presentation/workbench_issue_page.dart';
 import '../workbench/presentation/workbench_notes_editor_page.dart';
+import '../workbench/presentation/workbench_phase2_pages.dart';
 import '../workbench/presentation/workbench_task_list_page.dart';
 import '../workbench/presentation/workbench_workspace_pages.dart';
 
@@ -93,10 +95,10 @@ final router = GoRouter(
           pageBuilder: (context, state) {
             final workspaceId = state.params['workspaceId']!;
             return NoTransitionPage(
-              child: WorkbenchWorkspaceFrame(
+              child: WorkbenchWorkspaceFrameV2(
                 workspaceId: workspaceId,
                 section: 'overview',
-                child: WorkbenchOverviewPage(workspaceId: workspaceId),
+                child: WorkbenchOverviewPageV2(workspaceId: workspaceId),
               ),
             );
           },
@@ -107,7 +109,7 @@ final router = GoRouter(
           pageBuilder: (context, state) {
             final workspaceId = state.params['workspaceId']!;
             return NoTransitionPage(
-              child: WorkbenchWorkspaceFrame(
+              child: WorkbenchWorkspaceFrameV2(
                 workspaceId: workspaceId,
                 section: 'tasks',
                 child: WorkbenchTaskListPage(workspaceId: workspaceId),
@@ -121,10 +123,24 @@ final router = GoRouter(
           pageBuilder: (context, state) {
             final workspaceId = state.params['workspaceId']!;
             return NoTransitionPage(
-              child: WorkbenchWorkspaceFrame(
+              child: WorkbenchWorkspaceFrameV2(
                 workspaceId: workspaceId,
                 section: 'notes',
                 child: WorkbenchNotesEditorPage(workspaceId: workspaceId),
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          name: 'workbenchIssues',
+          path: '/workspace/:workspaceId/issues',
+          pageBuilder: (context, state) {
+            final workspaceId = state.params['workspaceId']!;
+            return NoTransitionPage(
+              child: WorkbenchWorkspaceFrameV2(
+                workspaceId: workspaceId,
+                section: 'issues',
+                child: WorkbenchIssuePage(workspaceId: workspaceId),
               ),
             );
           },
