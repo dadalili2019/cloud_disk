@@ -4,50 +4,50 @@
 
 ## 1. Knowledge 基础闭环
 
-- [ ] 手工新建 Knowledge 可以保存。
-- [ ] Knowledge 可以再次打开并编辑。
-- [ ] Category 可以形成筛选项。
+- [x] 手工新建 Knowledge 可以保存。
+- [x] Knowledge 可以再次打开并编辑。
+- [x] Category 可以形成筛选项。
 - [ ] Pin 状态可以持久化。
-- [ ] Markdown 正文可以持久化。
+- [x] Markdown 正文可以持久化。
 
 ## 2. Workspace → Knowledge 沉淀
 
-- [ ] `从工作区沉淀` 可以选择 Workspace。
-- [ ] 可以读取 Task / Note / Issue / Resource / Decision。
-- [ ] 选择来源后会生成可编辑草稿。
-- [ ] 沉淀后 Knowledge 出现在 Library。
-- [ ] Knowledge 保存 `derived_from` 关系。
-- [ ] 再次打开 Knowledge 时可以显示 Source Context。
-- [ ] 手工创建、没有来源的 Knowledge 不显示 Source Context。
+- [x] `从工作区沉淀` 可以选择 Workspace。
+- [x] 可以读取 Task / Note / Issue / Resource / Decision。
+- [x] 选择来源后会生成可编辑草稿。
+- [x] 沉淀后 Knowledge 出现在 Library。
+- [x] Knowledge 保存 `derived_from` 关系。
+- [x] 再次打开 Knowledge 时可以显示 Source Context。
+- [x] 手工创建、没有来源的 Knowledge 不显示 Source Context。
 
 ## 3. Global Search
 
 搜索范围：
 
-- [ ] Task
+- [x] Task
 - [ ] Note
 - [ ] Issue
-- [ ] Resource
-- [ ] Decision
-- [ ] Knowledge
+- [x] Resource
+- [x] Decision
+- [x] Knowledge
 
 搜索行为：
 
 - [ ] 英文关键词可以搜索。
 - [ ] 中文关键词可以搜索。
-- [ ] 标题可以命中。
+- [x] 标题可以命中。
 - [ ] 正文 / Summary / Description 等内容可以命中。
-- [ ] FTS5 未命中时 LIKE fallback 仍能返回结果。
-- [ ] 搜索结果展示实体类型、标题和摘要片段。
+- [x] FTS5 未命中时 LIKE fallback 仍能返回结果。
+- [x] 搜索结果展示实体类型、标题和摘要片段。
 - [ ] Knowledge 结果点击后打开 Knowledge 编辑器。
-- [ ] Workspace 实体结果点击后进入正确 Workspace 业务页面。
+- [x] Workspace 实体结果点击后进入正确 Workspace 业务页面。
 
 ## 4. 索引恢复
 
 - [ ] 点击 `重建索引` 后无异常。
 - [ ] 重建后已有 Knowledge 仍可搜索。
 - [ ] 重建后 Workspace 数据仍可搜索。
-- [ ] `search_index` 只作为派生索引，不影响业务真实数据。
+- [x] `search_index` 只作为派生索引，不影响业务真实数据。
 
 ## 5. 重启恢复
 
@@ -74,7 +74,7 @@
 
 - [ ] Workspace 列表正常。
 - [ ] Overview 正常。
-- [ ] Task 新建 / 编辑 / 当前任务正常。
+- [x] Task 新建 / 编辑 / 当前任务正常。
 - [ ] Note 新建 / 自动保存正常。
 - [ ] Issue 新建 / 编辑 / 关联任务正常。
 - [ ] Resource 新建 / 编辑 / 关联任务正常。
