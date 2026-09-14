@@ -63,8 +63,20 @@ class SqliteTaskRepository implements TaskRepository {
 
   final WorkbenchDatabase database;
 
+  Future<void> _normalizeCompletedCurrent(String workspaceId) {
+    return database.update(
+      '''
+UPDATE tasks
+SET is_current = 0
+WHERE workspace_id = ? AND is_current = 1 AND status = 'done'
+''',
+      [workspaceId],
+    ).then((_) {});
+  }
+
   @override
   Future<List<TaskModel>> listByWorkspace(String workspaceId) async {
+    await _normalizeCompletedCurrent(workspaceId);
     final rows = await database.select(
       '''
 SELECT * FROM tasks
@@ -87,10 +99,11 @@ ORDER BY is_current DESC, updated_at DESC
 
   @override
   Future<TaskModel?> getCurrent(String workspaceId) async {
+    await _normalizeCompletedCurrent(workspaceId);
     final rows = await database.select(
       '''
 SELECT * FROM tasks
-WHERE workspace_id = ? AND is_current = 1 AND archived_at IS NULL
+WHERE workspace_id = ? AND is_current = 1 AND archived_at IS NULL AND status != 'done'
 LIMIT 1
 ''',
       [workspaceId],
