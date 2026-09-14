@@ -6,6 +6,7 @@ import 'application/phase2_overview_service.dart';
 import 'application/quick_capture_service.dart';
 import 'application/resource_service.dart';
 import 'application/task_context_service.dart';
+import 'application/today_service.dart';
 import 'application/workbench_services.dart';
 import 'application/workspace_admin_service.dart';
 import 'core/app_paths.dart';
@@ -32,6 +33,7 @@ class WorkbenchRuntime {
     required this.continueService,
     required this.quickCaptureService,
     required this.focusSessionService,
+    required this.todayService,
     required this.entityLinkService,
     required this.overviewService,
   });
@@ -49,6 +51,7 @@ class WorkbenchRuntime {
   final ContinueService continueService;
   final QuickCaptureService quickCaptureService;
   final FocusSessionService focusSessionService;
+  final TodayService todayService;
   final EntityLinkService entityLinkService;
   final Phase2WorkspaceOverviewService overviewService;
 
@@ -113,6 +116,7 @@ class WorkbenchRuntime {
       tasks: taskRepository,
       activities: activityRepository,
     );
+    final todayService = TodayService(focusSessions: focusSessionService);
 
     return WorkbenchRuntime._(
       paths: paths,
@@ -146,6 +150,7 @@ class WorkbenchRuntime {
       continueService: continueService,
       quickCaptureService: quickCaptureService,
       focusSessionService: focusSessionService,
+      todayService: todayService,
       entityLinkService: entityLinkService,
       overviewService: Phase2WorkspaceOverviewService(
         workspaces: workspaceRepository,
