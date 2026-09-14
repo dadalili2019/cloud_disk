@@ -7,6 +7,10 @@ class MarkdownStore {
 
   final AppPaths paths;
 
+  Future<bool> exists(String relativePath) {
+    return File(paths.resolveRelative(relativePath)).exists();
+  }
+
   Future<String> read(String relativePath) async {
     final file = File(paths.resolveRelative(relativePath));
     if (!await file.exists()) return '';
@@ -23,12 +27,12 @@ class MarkdownStore {
     if (await temp.exists()) await temp.delete();
     if (await backup.exists()) await backup.delete();
 
-    final sink = temp.openWrite(mode: FileMode.writeOnly);
+    final handle = await temp.open(mode: FileMode.write);
     try {
-      sink.write(content);
-      await sink.flush();
+      await handle.writeString(content);
+      await handle.flush();
     } finally {
-      await sink.close();
+      await handle.close();
     }
 
     var movedOriginal = false;
