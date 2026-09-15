@@ -326,8 +326,9 @@ class _NavigationPageState extends State<NavigationPage> {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final showCurrentContext = constraints.maxWidth >= 920;
-          final showSearch = constraints.maxWidth >= 1180;
+          final showCurrentContext = constraints.maxWidth >= 900;
+          final showFullSearch = constraints.maxWidth >= 1280;
+          final showCompactSearch = !showFullSearch && constraints.maxWidth >= 760;
           return Row(
             children: [
               SizedBox(
@@ -375,9 +376,12 @@ class _NavigationPageState extends State<NavigationPage> {
                 const SizedBox(width: 12),
                 _currentContextEntry(palette, accent),
               ],
-              if (showSearch) ...[
+              if (showFullSearch || showCompactSearch) ...[
                 const SizedBox(width: 10),
-                _globalSearchEntry(palette),
+                _globalSearchEntry(
+                  palette,
+                  compact: showCompactSearch,
+                ),
               ],
               const SizedBox(width: 10),
               Expanded(
@@ -497,42 +501,57 @@ class _NavigationPageState extends State<NavigationPage> {
     );
   }
 
-  Widget _globalSearchEntry(ThemePalette palette) {
+  Widget _globalSearchEntry(
+    ThemePalette palette, {
+    required bool compact,
+  }) {
     return Tooltip(
-      message: '打开知识与搜索',
+      message: '搜索工作上下文',
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => router.go('/knowledge'),
           child: Container(
-            width: 250,
+            width: compact ? 104 : 230,
             height: 34,
-            padding: const EdgeInsets.symmetric(horizontal: 11),
+            padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 11),
             decoration: BoxDecoration(
               color: palette.cardBackground.withOpacity(0.72),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: palette.cardBorder.withOpacity(0.95)),
             ),
-            child: const Row(
+            child: Row(
+              mainAxisAlignment: compact
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.start,
               children: [
-                Icon(
+                const Icon(
                   FluentIcons.search,
                   size: 13,
                   color: Color(0xFF73797D),
                 ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '搜索工作上下文…',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                const SizedBox(width: 8),
+                if (compact)
+                  const Text(
+                    '搜索',
                     style: TextStyle(
                       fontSize: 10.5,
                       color: Color(0xFF777D81),
                     ),
+                  )
+                else
+                  const Expanded(
+                    child: Text(
+                      '搜索工作上下文…',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: Color(0xFF777D81),
+                      ),
+                    ),
                   ),
-                ),
               ],
             ),
           ),
