@@ -9,6 +9,7 @@ import 'application/focus_session_service.dart';
 import 'application/issue_service.dart';
 import 'application/knowledge_distill_service.dart';
 import 'application/knowledge_service.dart';
+import 'application/openai_compatible_ai_provider.dart';
 import 'application/phase2_overview_service.dart';
 import 'application/preview_ai_provider.dart';
 import 'application/quick_capture_service.dart';
@@ -18,6 +19,7 @@ import 'application/task_context_service.dart';
 import 'application/today_service.dart';
 import 'application/workbench_services.dart';
 import 'application/workspace_admin_service.dart';
+import 'core/ai_provider_config.dart';
 import 'core/app_paths.dart';
 import 'core/workbench_database.dart';
 import 'data/markdown_store.dart';
@@ -191,7 +193,10 @@ class WorkbenchRuntime {
       tasks: taskRepository,
       knowledge: knowledgeRepository,
     );
-    const aiProvider = PreviewAIProvider();
+    final aiProviderConfig = AIProviderConfig.fromEnvironment();
+    final AIProvider aiProvider = aiProviderConfig.isConfigured
+        ? OpenAICompatibleAIProvider(config: aiProviderConfig)
+        : const PreviewAIProvider();
     final continueService = ContinueService(
       workspaces: workspaceRepository,
       tasks: taskRepository,
