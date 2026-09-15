@@ -1,4 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/services.dart';
 
 import '../application/ai_prompt_builder.dart';
 import '../core/ai_context_models.dart';
@@ -226,7 +227,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                 dialogError = null;
               });
               try {
-                final found = await runtime.searchService.search(
+                final found = await runtime.searchService.searchFresh(
                   query,
                   workspaceId: _scope == AIContextScope.workspace ||
                           _scope == AIContextScope.task
@@ -658,41 +659,52 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         .clamp(460.0, 680.0)
         .toDouble();
 
-    return Container(
-      width: drawerWidth,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        border: Border(left: BorderSide(color: theme.inactiveColor.withOpacity(0.18))),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 18,
-            offset: const Offset(-4, 0),
-            color: Colors.black.withOpacity(0.08),
-          ),
-        ],
-      ),
-      child: _loading
-          ? const Center(child: ProgressRing())
-          : Column(
-              children: [
-                _header(theme),
-                _scopeSection(theme),
-                if (_error != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
-                    child: InfoBar(
-                      title: const Text('AI 操作失败'),
-                      content: Text(_readableError(_error!)),
-                      severity: InfoBarSeverity.error,
-                      isLong: true,
-                    ),
-                  ),
-                const SizedBox(height: 6),
-                Expanded(child: _body(theme)),
-                _composer(theme),
-              ],
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.enter, control: true): _send,
+        const SingleActivator(LogicalKeyboardKey.escape): widget.onClose,
+      },
+      child: Focus(
+        autofocus: true,
+        child: Container(
+          width: drawerWidth,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: theme.scaffoldBackgroundColor,
+            border: Border(
+              left: BorderSide(color: theme.inactiveColor.withOpacity(0.18)),
             ),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 18,
+                offset: const Offset(-4, 0),
+                color: Colors.black.withOpacity(0.08),
+              ),
+            ],
+          ),
+          child: _loading
+              ? const Center(child: ProgressRing())
+              : Column(
+                  children: [
+                    _header(theme),
+                    _scopeSection(theme),
+                    if (_error != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
+                        child: InfoBar(
+                          title: const Text('AI 操作失败'),
+                          content: Text(_readableError(_error!)),
+                          severity: InfoBarSeverity.error,
+                          isLong: true,
+                        ),
+                      ),
+                    const SizedBox(height: 6),
+                    Expanded(child: _body(theme)),
+                    _composer(theme),
+                  ],
+                ),
+        ),
+      ),
     );
   }
 
@@ -1292,6 +1304,14 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                 child: Text(_sending ? '处理中…' : '发送'),
               ),
             ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            'Ctrl + Enter 发送 · Enter 换行 · Esc 关闭',
+            style: TextStyle(
+              fontSize: 9,
+              color: theme.typography.body?.color?.withOpacity(0.42),
+            ),
           ),
         ],
       ),
