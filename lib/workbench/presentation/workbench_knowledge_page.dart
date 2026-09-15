@@ -7,6 +7,7 @@ import '../application/knowledge_distill_service.dart';
 import '../core/models.dart';
 import '../workbench_runtime.dart';
 import 'workbench_knowledge_distill_dialog.dart';
+import 'workbench_ui.dart';
 
 class WorkbenchKnowledgePage extends StatefulWidget {
   const WorkbenchKnowledgePage({super.key});
@@ -189,167 +190,137 @@ class _WorkbenchKnowledgePageState extends State<WorkbenchKnowledgePage> {
     final theme = FluentTheme.of(context);
     final searching = _searchController.text.trim().isNotEmpty;
 
-    return ScaffoldPage(
-      padding: EdgeInsets.zero,
-      content: ListView(
-        padding: const EdgeInsets.fromLTRB(34, 28, 34, 40),
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '知识与搜索',
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      '把工作过程沉淀为可复用知识，并统一搜索任务、笔记、问题、资源与决策。',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
+    return WorkbenchPage(
+      title: '知识与搜索',
+      subtitle: '把工作过程沉淀为可复用知识，并统一搜索任务、笔记、问题、资源与决策。',
+      actions: [
+        Button(
+          onPressed: _distillFromWorkspace,
+          child: const Text('从工作区沉淀'),
+        ),
+        Button(
+          onPressed: _rebuilding ? null : () => _load(rebuildIndex: true),
+          child: Text(_rebuilding ? '正在重建…' : '重建索引'),
+        ),
+        FilledButton(
+          onPressed: () => _openEditor(),
+          child: const Text('新建知识'),
+        ),
+      ],
+      children: [
+        TextBox(
+          controller: _searchController,
+          placeholder: '搜索知识、任务、笔记、问题、资源、决策…',
+          prefix: const Padding(
+            padding: EdgeInsets.only(left: 10),
+            child: Icon(FluentIcons.search, size: 15),
+          ),
+          suffix: _searchController.text.isEmpty
+              ? null
+              : IconButton(
+                  icon: const Icon(FluentIcons.clear, size: 13),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _results = const []);
+                  },
                 ),
-              ),
-              Button(
-                onPressed: _distillFromWorkspace,
-                child: const Text('从工作区沉淀'),
-              ),
-              const SizedBox(width: 8),
-              Button(
-                onPressed: _rebuilding ? null : () => _load(rebuildIndex: true),
-                child: Text(_rebuilding ? '正在重建…' : '重建索引'),
-              ),
-              const SizedBox(width: 8),
-              FilledButton(
-                onPressed: () => _openEditor(),
-                child: const Text('新建知识'),
-              ),
-            ],
+          onChanged: (value) {
+            setState(() {});
+            _onSearchChanged(value);
+          },
+        ),
+        if (_error != null) ...[
+          const SizedBox(height: 12),
+          InfoBar(
+            title: const Text('操作失败'),
+            content: Text('$_error'),
+            severity: InfoBarSeverity.error,
+            isLong: true,
           ),
-          const SizedBox(height: 22),
-          TextBox(
-            controller: _searchController,
-            placeholder: '搜索知识、任务、笔记、问题、资源、决策…',
-            prefix: const Padding(
-              padding: EdgeInsets.only(left: 10),
-              child: Icon(FluentIcons.search, size: 15),
-            ),
-            suffix: _searchController.text.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(FluentIcons.clear, size: 13),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() => _results = const []);
-                    },
-                  ),
-            onChanged: (value) {
-              setState(() {});
-              _onSearchChanged(value);
-            },
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: 12),
-            InfoBar(
-              title: const Text('操作失败'),
-              content: Text('$_error'),
-              severity: InfoBarSeverity.error,
-              isLong: true,
-            ),
-          ],
-          const SizedBox(height: 22),
-          if (_loading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 70),
-              child: Center(child: ProgressRing()),
-            )
-          else if (searching)
-            _SearchResults(
-              query: _searchController.text.trim(),
-              results: _results,
-              onOpen: _openSearchResult,
-            )
-          else ...[
-            if (_categories.isNotEmpty) ...[
-              Wrap(
-                spacing: 7,
-                runSpacing: 7,
-                children: [
-                  _FilterChip(
-                    label: '全部',
-                    selected: _category.isEmpty,
+        ],
+        const SizedBox(height: 22),
+        if (_loading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 70),
+            child: Center(child: ProgressRing()),
+          )
+        else if (searching)
+          _SearchResults(
+            query: _searchController.text.trim(),
+            results: _results,
+            onOpen: _openSearchResult,
+          )
+        else ...[
+          if (_categories.isNotEmpty) ...[
+            Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: [
+                WorkbenchTag(
+                  label: '全部',
+                  selected: _category.isEmpty,
+                  onTap: () {
+                    setState(() => _category = '');
+                    _load();
+                  },
+                ),
+                ..._categories.map(
+                  (category) => WorkbenchTag(
+                    label: category,
+                    selected: _category == category,
                     onTap: () {
-                      setState(() => _category = '');
+                      setState(() => _category = category);
                       _load();
                     },
-                  ),
-                  ..._categories.map(
-                    (category) => _FilterChip(
-                      label: category,
-                      selected: _category == category,
-                      onTap: () {
-                        setState(() => _category = category);
-                        _load();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-            ],
-            Row(
-              children: [
-                const Text(
-                  'Knowledge Library',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                ),
-                const Spacer(),
-                Text(
-                  '${_knowledge.length} 条',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: theme.typography.body?.color?.withOpacity(0.50),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            if (_knowledge.isEmpty)
-              _EmptyKnowledge(onCreate: () => _openEditor())
-            else
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final columns = constraints.maxWidth >= 950
-                      ? 3
-                      : constraints.maxWidth >= 620
-                          ? 2
-                          : 1;
-                  const gap = 10.0;
-                  final width =
-                      (constraints.maxWidth - gap * (columns - 1)) / columns;
-                  return Wrap(
-                    spacing: gap,
-                    runSpacing: gap,
-                    children: _knowledge
-                        .map(
-                          (item) => SizedBox(
-                            width: width,
-                            child: _KnowledgeCard(
-                              item: item,
-                              onTap: () => _openEditor(item),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  );
-                },
-              ),
+            const SizedBox(height: 18),
           ],
+          WorkbenchSectionHeader(
+            title: 'Knowledge Library',
+            trailing: Text(
+              '${_knowledge.length} 条',
+              style: TextStyle(
+                fontSize: 11,
+                color: theme.typography.body?.color?.withOpacity(0.50),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          if (_knowledge.isEmpty)
+            _EmptyKnowledge(onCreate: () => _openEditor())
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 950
+                    ? 3
+                    : constraints.maxWidth >= 620
+                        ? 2
+                        : 1;
+                const gap = 12.0;
+                final width =
+                    (constraints.maxWidth - gap * (columns - 1)) / columns;
+                return Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: _knowledge
+                      .map(
+                        (item) => SizedBox(
+                          width: width,
+                          child: _KnowledgeCard(
+                            item: item,
+                            onTap: () => _openEditor(item),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                );
+              },
+            ),
         ],
-      ),
+      ],
     );
   }
 }
@@ -363,51 +334,40 @@ class _KnowledgeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 154),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(9),
-            border: Border.all(color: theme.inactiveColor.withOpacity(0.14)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return WorkbenchCard(
+      onTap: onTap,
+      minHeight: 154,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  if (item.category.isNotEmpty) _Tag(label: item.category),
-                  const Spacer(),
-                  if (item.isPinned) const Icon(FluentIcons.pinned, size: 12),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                item.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-              ),
-              if (item.summary.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  item.summary,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.45,
-                    color: theme.typography.body?.color?.withOpacity(0.65),
-                  ),
-                ),
-              ],
+              if (item.category.isNotEmpty) WorkbenchTag(label: item.category),
+              const Spacer(),
+              if (item.isPinned) const Icon(FluentIcons.pinned, size: 12),
             ],
           ),
-        ),
+          const SizedBox(height: 12),
+          Text(
+            item.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          ),
+          if (item.summary.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              item.summary,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.45,
+                color: theme.typography.body?.color?.withOpacity(0.65),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -436,60 +396,49 @@ class _SearchResults extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '搜索结果 · ${results.length}',
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-        ),
+        WorkbenchSectionHeader(title: '搜索结果 · ${results.length}'),
         const SizedBox(height: 10),
         ...results.map(
           (result) => Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: () => onOpen(result),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: theme.cardColor,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: theme.inactiveColor.withOpacity(0.13)),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _Tag(label: _entityLabel(result.entityType)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              result.title,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                            ),
-                            if (result.snippet.trim().isNotEmpty) ...[
-                              const SizedBox(height: 5),
-                              Text(
-                                result.snippet.replaceAll('[', '').replaceAll(']', ''),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  height: 1.45,
-                                  color: theme.typography.body?.color?.withOpacity(0.60),
-                                ),
-                              ),
-                            ],
-                          ],
+            child: WorkbenchCard(
+              onTap: () => onOpen(result),
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  WorkbenchTag(label: _entityLabel(result.entityType)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          result.title,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(FluentIcons.chevron_right, size: 11),
-                    ],
+                        if (result.snippet.trim().isNotEmpty) ...[
+                          const SizedBox(height: 5),
+                          Text(
+                            result.snippet.replaceAll('[', '').replaceAll(']', ''),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              height: 1.45,
+                              color: theme.typography.body?.color?.withOpacity(0.60),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  const Icon(FluentIcons.chevron_right, size: 11),
+                ],
               ),
             ),
           ),
@@ -499,71 +448,20 @@ class _SearchResults extends StatelessWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({required this.label, required this.selected, required this.onTap});
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FluentTheme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected ? theme.accentColor.withOpacity(0.12) : theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: selected
-                ? theme.accentColor.withOpacity(0.40)
-                : theme.inactiveColor.withOpacity(0.14),
-          ),
-        ),
-        child: Text(label, style: const TextStyle(fontSize: 11)),
-      ),
-    );
-  }
-}
-
-class _Tag extends StatelessWidget {
-  const _Tag({required this.label});
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FluentTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        color: theme.inactiveColor.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(fontSize: 10, color: theme.typography.body?.color?.withOpacity(0.62)),
-      ),
-    );
-  }
-}
-
 class _EmptyKnowledge extends StatelessWidget {
   const _EmptyKnowledge({required this.onCreate});
+
   final VoidCallback onCreate;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 28),
-      decoration: BoxDecoration(
-        color: FluentTheme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(9),
-      ),
+    return WorkbenchCard(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 26),
       child: Row(
         children: [
-          const Expanded(child: Text('还没有沉淀知识。先创建第一条可复用经验。')),
+          const Expanded(
+            child: Text('还没有沉淀知识。先创建第一条可复用经验。'),
+          ),
           FilledButton(onPressed: onCreate, child: const Text('新建知识')),
         ],
       ),
@@ -662,7 +560,10 @@ class _KnowledgeEditorDialogState extends State<_KnowledgeEditorDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.sources.isNotEmpty) ...[
-              const Text('Source Context', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+              const Text(
+                'Source Context',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 7),
               Wrap(
                 spacing: 6,
@@ -684,17 +585,33 @@ class _KnowledgeEditorDialogState extends State<_KnowledgeEditorDialog> {
             const SizedBox(height: 12),
             const Text('分类', style: TextStyle(fontSize: 11)),
             const SizedBox(height: 5),
-            TextBox(controller: _category, placeholder: '例如 Engineering / AI / Workflow'),
+            TextBox(
+              controller: _category,
+              placeholder: '例如 Engineering / AI / Workflow',
+            ),
             const SizedBox(height: 12),
             const Text('Summary', style: TextStyle(fontSize: 11)),
             const SizedBox(height: 5),
-            TextBox(controller: _summary, minLines: 2, maxLines: 4, placeholder: '这条知识说明了什么？'),
+            TextBox(
+              controller: _summary,
+              minLines: 2,
+              maxLines: 4,
+              placeholder: '这条知识说明了什么？',
+            ),
             const SizedBox(height: 12),
             const Text('Use When', style: TextStyle(fontSize: 11)),
             const SizedBox(height: 5),
-            TextBox(controller: _useWhen, minLines: 2, maxLines: 4, placeholder: '什么情况下值得复用它？'),
+            TextBox(
+              controller: _useWhen,
+              minLines: 2,
+              maxLines: 4,
+              placeholder: '什么情况下值得复用它？',
+            ),
             const SizedBox(height: 12),
-            const Text('Reusable Pattern / Markdown', style: TextStyle(fontSize: 11)),
+            const Text(
+              'Reusable Pattern / Markdown',
+              style: TextStyle(fontSize: 11),
+            ),
             const SizedBox(height: 5),
             TextBox(
               controller: _markdown,
@@ -712,14 +629,20 @@ class _KnowledgeEditorDialogState extends State<_KnowledgeEditorDialog> {
               const SizedBox(height: 8),
               Text(
                 _validation!,
-                style: const TextStyle(color: Color(0xFFD13438), fontSize: 11),
+                style: const TextStyle(
+                  color: Color(0xFFD13438),
+                  fontSize: 11,
+                ),
               ),
             ],
           ],
         ),
       ),
       actions: [
-        Button(onPressed: () => Navigator.of(context).pop(), child: const Text('取消')),
+        Button(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
         FilledButton(onPressed: _save, child: const Text('保存')),
       ],
     );
@@ -734,20 +657,9 @@ class _SourceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FluentTheme.of(context);
-    return Container(
+    return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 260),
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: theme.inactiveColor.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(7),
-      ),
-      child: Text(
-        '${_entityLabel(type)} · $title',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 10),
-      ),
+      child: WorkbenchTag(label: '${_entityLabel(type)} · $title'),
     );
   }
 }
