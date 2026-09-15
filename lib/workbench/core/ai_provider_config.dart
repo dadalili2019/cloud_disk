@@ -55,15 +55,20 @@ class AIProviderConfig {
       _compiledTimeoutSeconds,
     );
 
+    final resolvedHeader = apiKeyHeader.isEmpty ? 'Authorization' : apiKeyHeader;
+    final resolvedPrefix = apiKeyPrefix.isNotEmpty
+        ? apiKeyPrefix
+        : resolvedHeader.toLowerCase() == 'authorization'
+            ? 'Bearer'
+            : '';
+
     return AIProviderConfig(
       baseUrl: baseUrl,
       model: model,
       apiKey: apiKey,
       chatPath: chatPath.isEmpty ? '/v1/chat/completions' : chatPath,
-      apiKeyHeader: apiKeyHeader.isEmpty ? 'Authorization' : apiKeyHeader,
-      apiKeyPrefix: apiKeyPrefix.isEmpty && apiKeyHeader.isEmpty
-          ? 'Bearer'
-          : apiKeyPrefix,
+      apiKeyHeader: resolvedHeader,
+      apiKeyPrefix: resolvedPrefix,
       extraHeaders: _parseHeaders(extraHeadersRaw),
       timeoutSeconds: _parseTimeout(timeoutRaw),
     );
