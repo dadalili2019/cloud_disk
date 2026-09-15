@@ -117,7 +117,7 @@ class AIContextBuilder {
     items.addAll(workspaceDecisions.take(4).map(_decisionItem));
 
     if (request.query.trim().isNotEmpty) {
-      final hits = await searchService.search(
+      final hits = await searchService.searchFresh(
         request.query.trim(),
         workspaceId: workspaceId,
         limit: 8,
@@ -169,7 +169,7 @@ class AIContextBuilder {
     }
 
     if (request.query.trim().isNotEmpty) {
-      final hits = await searchService.search(request.query.trim(), limit: 6);
+      final hits = await searchService.searchFresh(request.query.trim(), limit: 6);
       items.addAll(await _itemsFromSearchHits(hits, reason: 'knowledge_related_search'));
     }
 
@@ -184,7 +184,7 @@ class AIContextBuilder {
   Future<AIContextModel> _buildGlobal(AIContextRequest request) async {
     final items = <AIContextItem>[];
     if (request.query.trim().isNotEmpty) {
-      final hits = await searchService.search(request.query.trim(), limit: 10);
+      final hits = await searchService.searchFresh(request.query.trim(), limit: 10);
       items.addAll(await _itemsFromSearchHits(hits, reason: 'global_search'));
     }
     return _finalize(request, items: items);
