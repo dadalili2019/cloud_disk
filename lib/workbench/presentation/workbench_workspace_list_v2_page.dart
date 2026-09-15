@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/models.dart';
 import '../workbench_runtime.dart';
+import 'workbench_ui.dart';
 import 'workbench_workspace_admin_dialog.dart';
 
 class WorkbenchWorkspaceListPageV2 extends StatefulWidget {
@@ -108,120 +109,142 @@ class _WorkbenchWorkspaceListPageV2State
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
 
-    return ScaffoldPage(
-      header: PageHeader(
-        title: const Text('工作区'),
-        commandBar: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+    return FutureBuilder<List<WorkspaceModel>>(
+      future: _workspaces,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const ScaffoldPage(content: Center(child: ProgressRing()));
+        }
+        if (snapshot.hasError) {
+          return ScaffoldPage(
+            content: Center(child: Text('加载失败：${snapshot.error}')),
+          );
+        }
+
+        final workspaces = snapshot.data ?? const <WorkspaceModel>[];
+
+        return WorkbenchPage(
+          title: '工作台',
+          subtitle: '管理你的工作区，并快速回到当前项目上下文。',
+          actions: [
             Button(
               onPressed: _openArchived,
-              child: const Text('已归档工作区'),
+              child: const Text('已归档'),
             ),
-            const SizedBox(width: 10),
             FilledButton(
               onPressed: _createWorkspace,
               child: const Text('新建工作区'),
             ),
           ],
-        ),
-      ),
-      content: FutureBuilder<List<WorkspaceModel>>(
-        future: _workspaces,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: ProgressRing());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('加载失败：${snapshot.error}'));
-          }
-
-          final workspaces = snapshot.data ?? const <WorkspaceModel>[];
-          if (workspaces.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '暂无活动工作区',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: theme.typography.body?.color?.withOpacity(0.55),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Button(
-                        onPressed: _openArchived,
-                        child: const Text('查看已归档工作区'),
-                      ),
-                      const SizedBox(width: 10),
-                      FilledButton(
-                        onPressed: _createWorkspace,
-                        child: const Text('新建工作区'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(0, 10, 0, 24),
-            itemCount: workspaces.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              final workspace = workspaces[index];
-              return GestureDetector(
-                onTap: () => context.go('/workspace/${workspace.id}/overview'),
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.cardColor,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: theme.inactiveColor.withOpacity(0.14),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          FluentIcons.open_folder_horizontal,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            workspace.name,
-                            style: const TextStyle(
-                              fontSize: 15,
+          children: [
+            if (workspaces.isEmpty)
+              WorkbenchCard(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '暂无活动工作区',
+                            style: TextStyle(
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+                          const SizedBox(height: 5),
+                          Text(
+                            '创建一个工作区，开始组织任务、笔记、问题、资源与决策。',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: theme.typography.body?.color?.withOpacity(0.56),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Button(
+                      onPressed: _openArchived,
+                      child: const Text('查看归档'),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: _createWorkspace,
+                      child: const Text('新建工作区'),
+                    ),
+                  ],
+                ),
+              )
+            else ...[
+              WorkbenchSectionHeader(
+                title: '活动工作区',
+                trailing: Text(
+                  '${workspaces.length} 个',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: theme.typography.body?.color?.withOpacity(0.48),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              ...workspaces.map(
+                (workspace) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: WorkbenchCard(
+                    onTap: () => context.go('/workspace/${workspace.id}/overview'),
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: theme.accentColor.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            FluentIcons.open_folder_horizontal,
+                            size: 16,
+                          ),
                         ),
-                        Text(
-                          workspace.slug,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: theme.typography.body?.color?.withOpacity(0.5),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                workspace.name,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (workspace.slug.trim().isNotEmpty) ...[
+                                const SizedBox(height: 3),
+                                Text(
+                                  workspace.slug,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    color: theme.typography.body?.color?.withOpacity(0.46),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(FluentIcons.chevron_right, size: 12),
+                        const Icon(FluentIcons.chevron_right, size: 11),
                       ],
                     ),
                   ),
                 ),
-              );
-            },
-          );
-        },
-      ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }
