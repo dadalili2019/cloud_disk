@@ -1,59 +1,318 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../theme/theme_controller.dart';
 import '../core/models.dart';
 import '../workbench_runtime.dart';
+import 'workbench_ui.dart';
 import 'workbench_workspace_admin_dialog.dart';
 
-class WorkbenchWorkspaceFrameV2 extends StatelessWidget {
-  const WorkbenchWorkspaceFrameV2({super.key, required this.workspaceId, required this.section, required this.child});
+class WorkbenchWorkspaceFrameV2 extends StatefulWidget {
+  const WorkbenchWorkspaceFrameV2({
+    super.key,
+    required this.workspaceId,
+    required this.section,
+    required this.child,
+  });
+
   final String workspaceId;
   final String section;
   final Widget child;
 
   @override
+  State<WorkbenchWorkspaceFrameV2> createState() =>
+      _WorkbenchWorkspaceFrameV2State();
+}
+
+class _WorkbenchWorkspaceFrameV2State
+    extends State<WorkbenchWorkspaceFrameV2> {
+  late Future<WorkspaceOverviewModel> _overview;
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
+
+  @override
+  void didUpdateWidget(covariant WorkbenchWorkspaceFrameV2 oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.workspaceId != widget.workspaceId) _reload();
+  }
+
+  void _reload() {
+    _overview = WorkbenchRuntime.instance.then(
+      (runtime) => runtime.overviewService.loadOverview(widget.workspaceId),
+    );
+  }
+
+  Future<void> _openSettings(WorkspaceModel workspace) async {
+    final result = await showWorkspaceSettingsDialog(context, workspace);
+    if (!mounted || result == null) return;
+    if (result == 'archived') {
+      context.go('/workspace');
+      return;
+    }
+    if (result == 'saved') setState(_reload);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      Container(
-        height: 46,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: FluentTheme.of(context).inactiveColor.withOpacity(0.14)))),
-        child: Row(children: [
-          _Tab(label: '概览', selected: section == 'overview', onTap: () => context.go('/workspace/$workspaceId/overview')),
-          _Tab(label: '任务', selected: section == 'tasks', onTap: () => context.go('/workspace/$workspaceId/tasks')),
-          _Tab(label: '笔记', selected: section == 'notes', onTap: () => context.go('/workspace/$workspaceId/notes')),
-          _Tab(label: '问题', selected: section == 'issues', onTap: () => context.go('/workspace/$workspaceId/issues')),
-          _Tab(label: '资源', selected: section == 'resources', onTap: () => context.go('/workspace/$workspaceId/resources')),
-          _Tab(label: '决策', selected: section == 'decisions', onTap: () => context.go('/workspace/$workspaceId/decisions')),
-        ]),
+    final palette = ThemeScope.of(context).palette;
+
+    return Container(
+      color: palette.appBackground,
+      child: Column(
+        children: [
+          FutureBuilder<WorkspaceOverviewModel>(
+            future: _overview,
+            builder: (context, snapshot) {
+              final overview = snapshot.data;
+              return _WorkspaceHeader(
+                workspace: overview?.workspace,
+                currentTask: overview?.currentTask,
+                loading: snapshot.connectionState != ConnectionState.done,
+                onSettings: overview == null
+                    ? null
+                    : () => _openSettings(overview.workspace),
+                onSwitchWorkspace: () => context.go('/workspace'),
+              );
+            },
+          ),
+          _WorkspaceNavigation(
+            workspaceId: widget.workspaceId,
+            section: widget.section,
+          ),
+          Expanded(child: widget.child),
+        ],
       ),
-      Expanded(child: child),
-    ]);
+    );
   }
 }
 
-class _Tab extends StatelessWidget {
-  const _Tab({required this.label, required this.selected, required this.onTap});
+class _WorkspaceHeader extends StatelessWidget {
+  const _WorkspaceHeader({
+    required this.workspace,
+    required this.currentTask,
+    required this.loading,
+    required this.onSettings,
+    required this.onSwitchWorkspace,
+  });
+
+  final WorkspaceModel? workspace;
+  final TaskModel? currentTask;
+  final bool loading;
+  final VoidCallback? onSettings;
+  final VoidCallback onSwitchWorkspace;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    final theme = FluentTheme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: palette.appBackground,
+        border: Border(
+          bottom: BorderSide(color: palette.cardBorder.withOpacity(0.76)),
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontal = constraints.maxWidth >= 1180 ? 34.0 : 28.0;
+          return Padding(
+            padding: EdgeInsets.fromLTRB(horizontal, 18, horizontal, 14),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1180),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: palette.surfaceMuted,
+                        borderRadius: BorderRadius.circular(9),
+                        border: Border.all(color: palette.cardBorder),
+                      ),
+                      child: Icon(
+                        FluentIcons.open_folder_horizontal,
+                        size: 16,
+                        color: theme.accentColor.normal,
+                      ),
+                    ),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            loading ? '加载工作区…' : workspace?.name ?? '工作区',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              height: 1.2,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            _subtitle(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: theme.typography.body?.color?.withOpacity(0.55),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Button(
+                      onPressed: onSettings,
+                      child: const Text('工作区设置'),
+                    ),
+                    const SizedBox(width: 8),
+                    Button(
+                      onPressed: onSwitchWorkspace,
+                      child: const Text('切换工作区'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  String _subtitle() {
+    if (loading) return '正在恢复工作上下文';
+    final task = currentTask;
+    if (task == null) return '暂无当前任务';
+    if (task.nextStep.trim().isEmpty) return '当前任务 · ${task.title}';
+    return '当前任务 · ${task.title} · 下一步：${task.nextStep}';
+  }
+}
+
+class _WorkspaceNavigation extends StatelessWidget {
+  const _WorkspaceNavigation({
+    required this.workspaceId,
+    required this.section,
+  });
+
+  final String workspaceId;
+  final String section;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: palette.appBackground,
+        border: Border(
+          bottom: BorderSide(color: palette.cardBorder.withOpacity(0.68)),
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontal = constraints.maxWidth >= 1180 ? 34.0 : 28.0;
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontal),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1180),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _WorkspaceTab(
+                        label: '概览',
+                        selected: section == 'overview',
+                        onTap: () => context.go('/workspace/$workspaceId/overview'),
+                      ),
+                      _WorkspaceTab(
+                        label: '任务',
+                        selected: section == 'tasks',
+                        onTap: () => context.go('/workspace/$workspaceId/tasks'),
+                      ),
+                      _WorkspaceTab(
+                        label: '笔记',
+                        selected: section == 'notes',
+                        onTap: () => context.go('/workspace/$workspaceId/notes'),
+                      ),
+                      _WorkspaceTab(
+                        label: '问题',
+                        selected: section == 'issues',
+                        onTap: () => context.go('/workspace/$workspaceId/issues'),
+                      ),
+                      _WorkspaceTab(
+                        label: '资源',
+                        selected: section == 'resources',
+                        onTap: () => context.go('/workspace/$workspaceId/resources'),
+                      ),
+                      _WorkspaceTab(
+                        label: '决策',
+                        selected: section == 'decisions',
+                        onTap: () => context.go('/workspace/$workspaceId/decisions'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _WorkspaceTab extends StatelessWidget {
+  const _WorkspaceTab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
   final String label;
   final bool selected;
   final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
     final theme = FluentTheme.of(context);
-    final accent = theme.accentColor.normal;
     return Padding(
-      padding: const EdgeInsets.only(right: 22),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: Container(
-            height: 46,
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 3),
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: selected ? accent : Colors.transparent, width: 2))),
-            child: Text(label, style: TextStyle(fontSize: 13, fontWeight: selected ? FontWeight.w600 : FontWeight.w400, color: selected ? accent : theme.typography.body?.color?.withOpacity(0.72))),
+      padding: const EdgeInsets.only(right: 6),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 130),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+            decoration: BoxDecoration(
+              color: selected ? palette.navItemSelected : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+              border: selected
+                  ? Border.all(color: palette.cardBorder.withOpacity(0.86))
+                  : null,
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                color: selected
+                    ? theme.accentColor.normal
+                    : theme.typography.body?.color?.withOpacity(0.68),
+              ),
+            ),
           ),
         ),
       ),
@@ -63,181 +322,369 @@ class _Tab extends StatelessWidget {
 
 class WorkbenchOverviewPageV2 extends StatelessWidget {
   const WorkbenchOverviewPageV2({super.key, required this.workspaceId});
-  final String workspaceId;
 
-  Future<void> _openSettings(BuildContext context, WorkspaceModel workspace) async {
-    final result = await showWorkspaceSettingsDialog(context, workspace);
-    if (!context.mounted || result == null) return;
-    if (result == 'archived') {
-      context.go('/workspace');
-    } else if (result == 'saved') {
-      context.go('/workspace/$workspaceId/overview');
-    }
-  }
+  final String workspaceId;
 
   @override
   Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
     return ScaffoldPage(
       padding: EdgeInsets.zero,
-      content: FutureBuilder<WorkspaceOverviewModel>(
-        future: WorkbenchRuntime.instance.then((runtime) => runtime.overviewService.loadOverview(workspaceId)),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) return const Center(child: ProgressRing());
-          if (snapshot.hasError) return Center(child: Text('加载失败：${snapshot.error}'));
-          final overview = snapshot.data!;
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(28, 24, 28, 32),
-            children: [
-              Row(children: [
-                Expanded(child: Text(overview.workspace.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700))),
-                Button(onPressed: () => _openSettings(context, overview.workspace), child: const Text('工作区设置')),
-                const SizedBox(width: 10),
-                Button(onPressed: () => context.go('/workspace'), child: const Text('切换工作区')),
-              ]),
-              const SizedBox(height: 18),
-              _CurrentTaskCard(workspaceId: workspaceId, task: overview.currentTask),
-              const SizedBox(height: 14),
-              if (overview.currentTask != null) _BlockerPanel(blockers: overview.currentBlockers),
-              if (overview.currentTask != null) const SizedBox(height: 14),
-              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Expanded(child: _Panel(
-                  title: '关联笔记',
-                  emptyText: '暂无关联笔记',
-                  children: overview.linkedNotes.map((note) => Text(note.title, style: const TextStyle(fontSize: 12))).toList(),
-                )),
-                const SizedBox(width: 14),
-                Expanded(child: _Panel(
-                  title: '相关资源',
-                  emptyText: '暂无相关资源',
-                  children: overview.linkedResources.map((resource) => Row(children: [
-                    const Icon(FluentIcons.link, size: 12),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(resource.name, style: const TextStyle(fontSize: 12))),
-                  ])).toList(),
-                )),
-              ]),
-              const SizedBox(height: 14),
-              _Panel(
-                title: '最近决策',
-                emptyText: '暂无相关决策',
-                children: overview.linkedDecisions.map((decision) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      content: Container(
+        color: palette.appBackground,
+        child: FutureBuilder<WorkspaceOverviewModel>(
+          future: WorkbenchRuntime.instance.then(
+            (runtime) => runtime.overviewService.loadOverview(workspaceId),
+          ),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Center(child: ProgressRing());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('加载失败：${snapshot.error}'));
+            }
+
+            final overview = snapshot.data!;
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final horizontal = constraints.maxWidth >= 1180 ? 34.0 : 28.0;
+                return ListView(
+                  padding: EdgeInsets.fromLTRB(horizontal, 22, horizontal, 34),
                   children: [
-                    Text(decision.title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                    if (decision.decisionText.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 3),
-                        child: Text(decision.decisionText, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: FluentTheme.of(context).typography.body?.color?.withOpacity(0.58))),
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1180),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _CurrentTaskCard(
+                              workspaceId: workspaceId,
+                              task: overview.currentTask,
+                            ),
+                            if (overview.currentTask != null) ...[
+                              const SizedBox(height: 12),
+                              _BlockerPanel(blockers: overview.currentBlockers),
+                            ],
+                            const SizedBox(height: 12),
+                            LayoutBuilder(
+                              builder: (context, inner) {
+                                final notes = _Panel(
+                                  title: '关联笔记',
+                                  emptyText: '暂无关联笔记',
+                                  children: overview.linkedNotes
+                                      .map(
+                                        (note) => Text(
+                                          note.title,
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                      )
+                                      .toList(),
+                                );
+                                final resources = _Panel(
+                                  title: '相关资源',
+                                  emptyText: '暂无相关资源',
+                                  children: overview.linkedResources
+                                      .map(
+                                        (resource) => Row(
+                                          children: [
+                                            const Icon(FluentIcons.link, size: 12),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                resource.name,
+                                                style: const TextStyle(fontSize: 12),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                      .toList(),
+                                );
+
+                                if (inner.maxWidth < 760) {
+                                  return Column(
+                                    children: [
+                                      notes,
+                                      const SizedBox(height: 12),
+                                      resources,
+                                    ],
+                                  );
+                                }
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: notes),
+                                    const SizedBox(width: 12),
+                                    Expanded(child: resources),
+                                  ],
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            _Panel(
+                              title: '最近决策',
+                              emptyText: '暂无相关决策',
+                              children: overview.linkedDecisions
+                                  .map(
+                                    (decision) => Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          decision.title,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        if (decision.decisionText.isNotEmpty)
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 3),
+                                            child: Text(
+                                              decision.decisionText,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: FluentTheme.of(context)
+                                                    .typography
+                                                    .body
+                                                    ?.color
+                                                    ?.withOpacity(0.58),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                            const SizedBox(height: 12),
+                            _Panel(
+                              title: '最近动态',
+                              emptyText: '暂无动态',
+                              children: overview.recentActivity
+                                  .map(
+                                    (activity) => Text(
+                                      _activityText(activity),
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ],
+                        ),
                       ),
+                    ),
                   ],
-                )).toList(),
-              ),
-              const SizedBox(height: 14),
-              _Panel(
-                title: '最近动态',
-                emptyText: '暂无动态',
-                children: overview.recentActivity.map((activity) => Text(_activityText(activity), style: const TextStyle(fontSize: 12))).toList(),
-              ),
-            ],
-          );
-        },
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
 
   String _activityText(ActivityEventModel activity) {
     switch (activity.eventType) {
-      case 'workspace_created': return '创建工作区 · ${activity.summary.replaceFirst('Created workspace ', '')}';
-      case 'workspace_renamed': return '重命名工作区 · ${activity.summary}';
-      case 'workspace_archived': return '归档工作区 · ${activity.summary}';
-      case 'workspace_restored': return '恢复工作区 · ${activity.summary}';
-      case 'task_created': return '新建任务 · ${activity.summary}';
-      case 'task_set_current': return '设为当前任务 · ${activity.summary}';
-      case 'task_updated': return '更新任务 · ${activity.summary}';
-      case 'task_completed': return '完成任务 · ${activity.summary}';
-      case 'note_created': return '新建笔记 · ${activity.summary}';
-      case 'issue_created': return '新建问题 · ${activity.summary}';
-      case 'issue_updated': return '更新问题 · ${activity.summary}';
-      case 'issue_resolved': return '解决问题 · ${activity.summary}';
-      case 'issue_linked_task': return '关联问题到任务 · ${activity.summary}';
-      case 'resource_created': return '新建资源 · ${activity.summary}';
-      case 'resource_updated': return '更新资源 · ${activity.summary}';
-      case 'resource_linked_task': return '关联资源到任务 · ${activity.summary}';
-      case 'decision_created': return '新建决策 · ${activity.summary}';
-      case 'decision_updated': return '更新决策 · ${activity.summary}';
-      case 'decision_linked_task': return '关联决策到任务 · ${activity.summary}';
-      default: return activity.summary;
+      case 'workspace_created':
+        return '创建工作区 · ${activity.summary.replaceFirst('Created workspace ', '')}';
+      case 'workspace_renamed':
+        return '重命名工作区 · ${activity.summary}';
+      case 'workspace_archived':
+        return '归档工作区 · ${activity.summary}';
+      case 'workspace_restored':
+        return '恢复工作区 · ${activity.summary}';
+      case 'task_created':
+        return '新建任务 · ${activity.summary}';
+      case 'task_set_current':
+        return '设为当前任务 · ${activity.summary}';
+      case 'task_updated':
+        return '更新任务 · ${activity.summary}';
+      case 'task_completed':
+        return '完成任务 · ${activity.summary}';
+      case 'note_created':
+        return '新建笔记 · ${activity.summary}';
+      case 'issue_created':
+        return '新建问题 · ${activity.summary}';
+      case 'issue_updated':
+        return '更新问题 · ${activity.summary}';
+      case 'issue_resolved':
+        return '解决问题 · ${activity.summary}';
+      case 'issue_linked_task':
+        return '关联问题到任务 · ${activity.summary}';
+      case 'resource_created':
+        return '新建资源 · ${activity.summary}';
+      case 'resource_updated':
+        return '更新资源 · ${activity.summary}';
+      case 'resource_linked_task':
+        return '关联资源到任务 · ${activity.summary}';
+      case 'decision_created':
+        return '新建决策 · ${activity.summary}';
+      case 'decision_updated':
+        return '更新决策 · ${activity.summary}';
+      case 'decision_linked_task':
+        return '关联决策到任务 · ${activity.summary}';
+      default:
+        return activity.summary;
     }
   }
 }
 
 class _CurrentTaskCard extends StatelessWidget {
   const _CurrentTaskCard({required this.workspaceId, required this.task});
+
   final String workspaceId;
   final TaskModel? task;
+
   @override
   Widget build(BuildContext context) {
-    if (task == null) {
-      return _Card(child: Row(children: [
-        const Expanded(child: Text('暂无当前任务', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
-        FilledButton(onPressed: () => context.go('/workspace/$workspaceId/tasks'), child: const Text('新建任务')),
-      ]));
+    final current = task;
+    if (current == null) {
+      return WorkbenchCard(
+        child: Row(
+          children: [
+            const Expanded(
+              child: Text(
+                '暂无当前任务',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+            ),
+            FilledButton(
+              onPressed: () => context.go('/workspace/$workspaceId/tasks'),
+              child: const Text('新建任务'),
+            ),
+          ],
+        ),
+      );
     }
-    return _Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [const Text('当前任务', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)), const Spacer(), Text('进度 ${task!.progress}%', style: const TextStyle(fontSize: 11))]),
-      const SizedBox(height: 8),
-      Text(task!.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-      if (task!.nextStep.isNotEmpty) ...[const SizedBox(height: 14), Text('下一步：${task!.nextStep}', style: const TextStyle(fontSize: 13))],
-    ]));
+
+    return WorkbenchCard(
+      onTap: () => context.go('/workspace/$workspaceId/tasks'),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                '当前任务',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+              const Spacer(),
+              WorkbenchTag(label: '进度 ${current.progress}%'),
+            ],
+          ),
+          const SizedBox(height: 9),
+          Text(
+            current.title,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          ),
+          if (current.nextStep.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              '下一步 · ${current.nextStep}',
+              style: const TextStyle(fontSize: 12.5),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
 class _BlockerPanel extends StatelessWidget {
   const _BlockerPanel({required this.blockers});
+
   final List<IssueModel> blockers;
+
   @override
   Widget build(BuildContext context) {
     return _Panel(
       title: '当前阻塞',
       emptyText: '当前任务暂无阻塞',
-      children: blockers.map((issue) => Row(children: [
-        const Icon(FluentIcons.warning, size: 13),
-        const SizedBox(width: 8),
-        Expanded(child: Text(issue.title, style: const TextStyle(fontSize: 12))),
-        if (issue.nextInvestigationStep.isNotEmpty) Flexible(child: Text('下一步调查：${issue.nextInvestigationStep}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: FluentTheme.of(context).typography.body?.color?.withOpacity(0.55)))),
-      ])).toList(),
+      children: blockers
+          .map(
+            (issue) => Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Icon(FluentIcons.warning, size: 13),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(issue.title, style: const TextStyle(fontSize: 12)),
+                      if (issue.nextInvestigationStep.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          '下一步调查 · ${issue.nextInvestigationStep}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: FluentTheme.of(context)
+                                .typography
+                                .body
+                                ?.color
+                                ?.withOpacity(0.55),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+          .toList(),
     );
   }
 }
 
 class _Panel extends StatelessWidget {
-  const _Panel({required this.title, required this.emptyText, required this.children});
+  const _Panel({
+    required this.title,
+    required this.emptyText,
+    required this.children,
+  });
+
   final String title;
   final String emptyText;
   final List<Widget> children;
-  @override
-  Widget build(BuildContext context) {
-    return _Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-      const SizedBox(height: 12),
-      if (children.isEmpty)
-        Text(emptyText, style: TextStyle(fontSize: 12, color: FluentTheme.of(context).typography.body?.color?.withOpacity(0.45)))
-      else
-        ...children.map((child) => Padding(padding: const EdgeInsets.only(bottom: 9), child: child)),
-    ]));
-  }
-}
 
-class _Card extends StatelessWidget {
-  const _Card({required this.child});
-  final Widget child;
   @override
   Widget build(BuildContext context) {
-    final theme = FluentTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(8), border: Border.all(color: theme.inactiveColor.withOpacity(0.14))),
-      child: child,
+    return WorkbenchCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          WorkbenchSectionHeader(title: title),
+          const SizedBox(height: 12),
+          if (children.isEmpty)
+            Text(
+              emptyText,
+              style: TextStyle(
+                fontSize: 11.5,
+                color: FluentTheme.of(context)
+                    .typography
+                    .body
+                    ?.color
+                    ?.withOpacity(0.45),
+              ),
+            )
+          else
+            ...children.map(
+              (child) => Padding(
+                padding: const EdgeInsets.only(bottom: 9),
+                child: child,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
