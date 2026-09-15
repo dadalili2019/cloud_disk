@@ -4,6 +4,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 
 import '../core/models.dart';
 import '../workbench_runtime.dart';
+import 'workbench_ui.dart';
 
 class WorkbenchNotesEditorPage extends StatefulWidget {
   const WorkbenchNotesEditorPage({
@@ -233,65 +234,45 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
     final theme = FluentTheme.of(context);
     final textColor = theme.typography.body?.color;
 
-    return ScaffoldPage(
-      padding: EdgeInsets.zero,
-      content: Row(
+    return WorkbenchSectionPage(
+      title: '笔记',
+      subtitle: '用 Markdown 记录过程信息，并与当前任务建立上下文关联。',
+      actions: [
+        FilledButton(
+          onPressed: _createNote,
+          child: const Text('新建笔记'),
+        ),
+      ],
+      headerGap: 14,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            width: 238,
+            width: 250,
             decoration: BoxDecoration(
-              border: Border(
-                right: BorderSide(
-                  color: theme.inactiveColor.withOpacity(0.14),
-                ),
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: theme.inactiveColor.withOpacity(0.14),
               ),
             ),
             child: Column(
               children: [
-                SizedBox(
-                  height: 56,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            '全部笔记',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '${_notes.length}',
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 13, 14, 11),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          '全部笔记',
                           style: TextStyle(
-                            fontSize: 11,
-                            color: textColor?.withOpacity(0.48),
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Button(
-                          onPressed: _createNote,
-                          style: ButtonStyle(
-                            padding: ButtonState.all(
-                              const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                            ),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(FluentIcons.add, size: 12),
-                              SizedBox(width: 5),
-                              Text('新建'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      WorkbenchTag(label: '${_notes.length}'),
+                    ],
                   ),
                 ),
                 Container(
@@ -307,7 +288,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                           ),
                         )
                       : ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          padding: const EdgeInsets.symmetric(vertical: 7),
                           itemCount: _notes.length,
                           itemBuilder: (context, index) {
                             final note = _notes[index];
@@ -323,102 +304,114 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
               ],
             ),
           ),
+          const SizedBox(width: 12),
           Expanded(
-            child: _selected == null
-                ? Center(
-                    child: Button(
-                      onPressed: _createNote,
-                      child: const Text('新建笔记'),
-                    ),
-                  )
-                : Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 18, 24, 22),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _selected!.title,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w700,
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: theme.inactiveColor.withOpacity(0.14),
+                ),
+              ),
+              child: _selected == null
+                  ? Center(
+                      child: Button(
+                        onPressed: _createNote,
+                        child: const Text('新建笔记'),
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _selected!.title,
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        FluentIcons.page,
-                                        size: 11,
-                                        color: textColor?.withOpacity(0.42),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        _selected!.filePath.split('/').last,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: textColor?.withOpacity(0.46),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  if (_linkedTasks.isNotEmpty) ...[
-                                    const SizedBox(height: 6),
-                                    Row(
+                                    const SizedBox(height: 5),
+                                    Wrap(
+                                      spacing: 10,
+                                      runSpacing: 5,
                                       children: [
-                                        Icon(
-                                          FluentIcons.link,
-                                          size: 11,
-                                          color: textColor?.withOpacity(0.42),
-                                        ),
-                                        const SizedBox(width: 5),
-                                        Expanded(
-                                          child: Text(
-                                            '关联任务：${_linkedTasks.map((task) => task.title).join('、')}',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: textColor?.withOpacity(0.52),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              FluentIcons.page,
+                                              size: 10,
+                                              color: textColor?.withOpacity(0.42),
                                             ),
-                                          ),
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              _selected!.filePath.split('/').last,
+                                              style: TextStyle(
+                                                fontSize: 9.5,
+                                                color: textColor?.withOpacity(0.46),
+                                              ),
+                                            ),
+                                          ],
                                         ),
+                                        if (_linkedTasks.isNotEmpty)
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                FluentIcons.link,
+                                                size: 10,
+                                                color: textColor?.withOpacity(0.42),
+                                              ),
+                                              const SizedBox(width: 5),
+                                              Text(
+                                                '关联任务 · ${_linkedTasks.map((task) => task.title).join('、')}',
+                                                style: TextStyle(
+                                                  fontSize: 9.5,
+                                                  color: textColor?.withOpacity(0.50),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                       ],
                                     ),
                                   ],
-                                ],
+                                ),
                               ),
+                              _SaveState(saving: _saving),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Expanded(
+                            child: TextBox(
+                              controller: _editor,
+                              expands: true,
+                              minLines: null,
+                              maxLines: null,
+                              textAlignVertical: TextAlignVertical.top,
+                              placeholder: '输入 Markdown 内容',
                             ),
-                            _SaveState(saving: _saving),
+                          ),
+                          if (_error != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              '保存失败：$_error',
+                              style: const TextStyle(fontSize: 11),
+                            ),
                           ],
-                        ),
-                        const SizedBox(height: 14),
-                        Expanded(
-                          child: TextBox(
-                            controller: _editor,
-                            expands: true,
-                            minLines: null,
-                            maxLines: null,
-                            textAlignVertical: TextAlignVertical.top,
-                            placeholder: '输入 Markdown 内容',
-                          ),
-                        ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            '保存失败：$_error',
-                            style: const TextStyle(fontSize: 11),
-                          ),
                         ],
-                      ],
+                      ),
                     ),
-                  ),
+            ),
           ),
         ],
       ),
@@ -444,7 +437,7 @@ class _NoteListItem extends StatelessWidget {
     final textColor = theme.typography.body?.color;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
@@ -454,34 +447,48 @@ class _NoteListItem extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
             decoration: BoxDecoration(
               color: selected ? accent.withOpacity(0.08) : Colors.transparent,
-              borderRadius: BorderRadius.circular(6),
-              border: Border(
-                left: BorderSide(
-                  color: selected ? accent : Colors.transparent,
-                  width: 2,
-                ),
+              borderRadius: BorderRadius.circular(7),
+              border: Border.all(
+                color: selected
+                    ? accent.withOpacity(0.18)
+                    : Colors.transparent,
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  note.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                Container(
+                  width: 3,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: selected ? accent : Colors.transparent,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  note.filePath.split('/').last,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: textColor?.withOpacity(0.44),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        note.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        note.filePath.split('/').last,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          color: textColor?.withOpacity(0.44),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
