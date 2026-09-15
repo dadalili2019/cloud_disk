@@ -1,6 +1,6 @@
 # Personal Workbench Phase 5 — AI UI Polish
 
-> 状态：进行中。此清单用于 Phase 5 功能完成后的 UI / UX 收口，不替代 `PHASE5_ACCEPTANCE.md`。
+> 状态：核心 UI / 技术收口已完成，待 Windows 实际验收。此清单不替代 `PHASE5_ACCEPTANCE.md`。
 
 ## 1. 设计基线
 
@@ -44,12 +44,6 @@ AI 是 App Shell 的 Right Drawer，不是独立主页面。
 - [x] Composer 在已有 Preview 时显示 Context 数量。
 - [x] Empty State 压缩为一个主要提示。
 
-对应代码：
-
-```text
-lib/workbench/presentation/global_ai_drawer.dart
-```
-
 ---
 
 ## 3. 第二轮 — Message Readability
@@ -72,9 +66,7 @@ lib/workbench/presentation/global_ai_drawer.dart
 lib/workbench/presentation/assistant_markdown.dart
 ```
 
-说明：
-
-> Phase 5 使用轻量 Markdown 子集，不引入完整 Markdown / HTML 渲染依赖。后续如出现表格、链接、引用等强需求，再评估扩展。
+Phase 5 使用轻量 Markdown 子集，不引入完整 Markdown / HTML 渲染依赖。
 
 ---
 
@@ -92,47 +84,46 @@ lib/workbench/presentation/assistant_markdown.dart
 - [x] 失败信息做长度控制，避免大段 Gateway 错误占满 Drawer。
 - [x] 顶部 InfoBar 仅处理 Context / 创建 Thread 等前置错误；Provider 失败主要在消息流反馈。
 
-流程：
-
-```text
-User Message
-→ persist user message
-→ provider call
-→ fail
-→ keep user message
-→ failure card
-→ Retry
-→ rebuild context / prompt
-→ provider call
-→ persist assistant message only
-```
-
 ---
 
 ## 5. 第四轮 — Desktop Interaction
 
-待实现：
+已实现：
 
-- [ ] `Ctrl + Enter` 发送。
-- [ ] `Enter` 保留换行。
-- [ ] `Esc` 关闭 AI Drawer。
-- [ ] Context Scope 切换支持更明确的 Hover / Focus 状态。
-- [ ] History 对话框支持更完整的键盘操作。
-- [ ] Drawer 最小宽度下做一次 Windows 实际 overflow 验证。
+- [x] `Ctrl + Enter` 发送。
+- [x] `Enter` 保留换行。
+- [x] `Esc` 关闭 AI Drawer。
+- [x] Composer 显示桌面快捷键提示。
+
+待实际 Windows 验证：
+
+- [ ] TextBox 聚焦时 `Ctrl + Enter` 不产生额外换行。
+- [ ] `Esc` 在输入框聚焦时仍能关闭 Drawer。
+- [ ] Drawer 最小宽度无横向 overflow。
+
+后续可选优化：
+
+- [ ] Context Scope 增强 Hover / Focus 样式。
+- [ ] History 对话框增强完整键盘导航。
 
 ---
 
-## 6. 第五轮 — Thread Management
+## 6. Thread Management
 
-待实现 / 后续评估：
+当前已有：
 
-- [ ] Thread Rename。
-- [ ] Thread Archive。
 - [x] History 显示 Task / Workspace / Knowledge / Global Scope。
 - [x] History 显示更新时间。
-- [ ] 当前 Thread 有更明显的选中状态。
+- [x] 新建 Thread。
+- [x] 打开历史 Thread。
 
-不在 Phase 5 强制做：
+后续可选：
+
+- [ ] Thread Rename UI。
+- [ ] Thread Archive UI。
+- [ ] 当前 Thread 更明显的选中状态。
+
+以下不属于 Phase 5：
 
 ```text
 Thread Folder
@@ -143,45 +134,82 @@ Share Thread
 
 ---
 
-## 7. 技术收口（非纯 UI）
+## 7. Conversation History Budget
 
-Phase 5 Baseline 前还需要处理：
-
-### Conversation History Budget
-
-当前 Work Context 已有限制：
+已实现于：
 
 ```text
-maxItems = 24
-maxCharacters = 18000
+AIPromptBuilder
 ```
 
-但 Conversation History 仍需要单独预算。
-
-第一版建议：
+当前默认：
 
 ```text
-保留最近 8 ~ 12 轮 user / assistant 消息
-+ conversation character limit
+maxHistoryMessages = 20
+maxHistoryCharacters = 12000
 ```
 
-### Search Index Freshness
+约等于最多最近 10 轮 user / assistant 消息，同时再受字符上限保护。
 
-Global / Workspace AI Scope 会使用 `SearchService`。
-
-需要确保：
+策略：
 
 ```text
-用户直接打开 AI
+从最新消息向前保留
+→ 达到消息条数上限停止
+→ 达到字符上限停止
+→ 单条过长时保留其最近部分
 ```
 
-时不会依赖“之前必须打开过知识与搜索页面”才能获得最新 Search Index。
-
-建议在 Application 层增加 freshness / rebuild 策略，而不是让 AI UI 自己维护索引。
+因此 Thread 可以完整持久化，但模型 Prompt 不会随着历史会话无限增长。
 
 ---
 
-## 8. 当前状态
+## 8. Search Index Freshness
+
+已实现 Application 层 freshness gate。
+
+```text
+SearchService.searchFresh()
+→ ensureFreshIndex()
+→ rebuildIndex() when stale
+```
+
+当前默认：
+
+```text
+freshnessWindow = 2 minutes
+```
+
+行为：
+
+```text
+应用启动后 AI 第一次需要 Search
+→ 自动 rebuild index
+
+2 分钟内继续 AI Search
+→ 复用现有 index
+
+超过 freshness window
+→ 下一次 AI Search 自动刷新
+```
+
+并发 rebuild 会复用同一个 `_rebuildInFlight`，避免同时重复全量扫描。
+
+AI 以下 Scope 已切换为 fresh search：
+
+```text
+Workspace
+Knowledge
+Global
+```
+
+AI Drawer 的“添加上下文”搜索同样使用 fresh search。
+
+因此 AI 不再依赖用户先打开“知识与搜索”页面。
+
+---
+
+## 9. 当前状态
 
 ```text
 Phase 5 Core Features        Complete
@@ -189,20 +217,20 @@ Phase 5 AI Drawer Functional Complete
 Phase 5 UI Polish Round 1    Complete
 Message Readability          Complete
 Failure / Retry UX           Complete
-Desktop Interaction          Pending
-Thread Management            Partial
-History Budget               Pending
-Search Freshness             Pending
+Desktop Interaction          Implemented / Pending Windows Verification
+History Budget               Complete
+Search Freshness             Complete
+Thread Management            Optional Follow-up
 DeepSeek Credential Test     Pending
 Windows Acceptance           Pending
 ```
 
-下一步优先处理：
+下一步：
 
 ```text
-Desktop Interaction
-Conversation History Budget
-Search Index Freshness
+Windows compile / interaction acceptance
+→ Preview Provider smoke test
+→ schema / persistence regression
+→ DeepSeek credential validation（用户准备参数后）
+→ PHASE5_BASELINE.md
 ```
-
-完成 UI / 技术收口后再进入最终 P5.8 Windows Acceptance。
