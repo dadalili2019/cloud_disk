@@ -22,7 +22,16 @@ class AIPromptPackage {
 }
 
 class AIPromptBuilder {
-  const AIPromptBuilder();
+  const AIPromptBuilder({
+    this.maxHistoryMessages = 20,
+    this.maxHistoryCharacters = 12000,
+  });
+
+  /// Roughly the latest 10 user/assistant rounds.
+  final int maxHistoryMessages;
+
+  /// Character budget keeps long pasted replies from growing the prompt forever.
+  final int maxHistoryCharacters;
 
   AIPromptPackage build({
     required AIContextModel context,
@@ -37,9 +46,48 @@ class AIPromptBuilder {
     return AIPromptPackage(
       systemPrompt: _systemPrompt(context.scope),
       contextBlock: _contextBlock(context),
-      history: history,
+      history: _budgetHistory(history),
       userPrompt: message,
     );
+  }
+
+  List<AIConversationTurn> _budgetHistory(List<AIConversationTurn> history) {
+    if (history.isEmpty || maxHistoryMessages <= 0 || maxHistoryCharacters <= 0) {
+      return const [];
+    }
+
+    final selected = <AIConversationTurn>[];
+    var characters = 0;
+
+    for (var index = history.length - 1; index >= 0; index--) {
+      if (selected.length >= maxHistoryMessages) break;
+
+      final turn = history[index];
+      final content = turn.content.trim();
+      if (content.isEmpty) continue;
+
+      final remaining = maxHistoryCharacters - characters;
+      if (remaining <= 0) break;
+
+      if (content.length <= remaining) {
+        selected.add(AIConversationTurn(role: turn.role, content: content));
+        characters += content.length;
+        continue;
+      }
+
+      // Keep the most recent part of an oversized turn instead of dropping all
+      // recent context just because one message is very large.
+      selected.add(
+        AIConversationTurn(
+          role: turn.role,
+          content: '…${content.substring(content.length - remaining)}',
+        ),
+      );
+      characters += remaining;
+      break;
+    }
+
+    return selected.reversed.toList(growable: false);
   }
 
   String _systemPrompt(AIContextScope scope) {
