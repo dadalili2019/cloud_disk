@@ -2,6 +2,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 
 import '../core/models.dart';
 import '../workbench_runtime.dart';
+import 'workbench_ui.dart';
 
 class WorkbenchResourcePage extends StatefulWidget {
   const WorkbenchResourcePage({super.key, required this.workspaceId});
@@ -145,63 +146,98 @@ class _WorkbenchResourcePageState extends State<WorkbenchResourcePage> {
 
   @override
   Widget build(BuildContext context) {
-    return ScaffoldPage(
-      header: PageHeader(
-        title: const Text('资源'),
-        commandBar: FilledButton(onPressed: _createResource, child: const Text('新建资源')),
-      ),
-      content: FutureBuilder<List<ResourceModel>>(
+    final theme = FluentTheme.of(context);
+    return WorkbenchSectionPage(
+      title: '资源',
+      subtitle: '集中维护代码仓库、文档、链接、路径和常用命令。',
+      actions: [
+        FilledButton(onPressed: _createResource, child: const Text('新建资源')),
+      ],
+      child: FutureBuilder<List<ResourceModel>>(
         future: _resources,
         builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) return const Center(child: ProgressRing());
-          if (snapshot.hasError) return Center(child: Text('加载失败：${snapshot.error}'));
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: ProgressRing());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('加载失败：${snapshot.error}'));
+          }
           final resources = snapshot.data ?? const <ResourceModel>[];
           if (resources.isEmpty) {
-            return Center(child: FilledButton(onPressed: _createResource, child: const Text('新建第一个资源')));
+            return Center(
+              child: FilledButton(
+                onPressed: _createResource,
+                child: const Text('新建第一个资源'),
+              ),
+            );
           }
           return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
+            padding: const EdgeInsets.only(bottom: 8),
             itemCount: resources.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final resource = resources[index];
               return FutureBuilder<List<TaskModel>>(
-                future: WorkbenchRuntime.instance.then((r) => r.resourceService.linkedTasks(resource)),
+                future: WorkbenchRuntime.instance.then(
+                  (r) => r.resourceService.linkedTasks(resource),
+                ),
                 builder: (context, taskSnapshot) {
                   final linked = taskSnapshot.data ?? const <TaskModel>[];
-                  final taskText = linked.isEmpty ? '未关联任务' : linked.map((e) => e.title).join('、');
-                  return GestureDetector(
+                  final taskText = linked.isEmpty
+                      ? '未关联任务'
+                      : linked.map((e) => e.title).join('、');
+                  return WorkbenchCard(
                     onTap: () => _edit(resource),
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: FluentTheme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: FluentTheme.of(context).inactiveColor.withOpacity(0.16)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Row(children: [
-                              Expanded(child: Text(resource.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
-                              if (resource.isPinned) const Padding(padding: EdgeInsets.only(right: 8), child: Icon(FluentIcons.pinned, size: 12)),
-                              _Badge(_typeText(resource.resourceType)),
-                            ]),
-                            const SizedBox(height: 8),
-                            Text('关联任务：$taskText', style: TextStyle(fontSize: 11, color: FluentTheme.of(context).typography.body?.color?.withOpacity(0.55))),
-                            if (resource.uri.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Text(resource.uri, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)),
-                            ],
-                            if (resource.description.isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Text(resource.description, style: const TextStyle(fontSize: 12)),
-                            ],
+                            Expanded(
+                              child: Text(
+                                resource.name,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            if (resource.isPinned)
+                              const Padding(
+                                padding: EdgeInsets.only(right: 8),
+                                child: Icon(FluentIcons.pinned, size: 12),
+                              ),
+                            WorkbenchTag(label: _typeText(resource.resourceType)),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '关联任务 · $taskText',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: theme.typography.body?.color?.withOpacity(0.52),
+                          ),
+                        ),
+                        if (resource.uri.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            resource.uri,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 11.5),
+                          ),
+                        ],
+                        if (resource.description.isNotEmpty) ...[
+                          const SizedBox(height: 5),
+                          Text(
+                            resource.description,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 11.5),
+                          ),
+                        ],
+                      ],
                     ),
                   );
                 },
