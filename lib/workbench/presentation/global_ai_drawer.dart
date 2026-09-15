@@ -71,19 +71,28 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       final knowledge = await runtime.knowledgeService.list();
       final threads = await runtime.aiConversationService.listThreads();
 
-      String? routeWorkspaceId;
-      final match = RegExp(r'^/workspace/([^/]+)').firstMatch(widget.currentLocation);
-      if (match != null) routeWorkspaceId = match.group(1);
-
       var scope = AIContextScope.global;
-      if (routeWorkspaceId != null &&
-          workspaces.any((item) => item.id == routeWorkspaceId)) {
-        scope = AIContextScope.workspace;
-      }
-
+      String? workspaceId;
+      String? taskId;
       var tasks = const <TaskModel>[];
-      if (routeWorkspaceId != null) {
-        tasks = await runtime.taskService.listByWorkspace(routeWorkspaceId);
+
+      if (widget.currentLocation == '/home') {
+        final snapshot = await runtime.continueService.load();
+        final primary = snapshot.primary;
+        if (primary != null) {
+          workspaceId = primary.workspace.id;
+          taskId = primary.context.task.id;
+          tasks = await runtime.taskService.listByWorkspace(workspaceId);
+          scope = AIContextScope.task;
+        }
+      } else {
+        final match = RegExp(r'^/workspace/([^/]+)').firstMatch(widget.currentLocation);
+        workspaceId = match?.group(1);
+        if (workspaceId != null &&
+            workspaces.any((item) => item.id == workspaceId)) {
+          tasks = await runtime.taskService.listByWorkspace(workspaceId);
+          scope = AIContextScope.workspace;
+        }
       }
 
       if (!mounted) return;
@@ -92,7 +101,8 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         _workspaces = workspaces;
         _knowledge = knowledge;
         _threads = threads;
-        _workspaceId = routeWorkspaceId;
+        _workspaceId = workspaceId;
+        _taskId = taskId;
         _tasks = tasks;
         _scope = scope;
         _loading = false;
@@ -246,8 +256,8 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
             return ContentDialog(
               title: const Text('添加上下文'),
               content: SizedBox(
-                width: 540,
-                height: 430,
+                width: 520,
+                height: 420,
                 child: Column(
                   children: [
                     Row(
@@ -377,8 +387,8 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       builder: (dialogContext) => ContentDialog(
         title: const Text('历史会话'),
         content: SizedBox(
-          width: 500,
-          height: 420,
+          width: 480,
+          height: 400,
           child: ListView.separated(
             itemCount: _threads.length,
             separatorBuilder: (_, __) => const SizedBox(height: 6),
@@ -655,55 +665,50 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
-    final drawerWidth = (screenWidth < 980 ? screenWidth * 0.72 : 620.0)
-        .clamp(460.0, 680.0)
-        .toDouble();
+    final drawerWidth = (screenWidth * 0.48).clamp(480.0, 560.0).toDouble();
 
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
         const SingleActivator(LogicalKeyboardKey.enter, control: true): _send,
         const SingleActivator(LogicalKeyboardKey.escape): widget.onClose,
       },
-      child: Focus(
-        autofocus: true,
-        child: Container(
-          width: drawerWidth,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            color: theme.scaffoldBackgroundColor,
-            border: Border(
-              left: BorderSide(color: theme.inactiveColor.withOpacity(0.18)),
-            ),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 18,
-                offset: const Offset(-4, 0),
-                color: Colors.black.withOpacity(0.08),
-              ),
-            ],
+      child: Container(
+        width: drawerWidth,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          border: Border(
+            left: BorderSide(color: theme.inactiveColor.withOpacity(0.18)),
           ),
-          child: _loading
-              ? const Center(child: ProgressRing())
-              : Column(
-                  children: [
-                    _header(theme),
-                    _scopeSection(theme),
-                    if (_error != null)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
-                        child: InfoBar(
-                          title: const Text('AI 操作失败'),
-                          content: Text(_readableError(_error!)),
-                          severity: InfoBarSeverity.error,
-                          isLong: true,
-                        ),
-                      ),
-                    const SizedBox(height: 6),
-                    Expanded(child: _body(theme)),
-                    _composer(theme),
-                  ],
-                ),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 18,
+              offset: const Offset(-4, 0),
+              color: Colors.black.withOpacity(0.08),
+            ),
+          ],
         ),
+        child: _loading
+            ? const Center(child: ProgressRing())
+            : Column(
+                children: [
+                  _header(theme),
+                  _scopeSection(theme),
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: InfoBar(
+                        title: const Text('AI 操作失败'),
+                        content: Text(_readableError(_error!)),
+                        severity: InfoBarSeverity.error,
+                        isLong: true,
+                      ),
+                    ),
+                  const SizedBox(height: 4),
+                  Expanded(child: _body(theme)),
+                  _composer(theme),
+                ],
+              ),
       ),
     );
   }
@@ -712,7 +717,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     final providerName = _runtime?.aiProvider.name ?? 'Loading Provider';
     final isPreview = providerName.toLowerCase().contains('preview');
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 15, 12, 13),
+      padding: const EdgeInsets.fromLTRB(16, 14, 10, 12),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: theme.inactiveColor.withOpacity(0.12)),
@@ -721,43 +726,43 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 30,
+            height: 30,
             decoration: BoxDecoration(
               color: theme.accentColor.withOpacity(0.10),
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(FluentIcons.chat_bot, size: 17),
+            child: const Icon(FluentIcons.chat_bot, size: 16),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 9),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'Workbench AI',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
-                  _currentContextLabel(),
+                  _headerContextLabel(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 10,
-                    color: theme.typography.body?.color?.withOpacity(0.58),
+                    fontSize: 9.5,
+                    color: theme.typography.body?.color?.withOpacity(0.56),
                   ),
                 ),
               ],
             ),
           ),
           _statusBadge(isPreview ? 'Preview' : _shortProviderName(providerName), theme),
-          const SizedBox(width: 6),
+          const SizedBox(width: 4),
           if (_threads.isNotEmpty)
             Tooltip(
               message: '历史会话',
               child: IconButton(
-                icon: const Icon(FluentIcons.history, size: 14),
+                icon: const Icon(FluentIcons.history, size: 13),
                 onPressed: _showHistoryDialog,
               ),
             ),
@@ -782,7 +787,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
 
   Widget _scopeSection(FluentThemeData theme) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 12, 18, 10),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: theme.inactiveColor.withOpacity(0.10)),
@@ -792,7 +797,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _scopeSelector(theme),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           _anchorControls(theme),
         ],
       ),
@@ -826,7 +831,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                 child: Text(
                   _scopeShortLabel(scope),
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 10.5,
                     fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
@@ -839,8 +844,17 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   }
 
   Widget _anchorControls(FluentThemeData theme) {
-    final controls = <Widget>[];
+    if (_scope == AIContextScope.global) {
+      return Align(
+        alignment: Alignment.centerRight,
+        child: Button(
+          onPressed: _previewing ? null : _previewContext,
+          child: Text(_previewing ? '整理中…' : '查看上下文'),
+        ),
+      );
+    }
 
+    final controls = <Widget>[];
     if (_scope == AIContextScope.workspace || _scope == AIContextScope.task) {
       controls.add(
         Expanded(
@@ -906,20 +920,6 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       );
     }
 
-    if (_scope == AIContextScope.global) {
-      controls.add(
-        Expanded(
-          child: Text(
-            '根据当前问题检索少量相关工作上下文。',
-            style: TextStyle(
-              fontSize: 10,
-              color: theme.typography.body?.color?.withOpacity(0.55),
-            ),
-          ),
-        ),
-      );
-    }
-
     controls.add(const SizedBox(width: 8));
     controls.add(
       Button(
@@ -927,14 +927,13 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         child: Text(_previewing ? '整理中…' : '查看上下文'),
       ),
     );
-
     return Row(children: controls);
   }
 
   Widget _body(FluentThemeData theme) {
     return ListView(
       controller: _scrollController,
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       children: [
         if (_preview != null) _contextPreview(theme, _preview!),
         if (_messages.isEmpty && _preview == null && !_sending)
@@ -943,26 +942,26 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         if (_pendingUserMessage != null)
           _pendingUserBubble(theme, _pendingUserMessage!),
         if (_sending) _thinkingBubble(theme),
-        if (_failedMessage != null && !_sending)
-          _failureBubble(theme),
+        if (_failedMessage != null && !_sending) _failureBubble(theme),
       ],
     );
   }
 
   Widget _emptyState(FluentThemeData theme) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 56),
+      padding: const EdgeInsets.symmetric(vertical: 52),
       child: Column(
         children: [
           Icon(
             FluentIcons.chat_bot,
-            size: 28,
-            color: theme.typography.body?.color?.withOpacity(0.24),
+            size: 27,
+            color: theme.typography.body?.color?.withOpacity(0.22),
           ),
-          const SizedBox(height: 12),
-          const Text(
-            '选择工作上下文，然后开始提问',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+          const SizedBox(height: 11),
+          Text(
+            _emptyStateText(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -971,7 +970,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
 
   Widget _contextPreview(FluentThemeData theme, AIContextPreviewModel preview) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(9),
@@ -1122,7 +1121,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
 
   Widget _contextChip(String text, FluentThemeData theme) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 190),
+      constraints: const BoxConstraints(maxWidth: 180),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor.withOpacity(0.55),
@@ -1143,7 +1142,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     return Align(
       alignment: user ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500),
+        constraints: const BoxConstraints(maxWidth: 440),
         margin: const EdgeInsets.only(bottom: 9),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
@@ -1165,7 +1164,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     return Align(
       alignment: Alignment.centerRight,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500),
+        constraints: const BoxConstraints(maxWidth: 440),
         margin: const EdgeInsets.only(bottom: 9),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
@@ -1214,7 +1213,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500),
+        constraints: const BoxConstraints(maxWidth: 440),
         margin: const EdgeInsets.only(bottom: 9),
         padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(
@@ -1252,7 +1251,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   Widget _composer(FluentThemeData theme) {
     final contextCount = _preview?.included.length;
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 9, 18, 14),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(color: theme.inactiveColor.withOpacity(0.10)),
@@ -1262,17 +1261,17 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 2, bottom: 6),
+            padding: const EdgeInsets.only(left: 2, bottom: 5),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
-                    _currentContextLabel(),
+                    _composerContextLabel(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 9.5,
-                      color: theme.typography.body?.color?.withOpacity(0.55),
+                      color: theme.typography.body?.color?.withOpacity(0.52),
                     ),
                   ),
                 ),
@@ -1281,7 +1280,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                     '$contextCount contexts',
                     style: TextStyle(
                       fontSize: 9.5,
-                      color: theme.typography.body?.color?.withOpacity(0.55),
+                      color: theme.typography.body?.color?.withOpacity(0.52),
                     ),
                   ),
               ],
@@ -1305,12 +1304,12 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
               ),
             ],
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 4),
           Text(
-            'Ctrl + Enter 发送 · Enter 换行 · Esc 关闭',
+            'Ctrl + Enter 发送',
             style: TextStyle(
-              fontSize: 9,
-              color: theme.typography.body?.color?.withOpacity(0.42),
+              fontSize: 8.5,
+              color: theme.typography.body?.color?.withOpacity(0.34),
             ),
           ),
         ],
@@ -1320,8 +1319,8 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
 
   Widget _statusBadge(String text, FluentThemeData theme) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 110),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      constraints: const BoxConstraints(maxWidth: 92),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(10),
@@ -1331,23 +1330,45 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         text,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 9),
+        style: const TextStyle(fontSize: 8.5),
       ),
     );
   }
 
-  String _currentContextLabel() {
+  String _headerContextLabel() {
     return switch (_scope) {
       AIContextScope.task => _taskId == null
-          ? 'Current Task · 未选择任务'
+          ? 'Current Task'
           : 'Current Task · ${_taskTitle(_taskId!)}',
       AIContextScope.workspace => _workspaceId == null
-          ? 'Workspace · 未选择工作区'
+          ? 'Workspace'
           : 'Workspace · ${_workspaceName(_workspaceId!)}',
       AIContextScope.knowledge => _knowledgeId == null
-          ? 'Knowledge · 未选择知识'
+          ? 'Knowledge'
           : 'Knowledge · ${_knowledgeTitle(_knowledgeId!)}',
-      AIContextScope.global => 'Global · 根据问题检索相关上下文',
+      AIContextScope.global => 'Global',
+    };
+  }
+
+  String _composerContextLabel() {
+    return switch (_scope) {
+      AIContextScope.global => 'Global · 自动检索相关上下文',
+      _ => _headerContextLabel(),
+    };
+  }
+
+  String _emptyStateText() {
+    return switch (_scope) {
+      AIContextScope.task => _taskId == null
+          ? '请选择一个 Task'
+          : '围绕当前 Task 提问，我会自动组织相关上下文',
+      AIContextScope.workspace => _workspaceId == null
+          ? '请选择一个 Workspace'
+          : '围绕当前 Workspace 提问，我会组织相关工作上下文',
+      AIContextScope.knowledge => _knowledgeId == null
+          ? '请选择一个 Knowledge'
+          : '围绕当前 Knowledge 提问，并结合它的来源上下文',
+      AIContextScope.global => '输入问题，我会根据当前 Scope 组织相关上下文',
     };
   }
 
@@ -1408,8 +1429,8 @@ String _entityLabel(String type) {
 String _shortProviderName(String value) {
   final normalized = value.trim();
   if (normalized.isEmpty) return 'AI';
-  if (normalized.length <= 18) return normalized;
-  return '${normalized.substring(0, 18)}…';
+  if (normalized.length <= 16) return normalized;
+  return '${normalized.substring(0, 16)}…';
 }
 
 String _formatCharacters(int value) {
