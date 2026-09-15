@@ -29,6 +29,8 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   List<KnowledgeModel> _knowledge = const [];
   List<AIThreadModel> _threads = const [];
   List<AIMessageModel> _messages = const [];
+  List<AIContextRef> _manuallyIncluded = const [];
+  List<AIContextRef> _manuallyExcluded = const [];
   AIThreadModel? _thread;
   AIContextPreviewModel? _preview;
   String? _workspaceId;
@@ -93,6 +95,11 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     }
   }
 
+  void _resetContextOverrides() {
+    _manuallyIncluded = const [];
+    _manuallyExcluded = const [];
+  }
+
   Future<void> _setWorkspace(String? value) async {
     setState(() {
       _workspaceId = value;
@@ -101,6 +108,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       _thread = null;
       _messages = const [];
       _preview = null;
+      _resetContextOverrides();
     });
     if (value == null || _runtime == null) return;
     final tasks = await _runtime!.taskService.listByWorkspace(value);
@@ -115,6 +123,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       _thread = null;
       _messages = const [];
       _preview = null;
+      _resetContextOverrides();
       if (scope == AIContextScope.global) {
         _taskId = null;
         _knowledgeId = null;
@@ -135,6 +144,8 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
           : null,
       taskId: _scope == AIContextScope.task ? _taskId : null,
       knowledgeId: _scope == AIContextScope.knowledge ? _knowledgeId : null,
+      manuallyIncludedEntities: _manuallyIncluded,
+      manuallyExcludedEntities: _manuallyExcluded,
     );
   }
 
@@ -159,6 +170,191 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     }
   }
 
+  Future<void> _excludeContext(AIContextRef ref) async {
+    if (_manuallyExcluded.any((item) => item.key == ref.key)) return;
+    setState(() {
+      _manuallyExcluded = [..._manuallyExcluded, ref];
+    });
+    await _previewContext();
+  }
+
+  Future<void> _restoreContext(AIContextRef ref) async {
+    setState(() {
+      _manuallyExcluded = _manuallyExcluded
+          .where((item) => item.key != ref.key)
+          .toList(growable: false);
+    });
+    await _previewContext();
+  }
+
+  Future<void> _showAddContextDialog() async {
+    final runtime = _runtime;
+    if (runtime == null) return;
+
+    final controller = TextEditingController();
+    var results = const <SearchResultModel>[];
+    var searching = false;
+    Object? dialogError;
+
+    final selected = await showDialog<AIContextRef>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            Future<void> runSearch() async {
+              final query = controller.text.trim();
+              if (query.isEmpty || searching) return;
+              setDialogState(() {
+                searching = true;
+                dialogError = null;
+              });
+              try {
+                final found = await runtime.searchService.search(
+                  query,
+                  workspaceId: _scope == AIContextScope.workspace ||
+                          _scope == AIContextScope.task
+                      ? _workspaceId
+                      : null,
+                  limit: 20,
+                );
+                setDialogState(() => results = found);
+              } catch (error) {
+                setDialogState(() => dialogError = error);
+              } finally {
+                setDialogState(() => searching = false);
+              }
+            }
+
+            return ContentDialog(
+              title: const Text('添加上下文'),
+              content: SizedBox(
+                width: 520,
+                height: 420,
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextBox(
+                            controller: controller,
+                            autofocus: true,
+                            placeholder: '搜索 Task / Note / Issue / Resource / Decision / Knowledge',
+                            onSubmitted: (_) => runSearch(),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Button(
+                          onPressed: searching ? null : runSearch,
+                          child: Text(searching ? '搜索中…' : '搜索'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    if (dialogError != null)
+                      InfoBar(
+                        title: const Text('搜索失败'),
+                        content: Text('$dialogError'),
+                        severity: InfoBarSeverity.error,
+                      ),
+                    const SizedBox(height: 4),
+                    Expanded(
+                      child: results.isEmpty
+                          ? const Center(
+                              child: Text(
+                                '输入关键词搜索需要额外加入的工作上下文。',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: results.length,
+                              separatorBuilder: (_, __) => const SizedBox(height: 6),
+                              itemBuilder: (context, index) {
+                                final item = results[index];
+                                final key = '${item.entityType}:${item.entityId}';
+                                final alreadyIncluded = _manuallyIncluded
+                                    .any((ref) => ref.key == key);
+                                return Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: FluentTheme.of(context)
+                                          .inactiveColor
+                                          .withOpacity(0.14),
+                                    ),
+                                    borderRadius: BorderRadius.circular(7),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${_entityLabel(item.entityType)} · ${item.title}',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            if (item.snippet.trim().isNotEmpty)
+                                              Text(
+                                                item.snippet,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(fontSize: 10),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Button(
+                                        onPressed: alreadyIncluded
+                                            ? null
+                                            : () => Navigator.pop(
+                                                  dialogContext,
+                                                  AIContextRef(
+                                                    entityType: item.entityType,
+                                                    entityId: item.entityId,
+                                                    title: item.title,
+                                                    workspaceId: item.workspaceId,
+                                                  ),
+                                                ),
+                                        child: Text(alreadyIncluded ? '已添加' : '添加'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                Button(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('关闭'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    controller.dispose();
+
+    if (selected == null || !mounted) return;
+    setState(() {
+      if (!_manuallyIncluded.any((item) => item.key == selected.key)) {
+        _manuallyIncluded = [..._manuallyIncluded, selected];
+      }
+      _manuallyExcluded = _manuallyExcluded
+          .where((item) => item.key != selected.key)
+          .toList(growable: false);
+    });
+    await _previewContext();
+  }
+
   Future<void> _openThread(AIThreadModel? value) async {
     if (value == null || _runtime == null) return;
     final messages = await _runtime!.aiConversationService.listMessages(value.id);
@@ -176,6 +372,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       _tasks = tasks;
       _messages = messages;
       _preview = null;
+      _resetContextOverrides();
     });
   }
 
@@ -185,6 +382,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       _messages = const [];
       _preview = null;
       _error = null;
+      _resetContextOverrides();
     });
   }
 
@@ -296,18 +494,22 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   }
 
   Widget _header(FluentThemeData theme) {
+    final providerName = _runtime?.aiProvider.name ?? 'Loading Provider';
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 10, 10),
       child: Row(
         children: [
           const Icon(FluentIcons.chat_bot, size: 18),
           const SizedBox(width: 8),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Workbench AI', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                Text('Context Preview · 暂未连接真实模型', style: TextStyle(fontSize: 10)),
+                const Text(
+                  'Workbench AI',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+                Text(providerName, style: const TextStyle(fontSize: 10)),
               ],
             ),
           ),
@@ -368,6 +570,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                 _thread = null;
                 _messages = const [];
                 _preview = null;
+                _resetContextOverrides();
               }),
             ),
           ],
@@ -384,6 +587,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                 _thread = null;
                 _messages = const [];
                 _preview = null;
+                _resetContextOverrides();
               }),
             ),
           if (_threads.isNotEmpty) ...[
@@ -442,11 +646,19 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
             children: [
               const Text('Context Preview', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
               const Spacer(),
-              Text('${preview.included.length} 项 · ${preview.totalCharacters} 字符', style: const TextStyle(fontSize: 10)),
+              Button(
+                onPressed: _showAddContextDialog,
+                child: const Text('添加上下文'),
+              ),
             ],
           ),
+          const SizedBox(height: 4),
+          Text(
+            '${preview.included.length} 项 · ${preview.totalCharacters} 字符',
+            style: const TextStyle(fontSize: 10),
+          ),
           const SizedBox(height: 8),
-          ...preview.included.take(10).map(
+          ...preview.included.take(12).map(
                 (item) => Padding(
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Row(
@@ -469,10 +681,42 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                           ],
                         ),
                       ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(FluentIcons.remove, size: 11),
+                        onPressed: () => _excludeContext(item.ref),
+                      ),
                     ],
                   ),
                 ),
               ),
+          if (preview.excluded.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            const Text(
+              '已排除',
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 6),
+            ...preview.excluded.map(
+              (ref) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${_entityLabel(ref.entityType)} · ${ref.title}',
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    ),
+                    Button(
+                      onPressed: () => _restoreContext(ref),
+                      child: const Text('恢复'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
