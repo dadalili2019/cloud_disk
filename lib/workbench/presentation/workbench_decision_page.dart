@@ -2,6 +2,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 
 import '../core/models.dart';
 import '../workbench_runtime.dart';
+import 'workbench_ui.dart';
 
 class WorkbenchDecisionPage extends StatefulWidget {
   const WorkbenchDecisionPage({super.key, required this.workspaceId});
@@ -73,7 +74,10 @@ class _WorkbenchDecisionPageState extends State<WorkbenchDecisionPage> {
       if (!mounted) return;
       await _showError(e);
     } finally {
-      title.dispose(); decisionText.dispose(); rationale.dispose(); revisit.dispose();
+      title.dispose();
+      decisionText.dispose();
+      rationale.dispose();
+      revisit.dispose();
     }
   }
 
@@ -95,76 +99,111 @@ class _WorkbenchDecisionPageState extends State<WorkbenchDecisionPage> {
         builder: (dialogContext) => ContentDialog(
           title: const Text('操作失败'),
           content: Text(error.toString()),
-          actions: [FilledButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('确定'))],
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('确定'),
+            ),
+          ],
         ),
       );
 
   String _statusText(String status) {
     switch (status) {
-      case 'superseded': return '已替代';
-      case 'archived': return '已归档';
-      default: return '生效中';
+      case 'superseded':
+        return '已替代';
+      case 'archived':
+        return '已归档';
+      default:
+        return '生效中';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return ScaffoldPage(
-      header: PageHeader(
-        title: const Text('决策'),
-        commandBar: FilledButton(onPressed: _createDecision, child: const Text('新建决策')),
-      ),
-      content: FutureBuilder<List<DecisionModel>>(
+    final theme = FluentTheme.of(context);
+    return WorkbenchSectionPage(
+      title: '决策',
+      subtitle: '记录已经做出的选择、原因以及需要重新评估的条件。',
+      actions: [
+        FilledButton(onPressed: _createDecision, child: const Text('新建决策')),
+      ],
+      child: FutureBuilder<List<DecisionModel>>(
         future: _decisions,
         builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) return const Center(child: ProgressRing());
-          if (snapshot.hasError) return Center(child: Text('加载失败：${snapshot.error}'));
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: ProgressRing());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('加载失败：${snapshot.error}'));
+          }
           final decisions = snapshot.data ?? const <DecisionModel>[];
           if (decisions.isEmpty) {
-            return Center(child: FilledButton(onPressed: _createDecision, child: const Text('新建第一个决策')));
+            return Center(
+              child: FilledButton(
+                onPressed: _createDecision,
+                child: const Text('新建第一个决策'),
+              ),
+            );
           }
           return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
+            padding: const EdgeInsets.only(bottom: 8),
             itemCount: decisions.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final decision = decisions[index];
               return FutureBuilder<List<TaskModel>>(
-                future: WorkbenchRuntime.instance.then((r) => r.decisionService.linkedTasks(decision)),
+                future: WorkbenchRuntime.instance.then(
+                  (r) => r.decisionService.linkedTasks(decision),
+                ),
                 builder: (context, taskSnapshot) {
                   final linked = taskSnapshot.data ?? const <TaskModel>[];
-                  final taskText = linked.isEmpty ? '未关联任务' : linked.map((e) => e.title).join('、');
-                  return GestureDetector(
+                  final taskText = linked.isEmpty
+                      ? '未关联任务'
+                      : linked.map((e) => e.title).join('、');
+                  return WorkbenchCard(
                     onTap: () => _edit(decision),
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: FluentTheme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: FluentTheme.of(context).inactiveColor.withOpacity(0.16)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Row(children: [
-                              Expanded(child: Text(decision.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
-                              _Badge(_statusText(decision.status)),
-                            ]),
-                            const SizedBox(height: 8),
-                            Text('关联任务：$taskText', style: TextStyle(fontSize: 11, color: FluentTheme.of(context).typography.body?.color?.withOpacity(0.55))),
-                            if (decision.decisionText.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Text('决定：${decision.decisionText}', style: const TextStyle(fontSize: 12)),
-                            ],
-                            if (decision.rationale.isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Text('原因：${decision.rationale}', style: const TextStyle(fontSize: 12)),
-                            ],
+                            Expanded(
+                              child: Text(
+                                decision.title,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            WorkbenchTag(label: _statusText(decision.status)),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '关联任务 · $taskText',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: theme.typography.body?.color?.withOpacity(0.52),
+                          ),
+                        ),
+                        if (decision.decisionText.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            '决定 · ${decision.decisionText}',
+                            style: const TextStyle(fontSize: 11.5),
+                          ),
+                        ],
+                        if (decision.rationale.isNotEmpty) ...[
+                          const SizedBox(height: 5),
+                          Text(
+                            '原因 · ${decision.rationale}',
+                            style: const TextStyle(fontSize: 11.5),
+                          ),
+                        ],
+                      ],
                     ),
                   );
                 },
@@ -217,26 +256,42 @@ class _DecisionEditDrawerState extends State<_DecisionEditDrawer> {
 
   @override
   void dispose() {
-    _title.dispose(); _text.dispose(); _rationale.dispose(); _revisit.dispose(); super.dispose();
+    _title.dispose();
+    _text.dispose();
+    _rationale.dispose();
+    _revisit.dispose();
+    super.dispose();
   }
 
   Future<void> _link() async {
     if (_linking) return;
-    setState(() { _linking = true; _error = null; });
+    setState(() {
+      _linking = true;
+      _error = null;
+    });
     try {
       final runtime = await WorkbenchRuntime.instance;
       await runtime.decisionService.linkToCurrentTask(widget.decision);
       if (!mounted) return;
-      setState(() { _linking = false; _reloadLinks(); });
+      setState(() {
+        _linking = false;
+        _reloadLinks();
+      });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _linking = false; _error = e.toString(); });
+      setState(() {
+        _linking = false;
+        _error = e.toString();
+      });
     }
   }
 
   Future<void> _save() async {
     if (_saving) return;
-    setState(() { _saving = true; _error = null; });
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
     try {
       final runtime = await WorkbenchRuntime.instance;
       await runtime.decisionService.update(
@@ -251,7 +306,10 @@ class _DecisionEditDrawerState extends State<_DecisionEditDrawer> {
       widget.onSaved();
     } catch (e) {
       if (!mounted) return;
-      setState(() { _saving = false; _error = e.toString(); });
+      setState(() {
+        _saving = false;
+        _error = e.toString();
+      });
     }
   }
 
@@ -269,54 +327,108 @@ class _DecisionEditDrawerState extends State<_DecisionEditDrawer> {
             Padding(
               padding: const EdgeInsets.fromLTRB(22, 20, 14, 14),
               child: Row(children: [
-                const Expanded(child: Text('编辑决策', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700))),
-                IconButton(icon: const Icon(FluentIcons.chrome_close, size: 14), onPressed: widget.onCancel),
+                const Expanded(
+                  child: Text(
+                    '编辑决策',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(FluentIcons.chrome_close, size: 14),
+                  onPressed: widget.onCancel,
+                ),
               ]),
             ),
             Container(height: 1, color: theme.inactiveColor.withOpacity(0.12)),
-            Expanded(child: ListView(
-              padding: const EdgeInsets.fromLTRB(22, 20, 22, 24),
-              children: [
-                const _Label('决策名称'), const SizedBox(height: 7), TextBox(controller: _title),
-                const SizedBox(height: 18), const _Label('状态'), const SizedBox(height: 7),
-                ComboBox<String>(
-                  value: _status,
-                  isExpanded: true,
-                  items: const [
-                    ComboBoxItem(value: 'active', child: Text('生效中')),
-                    ComboBoxItem(value: 'superseded', child: Text('已替代')),
-                    ComboBoxItem(value: 'archived', child: Text('已归档')),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(22, 20, 22, 24),
+                children: [
+                  const _Label('决策名称'),
+                  const SizedBox(height: 7),
+                  TextBox(controller: _title),
+                  const SizedBox(height: 18),
+                  const _Label('状态'),
+                  const SizedBox(height: 7),
+                  ComboBox<String>(
+                    value: _status,
+                    isExpanded: true,
+                    items: const [
+                      ComboBoxItem(value: 'active', child: Text('生效中')),
+                      ComboBoxItem(value: 'superseded', child: Text('已替代')),
+                      ComboBoxItem(value: 'archived', child: Text('已归档')),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setState(() => _status = v);
+                    },
+                  ),
+                  const SizedBox(height: 18),
+                  const _Label('决定做什么'),
+                  const SizedBox(height: 7),
+                  TextBox(controller: _text, minLines: 3, maxLines: 5),
+                  const SizedBox(height: 18),
+                  const _Label('为什么这样决定'),
+                  const SizedBox(height: 7),
+                  TextBox(controller: _rationale, minLines: 3, maxLines: 5),
+                  const SizedBox(height: 18),
+                  const _Label('重新评估条件'),
+                  const SizedBox(height: 7),
+                  TextBox(controller: _revisit, minLines: 3, maxLines: 5),
+                  const SizedBox(height: 20),
+                  const _Label('关联任务'),
+                  const SizedBox(height: 8),
+                  FutureBuilder<List<TaskModel>>(
+                    future: _linkedTasks,
+                    builder: (context, snapshot) {
+                      final tasks = snapshot.data ?? const <TaskModel>[];
+                      if (tasks.isEmpty) {
+                        return const Text('暂未关联任务', style: TextStyle(fontSize: 12));
+                      }
+                      return Wrap(
+                        spacing: 6,
+                        children: tasks.map((e) => _Badge(e.title)).toList(),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  FutureBuilder<TaskModel?>(
+                    future: _currentTask,
+                    builder: (context, snapshot) {
+                      final task = snapshot.data;
+                      if (task == null) return const SizedBox.shrink();
+                      return Button(
+                        onPressed: _linking ? null : _link,
+                        child: Text(
+                          _linking ? '关联中…' : '关联当前任务：${task.title}',
+                        ),
+                      );
+                    },
+                  ),
+                  if (_error != null) ...[
+                    const SizedBox(height: 14),
+                    Text('操作失败：$_error', style: const TextStyle(fontSize: 11)),
                   ],
-                  onChanged: (v) { if (v != null) setState(() => _status = v); },
-                ),
-                const SizedBox(height: 18), const _Label('决定做什么'), const SizedBox(height: 7), TextBox(controller: _text, minLines: 3, maxLines: 5),
-                const SizedBox(height: 18), const _Label('为什么这样决定'), const SizedBox(height: 7), TextBox(controller: _rationale, minLines: 3, maxLines: 5),
-                const SizedBox(height: 18), const _Label('重新评估条件'), const SizedBox(height: 7), TextBox(controller: _revisit, minLines: 3, maxLines: 5),
-                const SizedBox(height: 20), const _Label('关联任务'), const SizedBox(height: 8),
-                FutureBuilder<List<TaskModel>>(
-                  future: _linkedTasks,
-                  builder: (context, snapshot) {
-                    final tasks = snapshot.data ?? const <TaskModel>[];
-                    if (tasks.isEmpty) return const Text('暂未关联任务', style: TextStyle(fontSize: 12));
-                    return Wrap(spacing: 6, children: tasks.map((e) => _Badge(e.title)).toList());
-                  },
-                ),
-                const SizedBox(height: 10),
-                FutureBuilder<TaskModel?>(future: _currentTask, builder: (context, snapshot) {
-                  final task = snapshot.data;
-                  if (task == null) return const SizedBox.shrink();
-                  return Button(onPressed: _linking ? null : _link, child: Text(_linking ? '关联中…' : '关联当前任务：${task.title}'));
-                }),
-                if (_error != null) ...[const SizedBox(height: 14), Text('操作失败：$_error', style: const TextStyle(fontSize: 11))],
-              ],
-            )),
+                ],
+              ),
+            ),
             Container(
               padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
-              decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.inactiveColor.withOpacity(0.12)))),
-              child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                Button(onPressed: widget.onCancel, child: const Text('取消')), const SizedBox(width: 10),
-                FilledButton(onPressed: _saving ? null : _save, child: Text(_saving ? '保存中…' : '保存')),
-              ]),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: theme.inactiveColor.withOpacity(0.12)),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Button(onPressed: widget.onCancel, child: const Text('取消')),
+                  const SizedBox(width: 10),
+                  FilledButton(
+                    onPressed: _saving ? null : _save,
+                    child: Text(_saving ? '保存中…' : '保存'),
+                  ),
+                ],
+              ),
             ),
           ]),
         ),
@@ -326,15 +438,27 @@ class _DecisionEditDrawerState extends State<_DecisionEditDrawer> {
 }
 
 class _Badge extends StatelessWidget {
-  const _Badge(this.text); final String text;
-  @override Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-    decoration: BoxDecoration(color: FluentTheme.of(context).inactiveColor.withOpacity(0.10), borderRadius: BorderRadius.circular(10)),
-    child: Text(text, style: const TextStyle(fontSize: 10)),
-  );
+  const _Badge(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: FluentTheme.of(context).inactiveColor.withOpacity(0.10),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(text, style: const TextStyle(fontSize: 10)),
+      );
 }
 
 class _Label extends StatelessWidget {
-  const _Label(this.text); final String text;
-  @override Widget build(BuildContext context) => Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600));
+  const _Label(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Text(
+        text,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+      );
 }
