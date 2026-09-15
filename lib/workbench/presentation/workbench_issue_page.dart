@@ -2,6 +2,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 
 import '../core/models.dart';
 import '../workbench_runtime.dart';
+import 'workbench_ui.dart';
 
 class WorkbenchIssuePage extends StatefulWidget {
   const WorkbenchIssuePage({
@@ -189,15 +190,17 @@ class _WorkbenchIssuePageState extends State<WorkbenchIssuePage> {
 
   @override
   Widget build(BuildContext context) {
-    return ScaffoldPage(
-      header: PageHeader(
-        title: const Text('问题'),
-        commandBar: FilledButton(
+    final theme = FluentTheme.of(context);
+    return WorkbenchSectionPage(
+      title: '问题',
+      subtitle: '记录阻塞、假设、影响与下一步调查。',
+      actions: [
+        FilledButton(
           onPressed: _createIssue,
           child: const Text('新建问题'),
         ),
-      ),
-      content: FutureBuilder<List<IssueModel>>(
+      ],
+      child: FutureBuilder<List<IssueModel>>(
         future: _issues,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
@@ -218,9 +221,9 @@ class _WorkbenchIssuePageState extends State<WorkbenchIssuePage> {
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
+            padding: const EdgeInsets.only(bottom: 8),
             itemCount: issues.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final issue = issues[index];
               return FutureBuilder<List<TaskModel>>(
@@ -233,81 +236,56 @@ class _WorkbenchIssuePageState extends State<WorkbenchIssuePage> {
                       ? '未关联任务'
                       : linkedTasks.map((task) => task.title).join('、');
 
-                  return MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => _editIssue(issue),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: FluentTheme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: FluentTheme.of(context)
-                                .inactiveColor
-                                .withOpacity(0.16),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  return WorkbenchCard(
+                    onTap: () => _editIssue(issue),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    issue.title,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
+                            Expanded(
+                              child: Text(
+                                issue.title,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                _IssueBadge(text: _severityText(issue.severity)),
-                                const SizedBox(width: 6),
-                                _IssueBadge(text: _statusText(issue.status)),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                const Icon(FluentIcons.link, size: 12),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    '关联任务：$linkedTaskText',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: FluentTheme.of(context)
-                                          .typography
-                                          .body
-                                          ?.color
-                                          ?.withOpacity(0.55),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (issue.impact.isNotEmpty) ...[
-                              const SizedBox(height: 10),
-                              Text('影响：${issue.impact}',
-                                  style: const TextStyle(fontSize: 12)),
-                            ],
-                            if (issue.hypothesis.isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Text('当前假设：${issue.hypothesis}',
-                                  style: const TextStyle(fontSize: 12)),
-                            ],
-                            if (issue.nextInvestigationStep.isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Text(
-                                '下一步调查：${issue.nextInvestigationStep}',
-                                style: const TextStyle(fontSize: 12),
                               ),
-                            ],
+                            ),
+                            WorkbenchTag(
+                              label: '严重程度 · ${_severityText(issue.severity)}',
+                            ),
+                            const SizedBox(width: 6),
+                            WorkbenchTag(label: _statusText(issue.status)),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 9),
+                        Text(
+                          '关联任务 · $linkedTaskText',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: theme.typography.body?.color?.withOpacity(0.52),
+                          ),
+                        ),
+                        if (issue.impact.isNotEmpty) ...[
+                          const SizedBox(height: 9),
+                          Text('影响 · ${issue.impact}',
+                              style: const TextStyle(fontSize: 11.5)),
+                        ],
+                        if (issue.hypothesis.isNotEmpty) ...[
+                          const SizedBox(height: 5),
+                          Text('当前假设 · ${issue.hypothesis}',
+                              style: const TextStyle(fontSize: 11.5)),
+                        ],
+                        if (issue.nextInvestigationStep.isNotEmpty) ...[
+                          const SizedBox(height: 5),
+                          Text(
+                            '下一步调查 · ${issue.nextInvestigationStep}',
+                            style: const TextStyle(fontSize: 11.5),
+                          ),
+                        ],
+                      ],
                     ),
                   );
                 },
