@@ -107,6 +107,10 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         _scope = scope;
         _loading = false;
       });
+
+      if (scope == AIContextScope.task && taskId != null) {
+        await _previewContext();
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -665,7 +669,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
-    final drawerWidth = (screenWidth * 0.48).clamp(480.0, 560.0).toDouble();
+    final drawerWidth = (screenWidth * 0.42).clamp(460.0, 520.0).toDouble();
 
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
@@ -844,12 +848,18 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   }
 
   Widget _anchorControls(FluentThemeData theme) {
+    final buttonLabel = _previewing
+        ? '整理中…'
+        : _preview == null
+            ? '查看上下文'
+            : '刷新';
+
     if (_scope == AIContextScope.global) {
       return Align(
         alignment: Alignment.centerRight,
         child: Button(
           onPressed: _previewing ? null : _previewContext,
-          child: Text(_previewing ? '整理中…' : '查看上下文'),
+          child: Text(buttonLabel),
         ),
       );
     }
@@ -882,15 +892,18 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
             items: _tasks
                 .map((item) => ComboBoxItem(value: item.id, child: Text(item.title)))
                 .toList(),
-            onChanged: (value) => setState(() {
-              _taskId = value;
-              _thread = null;
-              _messages = const [];
-              _preview = null;
-              _contextExpanded = false;
-              _clearFailure();
-              _resetContextOverrides();
-            }),
+            onChanged: (value) async {
+              setState(() {
+                _taskId = value;
+                _thread = null;
+                _messages = const [];
+                _preview = null;
+                _contextExpanded = false;
+                _clearFailure();
+                _resetContextOverrides();
+              });
+              if (value != null) await _previewContext();
+            },
           ),
         ),
       );
@@ -924,7 +937,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     controls.add(
       Button(
         onPressed: _previewing ? null : _previewContext,
-        child: Text(_previewing ? '整理中…' : '查看上下文'),
+        child: Text(buttonLabel),
       ),
     );
     return Row(children: controls);
