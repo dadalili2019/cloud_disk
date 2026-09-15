@@ -26,11 +26,33 @@ PreviewAIProvider
 POST {BASE_URL}{CHAT_PATH}
 ```
 
-默认：
+默认普通 OpenAI-compatible 服务使用：
 
 ```text
 CHAT_PATH=/v1/chat/completions
 ```
+
+如果：
+
+```text
+WORKBENCH_AI_BASE_URL=https://api.deepseek.com
+```
+
+Workbench 会自动识别 DeepSeek 官方 API，并默认使用：
+
+```text
+CHAT_PATH=/chat/completions
+```
+
+因此 DeepSeek 官方 API 通常只需要配置：
+
+```text
+WORKBENCH_AI_BASE_URL
+WORKBENCH_AI_MODEL
+WORKBENCH_AI_API_KEY
+```
+
+如果显式设置 `WORKBENCH_AI_CHAT_PATH`，则始终以显式配置为准。
 
 请求核心格式：
 
@@ -83,7 +105,12 @@ WORKBENCH_AI_TIMEOUT_SECONDS
 默认值：
 
 ```text
+普通 OpenAI-compatible:
 CHAT_PATH=/v1/chat/completions
+
+DeepSeek 官方 API:
+CHAT_PATH=/chat/completions
+
 API_KEY_HEADER=Authorization
 API_KEY_PREFIX=Bearer
 TIMEOUT_SECONDS=90
@@ -93,7 +120,18 @@ TIMEOUT_SECONDS=90
 
 ## 4. Windows PowerShell 示例
 
-普通 Bearer Token 网关：
+### DeepSeek 官方 API
+
+```powershell
+$env:WORKBENCH_AI_BASE_URL="https://api.deepseek.com"
+$env:WORKBENCH_AI_MODEL="your-deepseek-model"
+$env:WORKBENCH_AI_API_KEY="your-key"
+flutter run -d windows
+```
+
+无需额外设置 `WORKBENCH_AI_CHAT_PATH`。
+
+### 普通 Bearer Token 网关
 
 ```powershell
 $env:WORKBENCH_AI_BASE_URL="https://your-ai-gateway.example.com"
@@ -133,8 +171,8 @@ $env:WORKBENCH_AI_EXTRA_HEADERS_JSON='{"X-Tenant":"tenant-id","X-App":"personal-
 
 ```powershell
 flutter run -d windows `
-  --dart-define=WORKBENCH_AI_BASE_URL=https://your-ai-gateway.example.com `
-  --dart-define=WORKBENCH_AI_MODEL=your-model `
+  --dart-define=WORKBENCH_AI_BASE_URL=https://api.deepseek.com `
+  --dart-define=WORKBENCH_AI_MODEL=your-deepseek-model `
   --dart-define=WORKBENCH_AI_API_KEY=your-key
 ```
 
