@@ -982,6 +982,15 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   }
 
   Widget _contextPreview(FluentThemeData theme, AIContextPreviewModel preview) {
+    final nonActivity = preview.included
+        .where((item) => item.ref.entityType != 'activity')
+        .toList(growable: false);
+    final visibleNonActivity = nonActivity.take(5).toList(growable: false);
+    final hiddenNonActivity = nonActivity.length - visibleNonActivity.length;
+    final activityCount = preview.included
+        .where((item) => item.ref.entityType == 'activity')
+        .length;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -1023,14 +1032,16 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                 spacing: 6,
                 runSpacing: 6,
                 children: [
-                  ...preview.included.take(6).map(
-                        (item) => _contextChip(
-                          '${_entityLabel(item.ref.entityType)} · ${item.ref.title}',
-                          theme,
-                        ),
-                      ),
-                  if (preview.included.length > 6)
-                    _contextChip('+${preview.included.length - 6}', theme),
+                  ...visibleNonActivity.map(
+                    (item) => _contextChip(
+                      '${_entityLabel(item.ref.entityType)} · ${item.ref.title}',
+                      theme,
+                    ),
+                  ),
+                  if (activityCount > 0)
+                    _contextChip('活动 · $activityCount 条', theme),
+                  if (hiddenNonActivity > 0)
+                    _contextChip('其他 · $hiddenNonActivity 条', theme),
                   if (preview.excluded.isNotEmpty)
                     _contextChip('已排除 ${preview.excluded.length}', theme),
                 ],
@@ -1290,7 +1301,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                 ),
                 if (contextCount != null)
                   Text(
-                    '$contextCount contexts',
+                    '$contextCount 条上下文',
                     style: TextStyle(
                       fontSize: 9.5,
                       color: theme.typography.body?.color?.withOpacity(0.52),
@@ -1447,8 +1458,8 @@ String _shortProviderName(String value) {
 }
 
 String _formatCharacters(int value) {
-  if (value < 1000) return '$value chars';
-  return '${(value / 1000).toStringAsFixed(1)}k chars';
+  if (value < 1000) return '$value 字符';
+  return '${(value / 1000).toStringAsFixed(1)}k 字符';
 }
 
 String _formatDateTime(DateTime value) {
