@@ -61,12 +61,15 @@ class AIProviderConfig {
         : resolvedHeader.toLowerCase() == 'authorization'
             ? 'Bearer'
             : '';
+    final resolvedChatPath = chatPath.isNotEmpty
+        ? chatPath
+        : _defaultChatPath(baseUrl);
 
     return AIProviderConfig(
       baseUrl: baseUrl,
       model: model,
       apiKey: apiKey,
-      chatPath: chatPath.isEmpty ? '/v1/chat/completions' : chatPath,
+      chatPath: resolvedChatPath,
       apiKeyHeader: resolvedHeader,
       apiKeyPrefix: resolvedPrefix,
       extraHeaders: _parseHeaders(extraHeadersRaw),
@@ -78,6 +81,18 @@ class AIProviderConfig {
     final runtimeValue = Platform.environment[name]?.trim();
     if (runtimeValue != null && runtimeValue.isNotEmpty) return runtimeValue;
     return compiledValue.trim();
+  }
+
+  static String _defaultChatPath(String baseUrl) {
+    try {
+      final uri = Uri.parse(baseUrl.trim());
+      if (uri.host.toLowerCase() == 'api.deepseek.com') {
+        return '/chat/completions';
+      }
+    } catch (_) {
+      // Invalid / incomplete URLs will be reported later by the HTTP provider.
+    }
+    return '/v1/chat/completions';
   }
 
   static Map<String, String> _parseHeaders(String raw) {
