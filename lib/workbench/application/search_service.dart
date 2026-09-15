@@ -8,7 +8,7 @@ import '../domain/resource_repository.dart';
 import '../domain/search_repository.dart';
 
 class SearchService {
-  const SearchService({
+  SearchService({
     required this.workspaces,
     required this.tasks,
     required this.notes,
@@ -18,6 +18,7 @@ class SearchService {
     required this.knowledge,
     required this.markdownStore,
     required this.index,
+    this.freshnessWindow = const Duration(minutes: 2),
   });
 
   final WorkspaceRepository workspaces;
@@ -29,8 +30,35 @@ class SearchService {
   final KnowledgeRepository knowledge;
   final MarkdownStore markdownStore;
   final SearchIndexRepository index;
+  final Duration freshnessWindow;
+
+  DateTime? _lastRebuildAt;
+  Future<void>? _rebuildInFlight;
 
   Future<void> rebuildIndex() async {
+    final existing = _rebuildInFlight;
+    if (existing != null) return existing;
+
+    final future = _rebuildIndexInternal();
+    _rebuildInFlight = future;
+    try {
+      await future;
+      _lastRebuildAt = DateTime.now().toUtc();
+    } finally {
+      _rebuildInFlight = null;
+    }
+  }
+
+  Future<void> ensureFreshIndex() async {
+    final last = _lastRebuildAt;
+    if (last != null &&
+        DateTime.now().toUtc().difference(last) < freshnessWindow) {
+      return;
+    }
+    await rebuildIndex();
+  }
+
+  Future<void> _rebuildIndexInternal() async {
     await index.clear();
 
     final activeWorkspaces = await workspaces.listActive();
@@ -129,6 +157,21 @@ class SearchService {
     int limit = 50,
   }) {
     return index.search(
+      query,
+      entityTypes: entityTypes,
+      workspaceId: workspaceId,
+      limit: limit,
+    );
+  }
+
+  Future<List<SearchResultModel>> searchFresh(
+    String query, {
+    Set<String>? entityTypes,
+    String? workspaceId,
+    int limit = 50,
+  }) async {
+    await ensureFreshIndex();
+    return search(
       query,
       entityTypes: entityTypes,
       workspaceId: workspaceId,
