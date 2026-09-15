@@ -228,11 +228,17 @@ class ThemeController extends ChangeNotifier {
         .key;
   }
 
-  FluentThemeData buildTheme(Brightness b) => FluentThemeData(
-        brightness: b,
-        accentColor: _accent,
-        fontFamily: effectiveFontFamily,
-      );
+  FluentThemeData buildTheme(Brightness b) {
+    final isLight = b == Brightness.light;
+    return FluentThemeData(
+      brightness: b,
+      accentColor: _accent,
+      fontFamily: effectiveFontFamily,
+      scaffoldBackgroundColor: isLight ? palette.appBackground : null,
+      cardColor: isLight ? palette.cardBackground : null,
+      inactiveColor: isLight ? palette.cardBorder : null,
+    );
+  }
 }
 
 class ThemeScope extends InheritedNotifier<ThemeController> {
