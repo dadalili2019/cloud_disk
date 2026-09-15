@@ -1,6 +1,8 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/services.dart';
 
+import '../../theme/theme_controller.dart';
+
 class AssistantMarkdown extends StatelessWidget {
   const AssistantMarkdown({
     super.key,
@@ -19,7 +21,7 @@ class AssistantMarkdown extends StatelessWidget {
       children: [
         for (var index = 0; index < blocks.length; index++) ...[
           _buildBlock(context, theme, blocks[index]),
-          if (index != blocks.length - 1) const SizedBox(height: 8),
+          if (index != blocks.length - 1) const SizedBox(height: 9),
         ],
       ],
     );
@@ -33,19 +35,20 @@ class AssistantMarkdown extends StatelessWidget {
     switch (block.type) {
       case _BlockType.heading:
         final size = switch (block.level) {
-          1 => 17.0,
-          2 => 15.0,
-          3 => 13.5,
-          _ => 12.5,
+          1 => 16.0,
+          2 => 14.5,
+          3 => 13.0,
+          _ => 12.0,
         };
         return SelectableText.rich(
           TextSpan(
             children: _inlineSpans(
+              context,
               block.text,
               theme,
               baseStyle: TextStyle(
                 fontSize: size,
-                height: 1.35,
+                height: 1.38,
                 fontWeight: FontWeight.w600,
                 color: theme.typography.body?.color,
               ),
@@ -59,7 +62,7 @@ class AssistantMarkdown extends StatelessWidget {
           children: [
             for (var i = 0; i < block.items.length; i++)
               Padding(
-                padding: const EdgeInsets.only(bottom: 4),
+                padding: const EdgeInsets.only(bottom: 5),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -69,18 +72,23 @@ class AssistantMarkdown extends StatelessWidget {
                         block.type == _BlockType.orderedList
                             ? '${i + 1}.'
                             : '•',
-                        style: const TextStyle(fontSize: 11.5, height: 1.45),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          height: 1.5,
+                          color: theme.typography.body?.color?.withOpacity(0.62),
+                        ),
                       ),
                     ),
                     Expanded(
                       child: SelectableText.rich(
                         TextSpan(
                           children: _inlineSpans(
+                            context,
                             block.items[i],
                             theme,
                             baseStyle: TextStyle(
                               fontSize: 11.5,
-                              height: 1.45,
+                              height: 1.5,
                               color: theme.typography.body?.color,
                             ),
                           ),
@@ -101,11 +109,12 @@ class AssistantMarkdown extends StatelessWidget {
         return SelectableText.rich(
           TextSpan(
             children: _inlineSpans(
+              context,
               block.text,
               theme,
               baseStyle: TextStyle(
                 fontSize: 11.5,
-                height: 1.5,
+                height: 1.55,
                 color: theme.typography.body?.color,
               ),
             ),
@@ -127,49 +136,51 @@ class _CodeBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
+    final palette = ThemeScope.of(context).palette;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor.withOpacity(0.72),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.inactiveColor.withOpacity(0.12)),
+        color: palette.surfaceMuted,
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(color: palette.cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 6, 6, 5),
+            padding: const EdgeInsets.fromLTRB(11, 7, 7, 6),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
-                    language.isEmpty ? 'Code' : language,
+                    language.isEmpty ? '代码' : language,
                     style: TextStyle(
                       fontSize: 9.5,
-                      color: theme.typography.body?.color?.withOpacity(0.55),
+                      fontWeight: FontWeight.w500,
+                      color: theme.typography.body?.color?.withOpacity(0.52),
                     ),
                   ),
                 ),
                 Button(
                   onPressed: () => Clipboard.setData(ClipboardData(text: code)),
-                  child: const Text('Copy'),
+                  child: const Text('复制'),
                 ),
               ],
             ),
           ),
           Container(
             height: 1,
-            color: theme.inactiveColor.withOpacity(0.08),
+            color: palette.cardBorder.withOpacity(0.86),
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(11),
             child: SelectableText(
               code,
               style: const TextStyle(
                 fontFamily: 'Consolas',
                 fontSize: 10.5,
-                height: 1.45,
+                height: 1.5,
               ),
             ),
           ),
@@ -180,10 +191,12 @@ class _CodeBlock extends StatelessWidget {
 }
 
 List<InlineSpan> _inlineSpans(
+  BuildContext context,
   String value,
   FluentThemeData theme, {
   required TextStyle baseStyle,
 }) {
+  final palette = ThemeScope.of(context).palette;
   final spans = <InlineSpan>[];
   final pattern = RegExp(r'(`[^`]+`|\*\*[^*]+\*\*)');
   var offset = 0;
@@ -203,7 +216,7 @@ List<InlineSpan> _inlineSpans(
         style: baseStyle.copyWith(
           fontFamily: 'Consolas',
           fontSize: (baseStyle.fontSize ?? 11.5) - 0.5,
-          backgroundColor: theme.inactiveColor.withOpacity(0.10),
+          backgroundColor: palette.surfaceMuted,
         ),
       ));
     } else {
