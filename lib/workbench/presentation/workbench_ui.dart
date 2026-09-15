@@ -66,17 +66,85 @@ class WorkbenchPage extends StatelessWidget {
   }
 }
 
+class WorkbenchSectionPage extends StatelessWidget {
+  const WorkbenchSectionPage({
+    super.key,
+    required this.title,
+    required this.child,
+    this.subtitle,
+    this.actions = const [],
+    this.maxWidth = 1180,
+    this.topPadding = 20,
+    this.bottomPadding = 24,
+    this.headerGap = 16,
+  });
+
+  final String title;
+  final String? subtitle;
+  final List<Widget> actions;
+  final Widget child;
+  final double maxWidth;
+  final double topPadding;
+  final double bottomPadding;
+  final double headerGap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    return ScaffoldPage(
+      padding: EdgeInsets.zero,
+      content: Container(
+        color: palette.appBackground,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final horizontal = constraints.maxWidth >= 1180 ? 34.0 : 28.0;
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                horizontal,
+                topPadding,
+                horizontal,
+                bottomPadding,
+              ),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      WorkbenchPageHeader(
+                        title: title,
+                        subtitle: subtitle,
+                        actions: actions,
+                        compact: true,
+                      ),
+                      SizedBox(height: headerGap),
+                      Expanded(child: child),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
 class WorkbenchPageHeader extends StatelessWidget {
   const WorkbenchPageHeader({
     super.key,
     required this.title,
     this.subtitle,
     this.actions = const [],
+    this.compact = false,
   });
 
   final String title;
   final String? subtitle;
   final List<Widget> actions;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -90,19 +158,19 @@ class WorkbenchPageHeader extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 27,
+                style: TextStyle(
+                  fontSize: compact ? 20 : 27,
                   height: 1.12,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
+                  letterSpacing: compact ? -0.1 : -0.3,
                 ),
               ),
               if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
-                const SizedBox(height: 6),
+                SizedBox(height: compact ? 4 : 6),
                 Text(
                   subtitle!,
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: compact ? 10.5 : 11.5,
                     height: 1.45,
                     color: theme.typography.body?.color?.withOpacity(0.58),
                   ),
