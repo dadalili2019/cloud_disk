@@ -1,6 +1,7 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/services.dart';
 
+import '../../theme/theme_controller.dart';
 import '../application/ai_prompt_builder.dart';
 import '../core/ai_context_models.dart';
 import '../core/ai_conversation_models.dart';
@@ -91,7 +92,13 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         if (workspaceId != null &&
             workspaces.any((item) => item.id == workspaceId)) {
           tasks = await runtime.taskService.listByWorkspace(workspaceId);
-          scope = AIContextScope.workspace;
+          final currentTask = await runtime.taskService.getCurrent(workspaceId);
+          if (currentTask != null) {
+            taskId = currentTask.id;
+            scope = AIContextScope.task;
+          } else {
+            scope = AIContextScope.workspace;
+          }
         }
       }
 
@@ -108,9 +115,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         _loading = false;
       });
 
-      if (scope == AIContextScope.task && taskId != null) {
-        await _previewContext();
-      }
+      if (_anchorReady()) await _previewContext();
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -120,14 +125,24 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     }
   }
 
-  void _resetContextOverrides() {
-    _manuallyIncluded = const [];
-    _manuallyExcluded = const [];
+  bool _anchorReady() {
+    return switch (_scope) {
+      AIContextScope.task => _taskId != null,
+      AIContextScope.workspace => _workspaceId != null,
+      AIContextScope.knowledge => _knowledgeId != null,
+      AIContextScope.global => false,
+    };
   }
 
-  void _clearFailure() {
+  void _resetConversation() {
+    _thread = null;
+    _messages = const [];
+    _preview = null;
+    _contextExpanded = false;
     _failedMessage = null;
     _failedError = null;
+    _manuallyIncluded = const [];
+    _manuallyExcluded = const [];
   }
 
   Future<void> _setWorkspace(String? value) async {
@@ -135,29 +150,27 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       _workspaceId = value;
       _taskId = null;
       _tasks = const [];
-      _thread = null;
-      _messages = const [];
-      _preview = null;
-      _contextExpanded = false;
-      _clearFailure();
-      _resetContextOverrides();
+      _resetConversation();
     });
     if (value == null || _runtime == null) return;
+
     final tasks = await _runtime!.taskService.listByWorkspace(value);
+    final currentTask = _scope == AIContextScope.task
+        ? await _runtime!.taskService.getCurrent(value)
+        : null;
     if (!mounted) return;
-    setState(() => _tasks = tasks);
+    setState(() {
+      _tasks = tasks;
+      _taskId = currentTask?.id;
+    });
+    if (_anchorReady()) await _previewContext();
   }
 
-  void _setScope(AIContextScope? scope) {
-    if (scope == null || scope == _scope) return;
+  Future<void> _setScope(AIContextScope scope) async {
+    if (scope == _scope) return;
     setState(() {
       _scope = scope;
-      _thread = null;
-      _messages = const [];
-      _preview = null;
-      _contextExpanded = false;
-      _clearFailure();
-      _resetContextOverrides();
+      _resetConversation();
       if (scope == AIContextScope.global) {
         _taskId = null;
         _knowledgeId = null;
@@ -167,6 +180,32 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         _knowledgeId = null;
       }
     });
+
+    if (scope == AIContextScope.task &&
+        _workspaceId != null &&
+        _runtime != null) {
+      final currentTask = await _runtime!.taskService.getCurrent(_workspaceId!);
+      if (!mounted) return;
+      setState(() => _taskId = currentTask?.id);
+    }
+
+    if (_anchorReady()) await _previewContext();
+  }
+
+  Future<void> _setTask(String? value) async {
+    setState(() {
+      _taskId = value;
+      _resetConversation();
+    });
+    if (value != null) await _previewContext();
+  }
+
+  Future<void> _setKnowledge(String? value) async {
+    setState(() {
+      _knowledgeId = value;
+      _resetConversation();
+    });
+    if (value != null) await _previewContext();
   }
 
   AIContextRequest _request({String query = ''}) {
@@ -230,145 +269,142 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
 
     final selected = await showDialog<AIContextRef>(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            Future<void> runSearch() async {
-              final query = controller.text.trim();
-              if (query.isEmpty || searching) return;
-              setDialogState(() {
-                searching = true;
-                dialogError = null;
-              });
-              try {
-                final found = await runtime.searchService.searchFresh(
-                  query,
-                  workspaceId: _scope == AIContextScope.workspace ||
-                          _scope == AIContextScope.task
-                      ? _workspaceId
-                      : null,
-                  limit: 20,
-                );
-                setDialogState(() => results = found);
-              } catch (error) {
-                setDialogState(() => dialogError = error);
-              } finally {
-                setDialogState(() => searching = false);
-              }
-            }
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final palette = ThemeScope.of(context).palette;
 
-            return ContentDialog(
-              title: const Text('添加上下文'),
-              content: SizedBox(
-                width: 520,
-                height: 420,
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextBox(
-                            controller: controller,
-                            autofocus: true,
-                            placeholder: '搜索任务、笔记、问题、资源、决策或知识',
-                            onSubmitted: (_) => runSearch(),
-                          ),
+          Future<void> runSearch() async {
+            final query = controller.text.trim();
+            if (query.isEmpty || searching) return;
+            setDialogState(() {
+              searching = true;
+              dialogError = null;
+            });
+            try {
+              final found = await runtime.searchService.searchFresh(
+                query,
+                workspaceId: _scope == AIContextScope.workspace ||
+                        _scope == AIContextScope.task
+                    ? _workspaceId
+                    : null,
+                limit: 20,
+              );
+              setDialogState(() => results = found);
+            } catch (error) {
+              setDialogState(() => dialogError = error);
+            } finally {
+              setDialogState(() => searching = false);
+            }
+          }
+
+          return ContentDialog(
+            title: const Text('添加上下文'),
+            content: SizedBox(
+              width: 520,
+              height: 420,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextBox(
+                          controller: controller,
+                          autofocus: true,
+                          placeholder: '搜索任务、笔记、问题、资源、决策或知识',
+                          onSubmitted: (_) => runSearch(),
                         ),
-                        const SizedBox(width: 8),
-                        Button(
-                          onPressed: searching ? null : runSearch,
-                          child: Text(searching ? '搜索中…' : '搜索'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    if (dialogError != null)
-                      InfoBar(
-                        title: const Text('搜索失败'),
-                        content: Text('$dialogError'),
-                        severity: InfoBarSeverity.error,
                       ),
-                    const SizedBox(height: 4),
-                    Expanded(
-                      child: results.isEmpty
-                          ? const Center(
-                              child: Text('输入关键词搜索需要加入的工作上下文。'),
-                            )
-                          : ListView.separated(
-                              itemCount: results.length,
-                              separatorBuilder: (_, __) => const SizedBox(height: 6),
-                              itemBuilder: (context, index) {
-                                final item = results[index];
-                                final key = '${item.entityType}:${item.entityId}';
-                                final alreadyIncluded = _manuallyIncluded
-                                    .any((ref) => ref.key == key);
-                                return Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: FluentTheme.of(context)
-                                          .inactiveColor
-                                          .withOpacity(0.14),
-                                    ),
-                                    borderRadius: BorderRadius.circular(7),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              '${_entityLabel(item.entityType)} · ${item.title}',
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                            if (item.snippet.trim().isNotEmpty)
-                                              Text(
-                                                item.snippet,
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(fontSize: 10),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Button(
-                                        onPressed: alreadyIncluded
-                                            ? null
-                                            : () => Navigator.pop(
-                                                  dialogContext,
-                                                  AIContextRef(
-                                                    entityType: item.entityType,
-                                                    entityId: item.entityId,
-                                                    title: item.title,
-                                                    workspaceId: item.workspaceId,
-                                                  ),
-                                                ),
-                                        child: Text(alreadyIncluded ? '已添加' : '添加'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
+                      const SizedBox(width: 8),
+                      Button(
+                        onPressed: searching ? null : runSearch,
+                        child: Text(searching ? '搜索中…' : '搜索'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  if (dialogError != null)
+                    InfoBar(
+                      title: const Text('搜索失败'),
+                      content: Text('$dialogError'),
+                      severity: InfoBarSeverity.error,
                     ),
-                  ],
-                ),
+                  const SizedBox(height: 4),
+                  Expanded(
+                    child: results.isEmpty
+                        ? const Center(child: Text('输入关键词搜索需要加入的工作上下文。'))
+                        : ListView.separated(
+                            itemCount: results.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 7),
+                            itemBuilder: (context, index) {
+                              final item = results[index];
+                              final key = '${item.entityType}:${item.entityId}';
+                              final alreadyIncluded = _manuallyIncluded
+                                  .any((ref) => ref.key == key);
+                              return Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: palette.cardBackground,
+                                  border: Border.all(color: palette.cardBorder),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${_entityLabel(item.entityType)} · ${item.title}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          if (item.snippet.trim().isNotEmpty) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              item.snippet,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(fontSize: 10),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Button(
+                                      onPressed: alreadyIncluded
+                                          ? null
+                                          : () => Navigator.pop(
+                                                dialogContext,
+                                                AIContextRef(
+                                                  entityType: item.entityType,
+                                                  entityId: item.entityId,
+                                                  title: item.title,
+                                                  workspaceId: item.workspaceId,
+                                                ),
+                                              ),
+                                      child: Text(alreadyIncluded ? '已添加' : '添加'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
-              actions: [
-                Button(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('关闭'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+            ),
+            actions: [
+              Button(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('关闭'),
+              ),
+            ],
+          );
+        },
+      ),
     );
     controller.dispose();
 
@@ -388,65 +424,67 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     if (_threads.isEmpty) return;
     final selected = await showDialog<AIThreadModel>(
       context: context,
-      builder: (dialogContext) => ContentDialog(
-        title: const Text('历史会话'),
-        content: SizedBox(
-          width: 480,
-          height: 400,
-          child: ListView.separated(
-            itemCount: _threads.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 6),
-            itemBuilder: (context, index) {
-              final item = _threads[index];
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: FluentTheme.of(context).inactiveColor.withOpacity(0.14),
+      builder: (dialogContext) {
+        final palette = ThemeScope.of(dialogContext).palette;
+        return ContentDialog(
+          title: const Text('历史会话'),
+          content: SizedBox(
+            width: 480,
+            height: 400,
+            child: ListView.separated(
+              itemCount: _threads.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 7),
+              itemBuilder: (context, index) {
+                final item = _threads[index];
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                  decoration: BoxDecoration(
+                    color: palette.cardBackground,
+                    border: Border.all(color: palette.cardBorder),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.title.isEmpty ? '未命名会话' : item.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.title.isEmpty ? '未命名会话' : item.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            '${_scopeLabel(item.scope)} · ${_formatDateTime(item.updatedAt)}',
-                            style: const TextStyle(fontSize: 10),
-                          ),
-                        ],
+                            const SizedBox(height: 3),
+                            Text(
+                              '${_scopeLabel(item.scope)} · ${_formatDateTime(item.updatedAt)}',
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Button(
-                      onPressed: () => Navigator.pop(dialogContext, item),
-                      child: const Text('打开'),
-                    ),
-                  ],
-                ),
-              );
-            },
+                      const SizedBox(width: 8),
+                      Button(
+                        onPressed: () => Navigator.pop(dialogContext, item),
+                        child: const Text('打开'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-        actions: [
-          Button(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('关闭'),
-          ),
-        ],
-      ),
+          actions: [
+            Button(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('关闭'),
+            ),
+          ],
+        );
+      },
     );
 
     if (selected != null) await _openThread(selected);
@@ -471,8 +509,10 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       _messages = messages;
       _preview = null;
       _contextExpanded = false;
-      _clearFailure();
-      _resetContextOverrides();
+      _failedMessage = null;
+      _failedError = null;
+      _manuallyIncluded = const [];
+      _manuallyExcluded = const [];
     });
     _scrollToBottom();
   }
@@ -481,12 +521,10 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     setState(() {
       _thread = null;
       _messages = const [];
-      _preview = null;
       _error = null;
       _pendingUserMessage = null;
-      _contextExpanded = false;
-      _clearFailure();
-      _resetContextOverrides();
+      _failedMessage = null;
+      _failedError = null;
     });
   }
 
@@ -516,7 +554,8 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       _sending = true;
       _pendingUserMessage = message;
       _error = null;
-      _clearFailure();
+      _failedMessage = null;
+      _failedError = null;
     });
     _scrollToBottom();
 
@@ -555,10 +594,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       await _refreshConversation(thread.id, request: request);
       if (!mounted) return;
       _messageController.clear();
-      setState(() {
-        _pendingUserMessage = null;
-        _clearFailure();
-      });
+      setState(() => _pendingUserMessage = null);
       _scrollToBottom();
     } catch (error) {
       if (!mounted) return;
@@ -611,17 +647,18 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         userMessage: message,
         history: _historyForPrompt(excludeTrailingUser: message),
       );
-
       final response = await runtime.aiProvider.complete(prompt);
       await runtime.aiConversationService.addAssistantMessage(
         thread: thread,
         content: response,
         context: context,
       );
-
       await _refreshConversation(thread.id, request: request);
       if (!mounted) return;
-      setState(_clearFailure);
+      setState(() {
+        _failedMessage = null;
+        _failedError = null;
+      });
       _scrollToBottom();
     } catch (error) {
       if (!mounted) return;
@@ -668,6 +705,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   @override
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
+    final palette = ThemeScope.of(context).palette;
     final screenWidth = MediaQuery.of(context).size.width;
     final drawerWidth = (screenWidth * 0.42).clamp(460.0, 520.0).toDouble();
 
@@ -680,15 +718,13 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         width: drawerWidth,
         height: double.infinity,
         decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-          border: Border(
-            left: BorderSide(color: theme.inactiveColor.withOpacity(0.18)),
-          ),
+          color: palette.appBackground,
+          border: Border(left: BorderSide(color: palette.cardBorder)),
           boxShadow: [
             BoxShadow(
               blurRadius: 18,
               offset: const Offset(-4, 0),
-              color: Colors.black.withOpacity(0.08),
+              color: palette.shadow.withOpacity(0.08),
             ),
           ],
         ),
@@ -696,8 +732,8 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
             ? const Center(child: ProgressRing())
             : Column(
                 children: [
-                  _header(theme),
-                  _scopeSection(theme),
+                  _header(theme, palette),
+                  _scopeSection(theme, palette),
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -708,59 +744,62 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                         isLong: true,
                       ),
                     ),
-                  const SizedBox(height: 4),
-                  Expanded(child: _body(theme)),
-                  _composer(theme),
+                  Expanded(child: _body(theme, palette)),
+                  _composer(theme, palette),
                 ],
               ),
       ),
     );
   }
 
-  Widget _header(FluentThemeData theme) {
+  Widget _header(FluentThemeData theme, ThemePalette palette) {
     final providerName = _runtime?.aiProvider.name ?? 'Loading Provider';
     final isPreview = providerName.toLowerCase().contains('preview');
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 10, 12),
+      padding: const EdgeInsets.fromLTRB(18, 14, 10, 13),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: theme.inactiveColor.withOpacity(0.12)),
-        ),
+        color: palette.appBarBackground,
+        border: Border(bottom: BorderSide(color: palette.cardBorder)),
       ),
       child: Row(
         children: [
           Container(
-            width: 30,
-            height: 30,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
-              color: theme.accentColor.withOpacity(0.10),
-              borderRadius: BorderRadius.circular(8),
+              color: palette.successSoft,
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(color: palette.cardBorder),
             ),
-            child: const Icon(FluentIcons.chat_bot, size: 16),
+            child: Icon(
+              FluentIcons.chat_bot,
+              size: 16,
+              color: theme.accentColor.normal,
+            ),
           ),
-          const SizedBox(width: 9),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'Workbench AI',
-                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
-                const SizedBox(height: 1),
+                const SizedBox(height: 2),
                 Text(
                   _headerContextLabel(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 9.5,
-                    color: theme.typography.body?.color?.withOpacity(0.56),
+                    color: theme.typography.body?.color?.withOpacity(0.55),
                   ),
                 ),
               ],
             ),
           ),
-          _statusBadge(isPreview ? 'Preview' : _shortProviderName(providerName), theme),
+          _statusBadge(isPreview ? 'Preview' : _shortProviderName(providerName), palette),
           const SizedBox(width: 4),
           if (_threads.isNotEmpty)
             Tooltip(
@@ -789,65 +828,58 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     );
   }
 
-  Widget _scopeSection(FluentThemeData theme) {
+  Widget _scopeSection(FluentThemeData theme, ThemePalette palette) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: theme.inactiveColor.withOpacity(0.10)),
-        ),
+        color: palette.appBackground,
+        border: Border(bottom: BorderSide(color: palette.cardBorder)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _scopeSelector(theme),
-          const SizedBox(height: 8),
-          _anchorControls(theme),
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: palette.cardBackground,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: palette.cardBorder),
+            ),
+            child: Row(
+              children: AIContextScope.values.map((scope) {
+                final selected = scope == _scope;
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => _setScope(scope),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 140),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: selected ? palette.navItemSelected : Colors.transparent,
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        _scopeShortLabel(scope),
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                          color: selected ? theme.accentColor.normal : null,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(growable: false),
+            ),
+          ),
+          const SizedBox(height: 10),
+          _anchorControls(),
         ],
       ),
     );
   }
 
-  Widget _scopeSelector(FluentThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.inactiveColor.withOpacity(0.10)),
-      ),
-      child: Row(
-        children: AIContextScope.values.map((scope) {
-          final selected = scope == _scope;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => _setScope(scope),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 140),
-                padding: const EdgeInsets.symmetric(vertical: 7),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? theme.accentColor.withOpacity(0.13)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  _scopeShortLabel(scope),
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(growable: false),
-      ),
-    );
-  }
-
-  Widget _anchorControls(FluentThemeData theme) {
+  Widget _anchorControls() {
     final buttonLabel = _previewing
         ? '整理中…'
         : _preview == null
@@ -871,7 +903,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
           child: ComboBox<String>(
             value: _workspaceId,
             isExpanded: true,
-            placeholder: const Text('选择 Workspace'),
+            placeholder: const Text('选择工作区'),
             items: _workspaces
                 .map((item) => ComboBoxItem(value: item.id, child: Text(item.name)))
                 .toList(),
@@ -888,22 +920,11 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
           child: ComboBox<String>(
             value: _taskId,
             isExpanded: true,
-            placeholder: const Text('选择 Task'),
+            placeholder: const Text('选择任务'),
             items: _tasks
                 .map((item) => ComboBoxItem(value: item.id, child: Text(item.title)))
                 .toList(),
-            onChanged: (value) async {
-              setState(() {
-                _taskId = value;
-                _thread = null;
-                _messages = const [];
-                _preview = null;
-                _contextExpanded = false;
-                _clearFailure();
-                _resetContextOverrides();
-              });
-              if (value != null) await _previewContext();
-            },
+            onChanged: _setTask,
           ),
         ),
       );
@@ -915,19 +936,11 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
           child: ComboBox<String>(
             value: _knowledgeId,
             isExpanded: true,
-            placeholder: const Text('选择 Knowledge'),
+            placeholder: const Text('选择知识'),
             items: _knowledge
                 .map((item) => ComboBoxItem(value: item.id, child: Text(item.title)))
                 .toList(),
-            onChanged: (value) => setState(() {
-              _knowledgeId = value;
-              _thread = null;
-              _messages = const [];
-              _preview = null;
-              _contextExpanded = false;
-              _clearFailure();
-              _resetContextOverrides();
-            }),
+            onChanged: _setKnowledge,
           ),
         ),
       );
@@ -943,34 +956,35 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     return Row(children: controls);
   }
 
-  Widget _body(FluentThemeData theme) {
+  Widget _body(FluentThemeData theme, ThemePalette palette) {
     return ListView(
       controller: _scrollController,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       children: [
-        if (_preview != null) _contextPreview(theme, _preview!),
+        if (_preview != null) _contextPreview(theme, palette, _preview!),
         if (_messages.isEmpty && _preview == null && !_sending)
           _emptyState(theme),
-        ..._messages.map((message) => _messageBubble(theme, message)),
+        ..._messages.map((message) => _messageBubble(theme, palette, message)),
         if (_pendingUserMessage != null)
-          _pendingUserBubble(theme, _pendingUserMessage!),
-        if (_sending) _thinkingBubble(theme),
-        if (_failedMessage != null && !_sending) _failureBubble(theme),
+          _pendingUserBubble(palette, _pendingUserMessage!),
+        if (_sending) _thinkingBubble(theme, palette),
+        if (_failedMessage != null && !_sending)
+          _failureBubble(theme, palette),
       ],
     );
   }
 
   Widget _emptyState(FluentThemeData theme) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 52),
+      padding: const EdgeInsets.symmetric(vertical: 54),
       child: Column(
         children: [
           Icon(
             FluentIcons.chat_bot,
             size: 27,
-            color: theme.typography.body?.color?.withOpacity(0.22),
+            color: theme.typography.body?.color?.withOpacity(0.20),
           ),
-          const SizedBox(height: 11),
+          const SizedBox(height: 12),
           Text(
             _emptyStateText(),
             textAlign: TextAlign.center,
@@ -981,7 +995,11 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     );
   }
 
-  Widget _contextPreview(FluentThemeData theme, AIContextPreviewModel preview) {
+  Widget _contextPreview(
+    FluentThemeData theme,
+    ThemePalette palette,
+    AIContextPreviewModel preview,
+  ) {
     final nonActivity = preview.included
         .where((item) => item.ref.entityType != 'activity')
         .toList(growable: false);
@@ -992,29 +1010,29 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         .length;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: theme.inactiveColor.withOpacity(0.12)),
+        color: palette.cardBackground,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: palette.cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+            padding: const EdgeInsets.fromLTRB(14, 12, 10, 11),
             child: Row(
               children: [
                 const Text(
-                  'Context',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                  '上下文',
+                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   '${preview.included.length} 项 · ${_formatCharacters(preview.totalCharacters)}',
                   style: TextStyle(
-                    fontSize: 10,
-                    color: theme.typography.body?.color?.withOpacity(0.55),
+                    fontSize: 9.5,
+                    color: theme.typography.body?.color?.withOpacity(0.50),
                   ),
                 ),
                 const Spacer(),
@@ -1027,7 +1045,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
           ),
           if (!_contextExpanded)
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 11),
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 13),
               child: Wrap(
                 spacing: 6,
                 runSpacing: 6,
@@ -1035,22 +1053,22 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                   ...visibleNonActivity.map(
                     (item) => _contextChip(
                       '${_entityLabel(item.ref.entityType)} · ${item.ref.title}',
-                      theme,
+                      palette,
                     ),
                   ),
                   if (activityCount > 0)
-                    _contextChip('活动 · $activityCount 条', theme),
+                    _contextChip('活动 · $activityCount 条', palette),
                   if (hiddenNonActivity > 0)
-                    _contextChip('其他 · $hiddenNonActivity 条', theme),
+                    _contextChip('其他 · $hiddenNonActivity 条', palette),
                   if (preview.excluded.isNotEmpty)
-                    _contextChip('已排除 ${preview.excluded.length}', theme),
+                    _contextChip('已排除 ${preview.excluded.length}', palette),
                 ],
               ),
             ),
           if (_contextExpanded) ...[
-            Container(height: 1, color: theme.inactiveColor.withOpacity(0.09)),
+            Container(height: 1, color: palette.cardBorder),
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              padding: const EdgeInsets.fromLTRB(14, 11, 14, 13),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1058,7 +1076,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                     children: [
                       const Text(
                         '发送给 AI 的上下文',
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+                        style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600),
                       ),
                       const Spacer(),
                       Button(
@@ -1067,8 +1085,10 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  ...preview.included.map((item) => _contextRow(theme, item)),
+                  const SizedBox(height: 9),
+                  ...preview.included.map(
+                    (item) => _contextRow(palette, item),
+                  ),
                   if (preview.excluded.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     const Text(
@@ -1107,25 +1127,25 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     );
   }
 
-  Widget _contextRow(FluentThemeData theme, AIContextPreviewItem item) {
+  Widget _contextRow(ThemePalette palette, AIContextPreviewItem item) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor.withOpacity(0.45),
-        borderRadius: BorderRadius.circular(6),
+        color: palette.surfaceMuted,
+        borderRadius: BorderRadius.circular(7),
       ),
       child: Row(
         children: [
           SizedBox(
-            width: 26,
+            width: 28,
             child: Text(
               'P${item.priority}',
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600),
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 5),
           Expanded(
             child: Text(
               '${_entityLabel(item.ref.entityType)} · ${item.ref.title}',
@@ -1143,14 +1163,14 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     );
   }
 
-  Widget _contextChip(String text, FluentThemeData theme) {
+  Widget _contextChip(String text, ThemePalette palette) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 180),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor.withOpacity(0.55),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.inactiveColor.withOpacity(0.10)),
+        color: palette.surfaceMuted,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: palette.cardBorder),
       ),
       child: Text(
         text,
@@ -1161,18 +1181,22 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     );
   }
 
-  Widget _messageBubble(FluentThemeData theme, AIMessageModel message) {
+  Widget _messageBubble(
+    FluentThemeData theme,
+    ThemePalette palette,
+    AIMessageModel message,
+  ) {
     final user = message.role == 'user';
     return Align(
       alignment: user ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 440),
-        margin: const EdgeInsets.only(bottom: 9),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
         decoration: BoxDecoration(
-          color: user ? theme.accentColor.withOpacity(0.12) : theme.cardColor,
-          borderRadius: BorderRadius.circular(9),
-          border: Border.all(color: theme.inactiveColor.withOpacity(0.10)),
+          color: user ? palette.navItemSelected : palette.cardBackground,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: palette.cardBorder),
         ),
         child: user
             ? SelectableText(
@@ -1184,32 +1208,33 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     );
   }
 
-  Widget _pendingUserBubble(FluentThemeData theme, String message) {
+  Widget _pendingUserBubble(ThemePalette palette, String message) {
     return Align(
       alignment: Alignment.centerRight,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 440),
-        margin: const EdgeInsets.only(bottom: 9),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
         decoration: BoxDecoration(
-          color: theme.accentColor.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(9),
+          color: palette.navItemSelected,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: palette.cardBorder),
         ),
         child: Text(message, style: const TextStyle(fontSize: 11.5, height: 1.45)),
       ),
     );
   }
 
-  Widget _thinkingBubble(FluentThemeData theme) {
+  Widget _thinkingBubble(FluentThemeData theme, ThemePalette palette) {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 9),
+        margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(9),
-          border: Border.all(color: theme.inactiveColor.withOpacity(0.10)),
+          color: palette.cardBackground,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: palette.cardBorder),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1221,10 +1246,10 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
             ),
             const SizedBox(width: 8),
             Text(
-              'Thinking…',
+              '正在思考…',
               style: TextStyle(
                 fontSize: 10.5,
-                color: theme.typography.body?.color?.withOpacity(0.65),
+                color: theme.typography.body?.color?.withOpacity(0.62),
               ),
             ),
           ],
@@ -1233,17 +1258,17 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     );
   }
 
-  Widget _failureBubble(FluentThemeData theme) {
+  Widget _failureBubble(FluentThemeData theme, ThemePalette palette) {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 440),
-        margin: const EdgeInsets.only(bottom: 9),
-        padding: const EdgeInsets.all(11),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(9),
-          border: Border.all(color: const Color(0xFFD13438).withOpacity(0.38)),
+          color: palette.cardBackground,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFD13438).withOpacity(0.35)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1258,34 +1283,30 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
               style: TextStyle(
                 fontSize: 10,
                 height: 1.4,
-                color: theme.typography.body?.color?.withOpacity(0.66),
+                color: theme.typography.body?.color?.withOpacity(0.62),
               ),
             ),
             const SizedBox(height: 8),
-            Button(
-              onPressed: _retryFailed,
-              child: const Text('Retry'),
-            ),
+            Button(onPressed: _retryFailed, child: const Text('重试')),
           ],
         ),
       ),
     );
   }
 
-  Widget _composer(FluentThemeData theme) {
+  Widget _composer(FluentThemeData theme, ThemePalette palette) {
     final contextCount = _preview?.included.length;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: theme.inactiveColor.withOpacity(0.10)),
-        ),
+        color: palette.appBarBackground,
+        border: Border(top: BorderSide(color: palette.cardBorder)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 2, bottom: 5),
+            padding: const EdgeInsets.only(left: 2, bottom: 6),
             child: Row(
               children: [
                 Expanded(
@@ -1295,7 +1316,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 9.5,
-                      color: theme.typography.body?.color?.withOpacity(0.52),
+                      color: theme.typography.body?.color?.withOpacity(0.50),
                     ),
                   ),
                 ),
@@ -1304,7 +1325,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                     '$contextCount 条上下文',
                     style: TextStyle(
                       fontSize: 9.5,
-                      color: theme.typography.body?.color?.withOpacity(0.52),
+                      color: theme.typography.body?.color?.withOpacity(0.50),
                     ),
                   ),
               ],
@@ -1333,7 +1354,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
             'Ctrl + Enter 发送',
             style: TextStyle(
               fontSize: 8.5,
-              color: theme.typography.body?.color?.withOpacity(0.34),
+              color: theme.typography.body?.color?.withOpacity(0.32),
             ),
           ),
         ],
@@ -1341,14 +1362,14 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     );
   }
 
-  Widget _statusBadge(String text, FluentThemeData theme) {
+  Widget _statusBadge(String text, ThemePalette palette) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 92),
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: theme.inactiveColor.withOpacity(0.12)),
+        color: palette.surfaceMuted,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: palette.cardBorder),
       ),
       child: Text(
         text,
@@ -1362,21 +1383,21 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   String _headerContextLabel() {
     return switch (_scope) {
       AIContextScope.task => _taskId == null
-          ? 'Current Task'
-          : 'Current Task · ${_taskTitle(_taskId!)}',
+          ? '当前任务'
+          : '当前任务 · ${_taskTitle(_taskId!)}',
       AIContextScope.workspace => _workspaceId == null
-          ? 'Workspace'
-          : 'Workspace · ${_workspaceName(_workspaceId!)}',
+          ? '工作区'
+          : '工作区 · ${_workspaceName(_workspaceId!)}',
       AIContextScope.knowledge => _knowledgeId == null
-          ? 'Knowledge'
-          : 'Knowledge · ${_knowledgeTitle(_knowledgeId!)}',
-      AIContextScope.global => 'Global',
+          ? '知识'
+          : '知识 · ${_knowledgeTitle(_knowledgeId!)}',
+      AIContextScope.global => '全局',
     };
   }
 
   String _composerContextLabel() {
     return switch (_scope) {
-      AIContextScope.global => 'Global · 自动检索相关上下文',
+      AIContextScope.global => '全局 · 自动检索相关上下文',
       _ => _headerContextLabel(),
     };
   }
@@ -1384,15 +1405,15 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   String _emptyStateText() {
     return switch (_scope) {
       AIContextScope.task => _taskId == null
-          ? '请选择一个 Task'
-          : '围绕当前 Task 提问，我会自动组织相关上下文',
+          ? '请选择一个任务'
+          : '围绕当前任务提问，我会自动组织相关上下文',
       AIContextScope.workspace => _workspaceId == null
-          ? '请选择一个 Workspace'
-          : '围绕当前 Workspace 提问，我会组织相关工作上下文',
+          ? '请选择一个工作区'
+          : '围绕当前工作区提问，我会组织相关工作上下文',
       AIContextScope.knowledge => _knowledgeId == null
-          ? '请选择一个 Knowledge'
-          : '围绕当前 Knowledge 提问，并结合它的来源上下文',
-      AIContextScope.global => '输入问题，我会根据当前 Scope 组织相关上下文',
+          ? '请选择一条知识'
+          : '围绕当前知识提问，并结合它的来源上下文',
+      AIContextScope.global => '输入问题，我会根据当前范围组织相关上下文',
     };
   }
 
@@ -1420,19 +1441,19 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
 
 String _scopeLabel(AIContextScope scope) {
   return switch (scope) {
-    AIContextScope.task => 'Current Task',
-    AIContextScope.workspace => 'Workspace',
-    AIContextScope.knowledge => 'Knowledge',
-    AIContextScope.global => 'Global',
+    AIContextScope.task => '任务',
+    AIContextScope.workspace => '工作区',
+    AIContextScope.knowledge => '知识',
+    AIContextScope.global => '全局',
   };
 }
 
 String _scopeShortLabel(AIContextScope scope) {
   return switch (scope) {
-    AIContextScope.task => 'Task',
-    AIContextScope.workspace => 'Workspace',
-    AIContextScope.knowledge => 'Knowledge',
-    AIContextScope.global => 'Global',
+    AIContextScope.task => '任务',
+    AIContextScope.workspace => '工作区',
+    AIContextScope.knowledge => '知识',
+    AIContextScope.global => '全局',
   };
 }
 
