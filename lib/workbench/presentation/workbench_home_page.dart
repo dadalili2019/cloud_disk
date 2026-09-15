@@ -5,6 +5,7 @@ import '../application/continue_service.dart';
 import '../workbench_runtime.dart';
 import 'focus_today_card.dart';
 import 'quick_capture_card.dart';
+import 'workbench_ui.dart';
 
 class WorkbenchHomePage extends StatefulWidget {
   const WorkbenchHomePage({super.key});
@@ -39,66 +40,60 @@ class _WorkbenchHomePageState extends State<WorkbenchHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return ScaffoldPage(
-      padding: EdgeInsets.zero,
-      content: FutureBuilder<ContinueSnapshot>(
-        future: _snapshot,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: ProgressRing());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('加载失败：${snapshot.error}'));
-          }
+    return FutureBuilder<ContinueSnapshot>(
+      future: _snapshot,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const ScaffoldPage(content: Center(child: ProgressRing()));
+        }
+        if (snapshot.hasError) {
+          return ScaffoldPage(
+            content: Center(child: Text('加载失败：${snapshot.error}')),
+          );
+        }
 
-          final data = snapshot.data!;
-          final primary = data.primary;
+        final data = snapshot.data!;
+        final primary = data.primary;
 
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(34, 30, 34, 36),
-            children: [
-              const Text(
-                '今天',
-                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
+        return WorkbenchPage(
+          title: '今天',
+          subtitle: primary == null
+              ? '从这里开始今天的工作。'
+              : '${primary.workspace.name} · ${primary.context.task.title}',
+          children: [
+            if (primary == null)
+              _EmptyContinueCard(
+                onOpenWorkspace: () => context.go('/workspace'),
+              )
+            else
+              _PrimaryContinueCard(
+                item: primary,
+                onContinue: () => _continueTo(primary),
               ),
-              const SizedBox(height: 22),
-              if (primary == null)
-                _EmptyContinueCard(
-                  onOpenWorkspace: () => context.go('/workspace'),
-                )
-              else
-                _PrimaryContinueCard(
-                  item: primary,
-                  onContinue: () => _continueTo(primary),
-                ),
-              const SizedBox(height: 14),
-              QuickCaptureCard(
-                defaultWorkspace: primary?.workspace,
-                onCaptured: _reloadAfterCapture,
-              ),
-              const SizedBox(height: 14),
-              FocusTodayCard(primary: primary),
-              if (data.others.isNotEmpty) ...[
-                const SizedBox(height: 26),
-                const Text(
-                  '其他进行中的工作',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 12),
-                ...data.others.map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _OtherWorkCard(
-                      item: item,
-                      onTap: () => _continueTo(item),
-                    ),
+            const SizedBox(height: 14),
+            QuickCaptureCard(
+              defaultWorkspace: primary?.workspace,
+              onCaptured: _reloadAfterCapture,
+            ),
+            const SizedBox(height: 14),
+            FocusTodayCard(primary: primary),
+            if (data.others.isNotEmpty) ...[
+              const SizedBox(height: 26),
+              const WorkbenchSectionHeader(title: '其他进行中的工作'),
+              const SizedBox(height: 10),
+              ...data.others.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _OtherWorkCard(
+                    item: item,
+                    onTap: () => _continueTo(item),
                   ),
                 ),
-              ],
+              ),
             ],
-          );
-        },
-      ),
+          ],
+        );
+      },
     );
   }
 }
@@ -118,13 +113,8 @@ class _PrimaryContinueCard extends StatelessWidget {
     final blockers = item.context.openIssues;
     final theme = FluentTheme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: theme.inactiveColor.withOpacity(0.14)),
-      ),
+    return WorkbenchCard(
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -132,7 +122,7 @@ class _PrimaryContinueCard extends StatelessWidget {
             children: [
               const Text(
                 '继续工作',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
               ),
               const Spacer(),
               FilledButton(
@@ -141,67 +131,67 @@ class _PrimaryContinueCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Text(
             item.workspace.name,
             style: TextStyle(
-              fontSize: 12,
-              color: theme.typography.body?.color?.withOpacity(0.55),
+              fontSize: 11.5,
+              color: theme.typography.body?.color?.withOpacity(0.50),
             ),
           ),
           const SizedBox(height: 5),
           Text(
             task.title,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
           ),
           if (task.nextStep.isNotEmpty) ...[
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(
-                  width: 62,
+                  width: 66,
                   child: Text(
                     '下一步',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
                   ),
                 ),
                 Expanded(
-                  child: Text(task.nextStep, style: const TextStyle(fontSize: 13)),
+                  child: Text(task.nextStep, style: const TextStyle(fontSize: 12.5)),
                 ),
               ],
             ),
           ],
           if (blockers.isNotEmpty) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(
-                  width: 62,
+                  width: 66,
                   child: Text(
                     '阻塞',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
                   ),
                 ),
                 Expanded(
                   child: Text(
                     blockers.first.title,
-                    style: const TextStyle(fontSize: 13),
+                    style: const TextStyle(fontSize: 12.5),
                   ),
                 ),
               ],
             ),
           ],
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              _ContextTag(label: '笔记 ${item.context.notes.length}'),
-              _ContextTag(label: '问题 ${item.context.openIssues.length}'),
-              _ContextTag(label: '资源 ${item.context.resources.length}'),
-              _ContextTag(label: '决策 ${item.context.decisions.length}'),
+              WorkbenchTag(label: '笔记 ${item.context.notes.length}'),
+              WorkbenchTag(label: '问题 ${item.context.openIssues.length}'),
+              WorkbenchTag(label: '资源 ${item.context.resources.length}'),
+              WorkbenchTag(label: '决策 ${item.context.decisions.length}'),
             ],
           ),
         ],
@@ -221,79 +211,44 @@ class _OtherWorkCard extends StatelessWidget {
     final theme = FluentTheme.of(context);
     final task = item.context.task;
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: theme.inactiveColor.withOpacity(0.14)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.workspace.name,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: theme.typography.body?.color?.withOpacity(0.50),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      task.title,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                    ),
-                    if (task.nextStep.isNotEmpty) ...[
-                      const SizedBox(height: 5),
-                      Text(
-                        '下一步：${task.nextStep}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: theme.typography.body?.color?.withOpacity(0.62),
-                        ),
-                      ),
-                    ],
-                  ],
+    return WorkbenchCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.workspace.name,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: theme.typography.body?.color?.withOpacity(0.46),
+                  ),
                 ),
-              ),
-              const Icon(FluentIcons.chevron_right, size: 12),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  task.title,
+                  style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+                ),
+                if (task.nextStep.isNotEmpty) ...[
+                  const SizedBox(height: 5),
+                  Text(
+                    '下一步：${task.nextStep}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: theme.typography.body?.color?.withOpacity(0.58),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ContextTag extends StatelessWidget {
-  const _ContextTag({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FluentTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: theme.inactiveColor.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          color: theme.typography.body?.color?.withOpacity(0.62),
-        ),
+          const Icon(FluentIcons.chevron_right, size: 11),
+        ],
       ),
     );
   }
@@ -306,20 +261,14 @@ class _EmptyContinueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FluentTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: theme.inactiveColor.withOpacity(0.14)),
-      ),
+    return WorkbenchCard(
+      padding: const EdgeInsets.all(20),
       child: Row(
         children: [
           const Expanded(
             child: Text(
               '暂无可继续的当前任务',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
             ),
           ),
           FilledButton(
