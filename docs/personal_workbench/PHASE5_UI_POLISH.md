@@ -54,30 +54,58 @@ lib/workbench/presentation/global_ai_drawer.dart
 
 ## 3. 第二轮 — Message Readability
 
-待实现：
+已实现：
 
-- [ ] Assistant Message 支持轻量 Markdown 渲染。
-- [ ] 至少支持标题、列表、段落、代码块、inline code。
-- [ ] User Message 继续使用普通文本气泡。
-- [ ] Code Block 支持 Copy。
-- [ ] 超长 AI 回复保持可滚动且不破坏 Drawer 宽度。
+- [x] Assistant Message 使用轻量 Markdown 渲染。
+- [x] 支持标题、段落、无序列表、有序列表。
+- [x] 支持 fenced code block。
+- [x] 支持 inline code。
+- [x] 支持 `**bold**`。
+- [x] User Message 保持普通文本气泡。
+- [x] Code Block 支持 Copy。
+- [x] Code Block 超宽内容使用横向滚动，不撑破 Drawer。
+- [x] AI Message 使用 SelectableText，便于复制。
 
-目的：
+实现文件：
 
-> DeepSeek / OpenAI-compatible 模型真正接入以后，回答不能以一整块纯文本展示。
+```text
+lib/workbench/presentation/assistant_markdown.dart
+```
+
+说明：
+
+> Phase 5 使用轻量 Markdown 子集，不引入完整 Markdown / HTML 渲染依赖。后续如出现表格、链接、引用等强需求，再评估扩展。
 
 ---
 
 ## 4. 第三轮 — Failure / Retry UX
 
-待实现：
+已实现：
 
-- [ ] Provider 失败时在消息流中显示失败状态。
-- [ ] 已保存 User Message 不应因为 Provider 失败在 UI 中消失。
-- [ ] Assistant failure 提供 `Retry`。
-- [ ] Retry 使用原 Thread + 当前 Context 重新请求。
-- [ ] 401 / 403 / timeout / 5xx 保持简短可读错误信息。
-- [ ] 顶部 InfoBar 只作为补充，不作为唯一错误反馈。
+- [x] Provider 失败后在消息流中显示 `AI 回复失败`。
+- [x] 已保存 User Message 在 Provider 失败后仍保留在 Thread / UI。
+- [x] Failure Card 提供 `Retry`。
+- [x] Retry 复用原 Thread。
+- [x] Retry 不重复插入 User Message。
+- [x] Retry 重新构建当前 Context / Prompt。
+- [x] Retry 成功后只新增 Assistant Message。
+- [x] 失败信息做长度控制，避免大段 Gateway 错误占满 Drawer。
+- [x] 顶部 InfoBar 仅处理 Context / 创建 Thread 等前置错误；Provider 失败主要在消息流反馈。
+
+流程：
+
+```text
+User Message
+→ persist user message
+→ provider call
+→ fail
+→ keep user message
+→ failure card
+→ Retry
+→ rebuild context / prompt
+→ provider call
+→ persist assistant message only
+```
 
 ---
 
@@ -88,9 +116,9 @@ lib/workbench/presentation/global_ai_drawer.dart
 - [ ] `Ctrl + Enter` 发送。
 - [ ] `Enter` 保留换行。
 - [ ] `Esc` 关闭 AI Drawer。
-- [ ] Context Scope 切换支持清晰 Hover / Focus 状态。
-- [ ] History 对话框支持键盘选择。
-- [ ] Drawer 最小宽度下不出现横向 overflow。
+- [ ] Context Scope 切换支持更明确的 Hover / Focus 状态。
+- [ ] History 对话框支持更完整的键盘操作。
+- [ ] Drawer 最小宽度下做一次 Windows 实际 overflow 验证。
 
 ---
 
@@ -100,9 +128,9 @@ lib/workbench/presentation/global_ai_drawer.dart
 
 - [ ] Thread Rename。
 - [ ] Thread Archive。
-- [ ] History 可以区分 Task / Workspace / Knowledge / Global。
-- [ ] History 显示更新时间。
-- [ ] 当前 Thread 有明显选中状态。
+- [x] History 显示 Task / Workspace / Knowledge / Global Scope。
+- [x] History 显示更新时间。
+- [ ] 当前 Thread 有更明显的选中状态。
 
 不在 Phase 5 强制做：
 
@@ -117,7 +145,7 @@ Share Thread
 
 ## 7. 技术收口（非纯 UI）
 
-Phase 5 Baseline 前还需要评估：
+Phase 5 Baseline 前还需要处理：
 
 ### Conversation History Budget
 
@@ -134,7 +162,7 @@ maxCharacters = 18000
 
 ```text
 保留最近 8 ~ 12 轮 user / assistant 消息
-或增加字符上限
++ conversation character limit
 ```
 
 ### Search Index Freshness
@@ -159,13 +187,22 @@ Global / Workspace AI Scope 会使用 `SearchService`。
 Phase 5 Core Features        Complete
 Phase 5 AI Drawer Functional Complete
 Phase 5 UI Polish Round 1    Complete
-Message Readability          Pending
-Failure / Retry UX           Pending
+Message Readability          Complete
+Failure / Retry UX           Complete
 Desktop Interaction          Pending
+Thread Management            Partial
 History Budget               Pending
 Search Freshness             Pending
 DeepSeek Credential Test     Pending
 Windows Acceptance           Pending
+```
+
+下一步优先处理：
+
+```text
+Desktop Interaction
+Conversation History Budget
+Search Index Freshness
 ```
 
 完成 UI / 技术收口后再进入最终 P5.8 Windows Acceptance。
