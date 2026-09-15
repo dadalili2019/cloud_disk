@@ -5,6 +5,7 @@ import '../core/ai_context_models.dart';
 import '../core/ai_conversation_models.dart';
 import '../core/models.dart';
 import '../workbench_runtime.dart';
+import 'assistant_markdown.dart';
 
 class GlobalAiDrawer extends StatefulWidget {
   const GlobalAiDrawer({
@@ -40,6 +41,8 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   String? _taskId;
   String? _knowledgeId;
   String? _pendingUserMessage;
+  String? _failedMessage;
+  Object? _failedError;
 
   bool _loading = true;
   bool _sending = false;
@@ -107,6 +110,11 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     _manuallyExcluded = const [];
   }
 
+  void _clearFailure() {
+    _failedMessage = null;
+    _failedError = null;
+  }
+
   Future<void> _setWorkspace(String? value) async {
     setState(() {
       _workspaceId = value;
@@ -116,6 +124,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       _messages = const [];
       _preview = null;
       _contextExpanded = false;
+      _clearFailure();
       _resetContextOverrides();
     });
     if (value == null || _runtime == null) return;
@@ -132,6 +141,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       _messages = const [];
       _preview = null;
       _contextExpanded = false;
+      _clearFailure();
       _resetContextOverrides();
       if (scope == AIContextScope.global) {
         _taskId = null;
@@ -181,9 +191,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
 
   Future<void> _excludeContext(AIContextRef ref) async {
     if (_manuallyExcluded.any((item) => item.key == ref.key)) return;
-    setState(() {
-      _manuallyExcluded = [..._manuallyExcluded, ref];
-    });
+    setState(() => _manuallyExcluded = [..._manuallyExcluded, ref]);
     await _previewContext();
   }
 
@@ -269,10 +277,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                     Expanded(
                       child: results.isEmpty
                           ? const Center(
-                              child: Text(
-                                '输入关键词搜索需要加入的工作上下文。',
-                                style: TextStyle(fontSize: 12),
-                              ),
+                              child: Text('输入关键词搜索需要加入的工作上下文。'),
                             )
                           : ListView.separated(
                               itemCount: results.length,
@@ -433,11 +438,12 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   }
 
   Future<void> _openThread(AIThreadModel value) async {
-    if (_runtime == null) return;
-    final messages = await _runtime!.aiConversationService.listMessages(value.id);
+    final runtime = _runtime;
+    if (runtime == null) return;
+    final messages = await runtime.aiConversationService.listMessages(value.id);
     List<TaskModel> tasks = _tasks;
     if (value.workspaceId != null && value.workspaceId != _workspaceId) {
-      tasks = await _runtime!.taskService.listByWorkspace(value.workspaceId!);
+      tasks = await runtime.taskService.listByWorkspace(value.workspaceId!);
     }
     if (!mounted) return;
     setState(() {
@@ -450,6 +456,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       _messages = messages;
       _preview = null;
       _contextExpanded = false;
+      _clearFailure();
       _resetContextOverrides();
     });
     _scrollToBottom();
@@ -463,8 +470,26 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       _error = null;
       _pendingUserMessage = null;
       _contextExpanded = false;
+      _clearFailure();
       _resetContextOverrides();
     });
+  }
+
+  List<AIConversationTurn> _historyForPrompt({String? excludeTrailingUser}) {
+    final source = _messages
+        .where((item) => item.role == 'user' || item.role == 'assistant')
+        .toList(growable: false);
+    var end = source.length;
+    if (excludeTrailingUser != null &&
+        source.isNotEmpty &&
+        source.last.role == 'user' &&
+        source.last.content.trim() == excludeTrailingUser.trim()) {
+      end--;
+    }
+    return source
+        .take(end)
+        .map((item) => AIConversationTurn(role: item.role, content: item.content))
+        .toList(growable: false);
   }
 
   Future<void> _send() async {
@@ -476,37 +501,35 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       _sending = true;
       _pendingUserMessage = message;
       _error = null;
+      _clearFailure();
     });
     _scrollToBottom();
 
+    AIThreadModel? thread = _thread;
+    var userPersisted = false;
     try {
       final request = _request(query: message);
       final rawContext = await runtime.aiContextBuilder.build(request);
       final context = runtime.aiContextBudget.apply(rawContext);
-      final history = _messages
-          .where((item) => item.role == 'user' || item.role == 'assistant')
-          .map((item) => AIConversationTurn(role: item.role, content: item.content))
-          .toList(growable: false);
       final prompt = runtime.aiPromptBuilder.build(
         context: context,
         userMessage: message,
-        history: history,
+        history: _historyForPrompt(),
       );
 
-      var thread = _thread;
-      if (thread == null) {
-        thread = await runtime.aiConversationService.createThread(
-          scope: _scope,
-          workspaceId: request.workspaceId,
-          taskId: request.taskId,
-          knowledgeId: request.knowledgeId,
-        );
-      }
+      thread ??= await runtime.aiConversationService.createThread(
+        scope: _scope,
+        workspaceId: request.workspaceId,
+        taskId: request.taskId,
+        knowledgeId: request.knowledgeId,
+      );
 
       await runtime.aiConversationService.addUserMessage(
         thread: thread,
         content: message,
       );
+      userPersisted = true;
+
       final response = await runtime.aiProvider.complete(prompt);
       await runtime.aiConversationService.addAssistantMessage(
         thread: thread,
@@ -514,30 +537,106 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         context: context,
       );
 
-      final refreshedThread = await runtime.aiConversationService.getThread(thread.id);
-      final messages = await runtime.aiConversationService.listMessages(thread.id);
-      final threads = await runtime.aiConversationService.listThreads();
-      final preview = await runtime.aiContextPreviewService.preview(request);
-
+      await _refreshConversation(thread.id, request: request);
       if (!mounted) return;
       _messageController.clear();
       setState(() {
-        _thread = refreshedThread ?? thread;
-        _messages = messages;
-        _threads = threads;
-        _preview = preview;
         _pendingUserMessage = null;
+        _clearFailure();
       });
       _scrollToBottom();
     } catch (error) {
       if (!mounted) return;
-      setState(() {
-        _pendingUserMessage = null;
-        _error = error;
-      });
+      if (thread != null && userPersisted) {
+        final messages = await runtime.aiConversationService.listMessages(thread.id);
+        final refreshedThread = await runtime.aiConversationService.getThread(thread.id);
+        final threads = await runtime.aiConversationService.listThreads();
+        if (!mounted) return;
+        _messageController.clear();
+        setState(() {
+          _thread = refreshedThread ?? thread;
+          _messages = messages;
+          _threads = threads;
+          _pendingUserMessage = null;
+          _failedMessage = message;
+          _failedError = error;
+          _error = null;
+        });
+      } else {
+        setState(() {
+          _pendingUserMessage = null;
+          _error = error;
+        });
+      }
+      _scrollToBottom();
     } finally {
       if (mounted) setState(() => _sending = false);
     }
+  }
+
+  Future<void> _retryFailed() async {
+    final runtime = _runtime;
+    final thread = _thread;
+    final message = _failedMessage;
+    if (runtime == null || thread == null || message == null || _sending) return;
+
+    setState(() {
+      _sending = true;
+      _error = null;
+      _failedError = null;
+    });
+    _scrollToBottom();
+
+    try {
+      final request = _request(query: message);
+      final rawContext = await runtime.aiContextBuilder.build(request);
+      final context = runtime.aiContextBudget.apply(rawContext);
+      final prompt = runtime.aiPromptBuilder.build(
+        context: context,
+        userMessage: message,
+        history: _historyForPrompt(excludeTrailingUser: message),
+      );
+
+      final response = await runtime.aiProvider.complete(prompt);
+      await runtime.aiConversationService.addAssistantMessage(
+        thread: thread,
+        content: response,
+        context: context,
+      );
+
+      await _refreshConversation(thread.id, request: request);
+      if (!mounted) return;
+      setState(_clearFailure);
+      _scrollToBottom();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _failedError = error);
+      _scrollToBottom();
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  Future<void> _refreshConversation(
+    String threadId, {
+    AIContextRequest? request,
+  }) async {
+    final runtime = _runtime;
+    if (runtime == null) return;
+    final refreshedThread = await runtime.aiConversationService.getThread(threadId);
+    final messages = await runtime.aiConversationService.listMessages(threadId);
+    final threads = await runtime.aiConversationService.listThreads();
+    AIContextPreviewModel? preview = _preview;
+    if (request != null) {
+      preview = await runtime.aiContextPreviewService.preview(request);
+    }
+    if (!mounted) return;
+    setState(() {
+      if (refreshedThread != null) _thread = refreshedThread;
+      _messages = messages;
+      _threads = threads;
+      _preview = preview;
+    });
   }
 
   void _scrollToBottom() {
@@ -584,7 +683,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                     padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
                     child: InfoBar(
                       title: const Text('AI 操作失败'),
-                      content: Text('$_error'),
+                      content: Text(_readableError(_error!)),
                       severity: InfoBarSeverity.error,
                       isLong: true,
                     ),
@@ -600,7 +699,6 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   Widget _header(FluentThemeData theme) {
     final providerName = _runtime?.aiProvider.name ?? 'Loading Provider';
     final isPreview = providerName.toLowerCase().contains('preview');
-
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 15, 12, 13),
       decoration: BoxDecoration(
@@ -764,6 +862,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
               _messages = const [];
               _preview = null;
               _contextExpanded = false;
+              _clearFailure();
               _resetContextOverrides();
             }),
           ),
@@ -787,6 +886,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
               _messages = const [];
               _preview = null;
               _contextExpanded = false;
+              _clearFailure();
               _resetContextOverrides();
             }),
           ),
@@ -831,6 +931,8 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         if (_pendingUserMessage != null)
           _pendingUserBubble(theme, _pendingUserMessage!),
         if (_sending) _thinkingBubble(theme),
+        if (_failedMessage != null && !_sending)
+          _failureBubble(theme),
       ],
     );
   }
@@ -911,10 +1013,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
               ),
             ),
           if (_contextExpanded) ...[
-            Container(
-              height: 1,
-              color: theme.inactiveColor.withOpacity(0.09),
-            ),
+            Container(height: 1, color: theme.inactiveColor.withOpacity(0.09)),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               child: Column(
@@ -934,9 +1033,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  ...preview.included.map(
-                    (item) => _contextRow(theme, item),
-                  ),
+                  ...preview.included.map((item) => _contextRow(theme, item)),
                   if (preview.excluded.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     const Text(
@@ -985,11 +1082,11 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       ),
       child: Row(
         children: [
-          Container(
+          SizedBox(
             width: 26,
-            alignment: Alignment.center,
             child: Text(
               'P${item.priority}',
+              textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600),
             ),
           ),
@@ -1034,7 +1131,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     return Align(
       alignment: user ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 470),
+        constraints: const BoxConstraints(maxWidth: 500),
         margin: const EdgeInsets.only(bottom: 9),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
@@ -1042,10 +1139,12 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
           borderRadius: BorderRadius.circular(9),
           border: Border.all(color: theme.inactiveColor.withOpacity(0.10)),
         ),
-        child: Text(
-          message.content,
-          style: const TextStyle(fontSize: 11.5, height: 1.45),
-        ),
+        child: user
+            ? SelectableText(
+                message.content,
+                style: const TextStyle(fontSize: 11.5, height: 1.45),
+              )
+            : AssistantMarkdown(data: message.content),
       ),
     );
   }
@@ -1054,7 +1153,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     return Align(
       alignment: Alignment.centerRight,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 470),
+        constraints: const BoxConstraints(maxWidth: 500),
         margin: const EdgeInsets.only(bottom: 9),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
@@ -1092,6 +1191,45 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                 fontSize: 10.5,
                 color: theme.typography.body?.color?.withOpacity(0.65),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _failureBubble(FluentThemeData theme) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500),
+        margin: const EdgeInsets.only(bottom: 9),
+        padding: const EdgeInsets.all(11),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(color: const Color(0xFFD13438).withOpacity(0.38)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'AI 回复失败',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _readableError(_failedError ?? 'Unknown provider error.'),
+              style: TextStyle(
+                fontSize: 10,
+                height: 1.4,
+                color: theme.typography.body?.color?.withOpacity(0.66),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Button(
+              onPressed: _retryFailed,
+              child: const Text('Retry'),
             ),
           ],
         ),
@@ -1266,4 +1404,11 @@ String _formatDateTime(DateTime value) {
   final hour = local.hour.toString().padLeft(2, '0');
   final minute = local.minute.toString().padLeft(2, '0');
   return '$month-$day $hour:$minute';
+}
+
+String _readableError(Object error) {
+  var value = error.toString().trim();
+  value = value.replaceFirst(RegExp(r'^(StateError|Exception):\s*'), '');
+  if (value.length > 280) value = '${value.substring(0, 280)}…';
+  return value;
 }
