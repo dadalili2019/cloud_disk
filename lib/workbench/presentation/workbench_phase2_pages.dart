@@ -226,41 +226,44 @@ class _WorkspaceNavigation extends StatelessWidget {
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1180),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _WorkspaceTab(
-                        label: '概览',
-                        selected: section == 'overview',
-                        onTap: () => context.go('/workspace/$workspaceId/overview'),
-                      ),
-                      _WorkspaceTab(
-                        label: '任务',
-                        selected: section == 'tasks',
-                        onTap: () => context.go('/workspace/$workspaceId/tasks'),
-                      ),
-                      _WorkspaceTab(
-                        label: '笔记',
-                        selected: section == 'notes',
-                        onTap: () => context.go('/workspace/$workspaceId/notes'),
-                      ),
-                      _WorkspaceTab(
-                        label: '问题',
-                        selected: section == 'issues',
-                        onTap: () => context.go('/workspace/$workspaceId/issues'),
-                      ),
-                      _WorkspaceTab(
-                        label: '资源',
-                        selected: section == 'resources',
-                        onTap: () => context.go('/workspace/$workspaceId/resources'),
-                      ),
-                      _WorkspaceTab(
-                        label: '决策',
-                        selected: section == 'decisions',
-                        onTap: () => context.go('/workspace/$workspaceId/decisions'),
-                      ),
-                    ],
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _WorkspaceTab(
+                          label: '概览',
+                          selected: section == 'overview',
+                          onTap: () => context.go('/workspace/$workspaceId/overview'),
+                        ),
+                        _WorkspaceTab(
+                          label: '任务',
+                          selected: section == 'tasks',
+                          onTap: () => context.go('/workspace/$workspaceId/tasks'),
+                        ),
+                        _WorkspaceTab(
+                          label: '笔记',
+                          selected: section == 'notes',
+                          onTap: () => context.go('/workspace/$workspaceId/notes'),
+                        ),
+                        _WorkspaceTab(
+                          label: '问题',
+                          selected: section == 'issues',
+                          onTap: () => context.go('/workspace/$workspaceId/issues'),
+                        ),
+                        _WorkspaceTab(
+                          label: '资源',
+                          selected: section == 'resources',
+                          onTap: () => context.go('/workspace/$workspaceId/resources'),
+                        ),
+                        _WorkspaceTab(
+                          label: '决策',
+                          selected: section == 'decisions',
+                          onTap: () => context.go('/workspace/$workspaceId/decisions'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -361,102 +364,13 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
                               workspaceId: workspaceId,
                               task: overview.currentTask,
                             ),
-                            if (overview.currentTask != null) ...[
-                              const SizedBox(height: 12),
-                              _BlockerPanel(blockers: overview.currentBlockers),
-                            ],
                             const SizedBox(height: 12),
-                            LayoutBuilder(
-                              builder: (context, inner) {
-                                final notes = _Panel(
-                                  title: '关联笔记',
-                                  emptyText: '暂无关联笔记',
-                                  children: overview.linkedNotes
-                                      .map(
-                                        (note) => Text(
-                                          note.title,
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                      )
-                                      .toList(),
-                                );
-                                final resources = _Panel(
-                                  title: '相关资源',
-                                  emptyText: '暂无相关资源',
-                                  children: overview.linkedResources
-                                      .map(
-                                        (resource) => Row(
-                                          children: [
-                                            const Icon(FluentIcons.link, size: 12),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: Text(
-                                                resource.name,
-                                                style: const TextStyle(fontSize: 12),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                      .toList(),
-                                );
-
-                                if (inner.maxWidth < 760) {
-                                  return Column(
-                                    children: [
-                                      notes,
-                                      const SizedBox(height: 12),
-                                      resources,
-                                    ],
-                                  );
-                                }
-                                return Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(child: notes),
-                                    const SizedBox(width: 12),
-                                    Expanded(child: resources),
-                                  ],
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            _Panel(
-                              title: '最近决策',
-                              emptyText: '暂无相关决策',
-                              children: overview.linkedDecisions
-                                  .map(
-                                    (decision) => Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          decision.title,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        if (decision.decisionText.isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 3),
-                                            child: Text(
-                                              decision.decisionText,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: FluentTheme.of(context)
-                                                    .typography
-                                                    .body
-                                                    ?.color
-                                                    ?.withOpacity(0.58),
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  )
-                                  .toList(),
+                            _OverviewGrid(
+                              currentTask: overview.currentTask,
+                              blockers: overview.currentBlockers,
+                              notes: overview.linkedNotes,
+                              resources: overview.linkedResources,
+                              decisions: overview.linkedDecisions,
                             ),
                             const SizedBox(height: 12),
                             _Panel(
@@ -528,6 +442,123 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
       default:
         return activity.summary;
     }
+  }
+}
+
+class _OverviewGrid extends StatelessWidget {
+  const _OverviewGrid({
+    required this.currentTask,
+    required this.blockers,
+    required this.notes,
+    required this.resources,
+    required this.decisions,
+  });
+
+  final TaskModel? currentTask;
+  final List<IssueModel> blockers;
+  final List<NoteModel> notes;
+  final List<ResourceModel> resources;
+  final List<DecisionModel> decisions;
+
+  @override
+  Widget build(BuildContext context) {
+    final panels = <Widget>[
+      if (currentTask != null) _BlockerPanel(blockers: blockers),
+      _Panel(
+        title: '关联笔记',
+        emptyText: '暂无关联笔记',
+        children: notes
+            .map(
+              (note) => Text(
+                note.title,
+                style: const TextStyle(fontSize: 12),
+              ),
+            )
+            .toList(),
+      ),
+      _Panel(
+        title: '相关资源',
+        emptyText: '暂无相关资源',
+        children: resources
+            .map(
+              (resource) => Row(
+                children: [
+                  const Icon(FluentIcons.link, size: 12),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      resource.name,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            )
+            .toList(),
+      ),
+      _Panel(
+        title: '最近决策',
+        emptyText: '暂无相关决策',
+        children: decisions
+            .map(
+              (decision) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    decision.title,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (decision.decisionText.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Text(
+                        decision.decisionText,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: FluentTheme.of(context)
+                              .typography
+                              .body
+                              ?.color
+                              ?.withOpacity(0.58),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            )
+            .toList(),
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 560) {
+          return Column(
+            children: [
+              for (var i = 0; i < panels.length; i++) ...[
+                panels[i],
+                if (i != panels.length - 1) const SizedBox(height: 12),
+              ],
+            ],
+          );
+        }
+
+        const gap = 12.0;
+        final width = (constraints.maxWidth - gap) / 2;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: panels
+              .map((panel) => SizedBox(width: width, child: panel))
+              .toList(growable: false),
+        );
+      },
+    );
   }
 }
 
