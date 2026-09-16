@@ -1,6 +1,6 @@
 # Personal Workbench Phase 5 Acceptance — AI Context + Global AI
 
-> 状态：**Windows 验收进行中**。Workbench 全局 UI、Workspace 子页面与 Global AI Drawer 已完成实际 Windows 截图 smoke；Preview Provider 单轮发送链路已通过；Context 手工排除 / 恢复 / 搜索 / 添加链路已通过；真实 DeepSeek Provider 已实现，但用户计划稍后再配置参数，因此 Real Provider 网络调用可后补验证。
+> 状态：**Windows 验收进行中**。Workbench 全局 UI、Workspace 子页面与 Global AI Drawer 已完成实际 Windows 截图 smoke；Preview Provider 单轮发送链路已通过；Context 手工排除 / 恢复 / 搜索 / 添加链路已通过；Task / Workspace / Knowledge / Global 四种 Scope Preview 已通过；真实 DeepSeek Provider 已实现，但用户计划稍后再配置参数，因此 Real Provider 网络调用可后补验证。
 
 ## 0. 当前验收进度
 
@@ -20,7 +20,7 @@
 [✓] Knowledge 页面
 [✓] Global AI Drawer 打开 / 关闭
 [✓] Workspace 页面打开 AI 自动继承 Current Task
-[✓] Task Scope Context Preview 自动构建
+[✓] Task / Workspace / Knowledge / Global 四种 Scope Preview
 [✓] Context 摘要 / 管理视图可展示
 [✓] Preview Provider 单轮发送与回复链路
 [✓] 首轮 AI Thread / User Message / Assistant Message 写入链路
@@ -32,9 +32,9 @@
 仍需重点手工验证：
 
 ```text
-Workspace / Knowledge / Global Scope
 调整后的 Context 实际发送
 AI 多轮 Thread / Message persistence
+历史会话重新打开
 Context Snapshot
 Windows 重启恢复
 schema v4 → v5 数据回归
@@ -48,9 +48,9 @@ Phase 1–4 功能 smoke regression
 四种 Scope：
 
 - [x] Task Scope 可以构建上下文。
-- [ ] Workspace Scope 可以构建上下文。
-- [ ] Knowledge Scope 可以构建上下文。
-- [ ] Global Scope 可以通过 SearchService 获取少量相关上下文。
+- [x] Workspace Scope 可以构建上下文。
+- [x] Knowledge Scope 可以构建上下文。
+- [x] Global Scope 可以通过 SearchService 获取少量相关上下文。
 
 Task Scope 应包含：
 
@@ -116,7 +116,7 @@ maxCharacters = 18000
 新增项优先级：P2
 ```
 
-已实际看到搜索返回 Task / Note / Resource / Decision；Issue / Knowledge 类型可在后续 Scope / Regression 测试中继续覆盖。
+已实际看到搜索返回 Task / Note / Resource / Decision；Issue / Knowledge 类型可在后续 Regression 测试中继续覆盖。
 
 ## 4. PromptBuilder
 
@@ -189,10 +189,11 @@ context_snapshot_json
 - [x] 顶部 AI 按钮可以打开右侧 Drawer。
 - [x] Drawer 可以关闭。
 - [x] 显示当前 Provider 状态。
-- [x] Scope Selector 可用并展示四种 Scope。
+- [x] Scope Selector 可用并完成四种 Scope 实际切换。
 - [x] Workspace Selector 可用。
 - [x] Task Selector 可用。
-- [ ] Knowledge Selector 实际切换验证。
+- [x] Knowledge Selector 实际切换验证。
+- [x] Global Scope 实际 Preview 验证。
 - [x] Context Preview 可用。
 - [x] Message Input 可用并完成实际发送。
 - [x] 首轮发送后历史会话入口出现。
@@ -358,28 +359,29 @@ flutter run -d windows
 [ ] 实际发送消息时使用调整后的 Context
 ```
 
-### Case C — 四种 Scope
-
-Task Scope 已通过。接下来只需验证：
+### Case C — 四种 Scope（已通过）
 
 ```text
-工作区
-知识
-全局
+[✓] 任务
+[✓] 工作区
+[✓] 知识
+[✓] 全局
 ```
 
-至少确认 Context Preview 无异常，Anchor 与 Scope 正确。
+已确认各 Scope 的 Anchor / Selector / Context Preview 可正常工作。
 
 ### Case D — Thread Persistence
 
 ```text
-1. 在当前 Thread 再发送第二轮消息
-2. 记录 Thread title
-3. 完全退出应用
-4. flutter run -d windows
-5. 打开 AI Drawer
-6. 从历史会话重新打开 Thread
-7. 确认两轮消息均存在
+1. 回到一个 Task Thread
+2. 再发送第二轮消息
+3. 点击右上角历史图标，确认 Thread title 已生成
+4. 完全退出应用
+5. flutter run -d windows
+6. 打开 AI Drawer
+7. 从历史会话重新打开该 Thread
+8. 确认两轮用户消息和两轮 AI 回复均存在
+9. 确认 Scope / Task Anchor 仍然正确
 ```
 
 ### Case E — Regression
@@ -398,7 +400,7 @@ Task Scope 已通过。接下来只需验证：
 ```text
 [ ] flutter analyze 无 Phase 5 新增编译错误
 [✓] Preview Provider 单轮本地链路通过
-[ ] 四种 AI Scope Preview 通过
+[✓] 四种 AI Scope Preview 通过
 [✓] 手工 include / exclude 核心链路通过
 [ ] AI Thread / Message 多轮持久化通过
 [ ] Windows 重启恢复通过
