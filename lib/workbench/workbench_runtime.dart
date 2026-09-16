@@ -187,6 +187,26 @@ class WorkbenchRuntime {
       links: entityLinkRepository,
       activities: activityRepository,
     );
+    final developerProjectService = DeveloperProjectService(
+      projects: developerProjectRepository,
+      activities: activityRepository,
+    );
+    final developerCommandService = DeveloperCommandService(
+      commands: developerCommandRepository,
+      projects: developerProjectRepository,
+      activities: activityRepository,
+    );
+    final developerSnippetService = DeveloperSnippetService(
+      snippets: developerSnippetRepository,
+      projects: developerProjectRepository,
+      activities: activityRepository,
+    );
+    final developerContextService = DeveloperContextService(
+      projects: developerProjectRepository,
+      commands: developerCommandRepository,
+      snippets: developerSnippetRepository,
+      resources: resourceRepository,
+    );
     final aiContextBuilder = AIContextBuilder(
       workspaces: workspaceRepository,
       tasks: taskRepository,
@@ -200,6 +220,7 @@ class WorkbenchRuntime {
       taskContextService: taskContextService,
       knowledgeService: knowledgeService,
       searchService: searchService,
+      developerContextService: developerContextService,
     );
     const aiContextBudget = AIContextBudget();
     final aiContextPreviewService = AIContextPreviewService(
@@ -235,26 +256,6 @@ class WorkbenchRuntime {
       activities: activityRepository,
     );
     final todayService = TodayService(focusSessions: focusSessionService);
-    final developerProjectService = DeveloperProjectService(
-      projects: developerProjectRepository,
-      activities: activityRepository,
-    );
-    final developerCommandService = DeveloperCommandService(
-      commands: developerCommandRepository,
-      projects: developerProjectRepository,
-      activities: activityRepository,
-    );
-    final developerSnippetService = DeveloperSnippetService(
-      snippets: developerSnippetRepository,
-      projects: developerProjectRepository,
-      activities: activityRepository,
-    );
-    final developerContextService = DeveloperContextService(
-      projects: developerProjectRepository,
-      commands: developerCommandRepository,
-      snippets: developerSnippetRepository,
-      resources: resourceRepository,
-    );
 
     return WorkbenchRuntime._(
       paths: paths,
