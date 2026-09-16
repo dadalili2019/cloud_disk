@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/services.dart';
 
+import '../../theme/theme_controller.dart';
 import '../core/models.dart';
 import '../core/workbench_settings.dart';
 import '../workbench_runtime.dart';
