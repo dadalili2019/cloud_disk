@@ -310,7 +310,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                         child: TextBox(
                           controller: controller,
                           autofocus: true,
-                          placeholder: '搜索任务、笔记、问题、资源、决策或知识',
+                          placeholder: '搜索任务、笔记、问题、资源、决策、知识、项目、命令或代码片段',
                           onSubmitted: (_) => runSearch(),
                         ),
                       ),
@@ -1467,6 +1467,9 @@ String _entityLabel(String type) {
     'knowledge' => '知识',
     'workspace' => '工作区',
     'activity' => '活动',
+    'developer_project' => '项目',
+    'developer_command' => '命令',
+    'developer_snippet' => '代码片段',
     _ => type,
   };
 }
