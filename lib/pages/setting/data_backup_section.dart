@@ -1,4 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/services.dart';
 
 import '../../theme/theme_controller.dart';
 import '../../workbench/core/workbench_settings.dart';
@@ -46,6 +47,11 @@ class _DataBackupSectionState extends State<DataBackupSection> {
       setState(() {
         _success = '备份完成：${result.file.path}';
       });
+      await _showCompletedDialog(
+        title: '备份完成',
+        description: 'Personal Workbench 备份已创建。',
+        path: result.file.path,
+      );
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = _readableError(error));
@@ -69,12 +75,69 @@ class _DataBackupSectionState extends State<DataBackupSection> {
       setState(() {
         _success = '导出完成：${result.file.path}';
       });
+      await _showCompletedDialog(
+        title: '导出完成',
+        description: 'Portable Export 已生成，可用于归档或外部处理。',
+        path: result.file.path,
+      );
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = _readableError(error));
     } finally {
       if (mounted) setState(() => _exportRunning = false);
     }
+  }
+
+  Future<void> _showCompletedDialog({
+    required String title,
+    required String description,
+    required String path,
+  }) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final palette = ThemeScope.of(dialogContext).palette;
+        return ContentDialog(
+          title: Text(title),
+          content: SizedBox(
+            width: 520,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(description, style: const TextStyle(fontSize: 11)),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: palette.surfaceMuted,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: palette.cardBorder),
+                  ),
+                  child: SelectableText(
+                    path,
+                    style: const TextStyle(fontSize: 10.5, height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            Button(
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: path));
+              },
+              child: const Text('复制路径'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('确定'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
