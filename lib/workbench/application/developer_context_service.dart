@@ -54,4 +54,13 @@ class DeveloperContextService {
       devResources: devResources,
     );
   }
+
+  Future<DeveloperProjectModel?> getProjectById(String id) =>
+      projects.getById(id);
+
+  Future<DeveloperCommandModel?> getCommandById(String id) =>
+      commands.getById(id);
+
+  Future<DeveloperSnippetModel?> getSnippetById(String id) =>
+      snippets.getById(id);
 }
