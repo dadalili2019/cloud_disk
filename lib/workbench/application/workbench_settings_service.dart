@@ -80,12 +80,17 @@ class WorkbenchSettingsService {
   }
 
   Future<void> updateAI(AISettings value) async {
+    final timeoutSeconds = value.timeoutSeconds < 5
+        ? 5
+        : value.timeoutSeconds > 600
+            ? 600
+            : value.timeoutSeconds;
     final normalized = AISettings(
       mode: value.mode,
       baseUrl: value.baseUrl.trim(),
       model: value.model.trim(),
       chatPath: value.chatPath.trim(),
-      timeoutSeconds: value.timeoutSeconds.clamp(5, 600),
+      timeoutSeconds: timeoutSeconds,
     );
     _current = _current.copyWith(ai: normalized);
     await _preferences.setString(_Keys.aiMode, normalized.mode.name);
