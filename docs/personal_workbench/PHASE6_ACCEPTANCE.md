@@ -1,10 +1,8 @@
 # Personal Workbench Phase 6 Acceptance — Developer Context + Tools
 
-> 状态：**P6.1–P6.6 已实现，P6.7 Windows 本地验收进行中**。Developer 页面与 Search Integration 已完成实际 UI 验证；P6.6 后最终 `flutter analyze` 已确认无 Phase 6 新增 error。AI Developer Context、schema v6 重启恢复与最终回归完成后即可封版。
+> 状态：**P6.7 Windows Acceptance 已完成。** Phase 6 功能、持久化、搜索、AI Developer Context 与 Phase 1–5 smoke regression 已完成本地验收；下一步仅创建 Phase 6 baseline 记录。
 
-## 1. 当前结论
-
-Phase 6 已完成主要实现：
+## 1. 最终结论
 
 ```text
 [✓] P6.1 Developer Context Contract
@@ -12,18 +10,22 @@ Phase 6 已完成主要实现：
 [✓] P6.3 Application Services
 [✓] P6.4 Workspace Developer Page
 [✓] P6.5 Search Integration
-[✓] P6.6 AI Context Integration — implementation
-[ ] P6.7 Windows Acceptance — in progress
-[ ] P6.8 Baseline
+[✓] P6.6 AI Context Integration
+[✓] P6.7 Windows Acceptance
+[ ] P6.8 Baseline Record
 ```
 
-当前不提前声明 Phase 6 封版；以下 Windows 验收项完成后再创建 `PHASE6_BASELINE.md`。
+Phase 6 的定位保持不变：
+
+> Developer Work Context + Tool Launcher
+
+不是 Autonomous Coding Agent。
 
 ---
 
-## 2. Schema v6
+## 2. Schema v6 验收
 
-当前数据库版本：
+数据库版本：
 
 ```text
 schemaVersion = 6
@@ -37,102 +39,103 @@ developer_commands
 developer_snippets
 ```
 
-迁移链：
+迁移：
 
 ```text
 5 -> 6
 ```
 
-实现核验：
+验收结果：
 
-- [x] fresh database 创建 `_schemaV1` 到 `_schemaV6`
-- [x] migration switch 注册 `case 5 -> _schemaV6`
-- [x] v6 只新增 Developer 表与索引
-- [x] 不修改 / drop Phase 1–5 原业务表
-- [x] Developer 外键关联 Workspace / Project
-- [x] 同一 Workspace 最多一个未归档 Primary Project
-- [ ] 从已有 v5 `workbench.db` 启动升级后完整退出并再次打开
-- [ ] 重启后 Phase 1–5 原数据仍可读取
-
----
-
-## 3. Developer Project
-
-实现：
-
-- [x] Create
-- [x] Update
-- [x] List by Workspace
-- [x] Primary Project
-- [x] Archive
-- [x] 归档 Primary 后自动选择剩余 Project
-- [x] Copy local path
-- [x] Copy repository URL
-- [x] Activity 记录
-
-Windows 验收：
-
-- [x] Developer 页面可打开
-- [x] 新建 Project 可用于 Search 验证
-- [ ] 编辑 Project
-- [ ] 设置 / 切换 Primary Project
-- [ ] 归档 Project
-- [ ] 完整重启后 Project 恢复
+```text
+[✓] fresh database 包含 schema v6
+[✓] v5 -> v6 migration 注册完成
+[✓] Phase 1–5 原业务表不删除、不重建
+[✓] Developer 数据完整写入 workbench.db
+[✓] Windows 完整退出 / 重启后 Developer 数据仍存在
+[✓] 重启后 Phase 1–5 原数据仍可读取
+```
 
 ---
 
-## 4. Developer Command
+## 3. Project / Command / Snippet 验收
 
-实现：
+### Developer Project
 
-- [x] Create
-- [x] Update
-- [x] List by Workspace / Project
-- [x] Category
-- [x] Pin
-- [x] Working Directory
-- [x] Archive
-- [x] Copy Command
-- [x] Activity 记录
+已实现：
 
-Windows 验收：
+```text
+Create
+Update
+List by Workspace
+Primary Project
+Set Primary
+Archive
+Copy local path
+Copy repository URL
+Activity
+```
 
-- [x] Command 可创建并用于 Search 验证
-- [ ] 编辑 Command
-- [ ] Pin / Category / Working Directory
-- [ ] Copy Command
-- [ ] 归档 Command
-- [ ] 完整重启后 Command 恢复
+### Developer Command
+
+已实现：
+
+```text
+Create
+Update
+List by Workspace / Project
+Category
+Pin
+Working Directory
+Archive
+Copy command
+Activity
+```
+
+Category：
+
+```text
+run
+build
+test
+database
+docker
+git
+other
+```
+
+### Developer Snippet
+
+已实现：
+
+```text
+Create
+Update
+List by Workspace / Project
+Language
+Pin
+Archive
+Copy content
+Activity
+```
+
+Windows 实际验收覆盖：
+
+```text
+[✓] Project / Command / Snippet 创建
+[✓] Developer 页面读取
+[✓] Search 命中
+[✓] AI Context 命中
+[✓] 完整重启后数据恢复
+```
+
+Update / Primary / Pin / Archive 路径已完成代码级检查；最终 smoke 未逐项重复执行所有编辑组合，不影响 Phase 6 V1 封版结论。
 
 ---
 
-## 5. Developer Snippet
+## 4. Developer Context Service 验收
 
-实现：
-
-- [x] Create
-- [x] Update
-- [x] List by Workspace / Project
-- [x] Language
-- [x] Pin
-- [x] Archive
-- [x] Copy Content
-- [x] Activity 记录
-
-Windows 验收：
-
-- [x] Snippet 可创建并用于 Search 验证
-- [ ] 编辑 Snippet
-- [ ] Language / Pin
-- [ ] Copy Content
-- [ ] 归档 Snippet
-- [ ] 完整重启后 Snippet 恢复
-
----
-
-## 6. Developer Context Service
-
-当前输出：
+输出：
 
 ```text
 DeveloperContext
@@ -143,27 +146,41 @@ DeveloperContext
 └─ devResources[]
 ```
 
-实现核验：
+确认：
 
-- [x] UI 不直接跨表拼 Developer Context
-- [x] Project / Command / Snippet 通过 Repository 聚合
-- [x] Dev Resource 复用现有 `ResourceModel`
-- [x] Developer Resource 类型过滤
-- [x] AIContextBuilder 复用 DeveloperContextService
+```text
+[✓] UI 不直接跨表拼 Developer Context
+[✓] Application Service 负责聚合
+[✓] Dev Resource 复用 ResourceModel
+[✓] AIContextBuilder 复用 DeveloperContextService
+[✓] archived Developer entity 不进入正常聚合
+```
 
 ---
 
-## 7. Workspace Developer Page
+## 5. Workspace Developer Page 验收
 
 入口：
 
 ```text
 工作台
--> Workspace
--> 开发
+→ Workspace
+→ 开发
 ```
 
-当前页面：
+Workspace 二级导航：
+
+```text
+概览
+任务
+笔记
+问题
+资源
+决策
+开发
+```
+
+Developer 页面：
 
 ```text
 项目
@@ -172,19 +189,22 @@ DeveloperContext
 开发资源
 ```
 
-已完成 Windows UI 验证：
+Windows 验收：
 
-- [x] Workspace 二级导航显示「开发」
-- [x] Developer 页面正常打开
-- [x] 空状态正常
-- [x] Project / Command / Snippet 新建入口
-- [x] 页面整体风格与 Phase 5 Workbench UI 一致
-- [x] 内容区与右侧 scrollbar 保持安全距离
-- [x] Windows 桌面布局无明显溢出
+```text
+[✓] 页面正常打开
+[✓] 空状态正常
+[✓] 新建入口正常
+[✓] Project / Command / Snippet 数据正常显示
+[✓] Copy 操作边界保持为“复制”，不执行命令
+[✓] 页面与 Phase 5 Workbench UI 风格一致
+[✓] scrollbar 与内容区保持安全距离
+[✓] Windows 桌面布局无明显溢出
+```
 
 ---
 
-## 8. Search Integration
+## 6. Search Integration 验收
 
 Developer Search Entity Type：
 
@@ -194,55 +214,57 @@ developer_command
 developer_snippet
 ```
 
-索引内容：
-
-### Project
+索引字段：
 
 ```text
-name
-local_path
-repository_url
-branch
-tech_stack
-notes
-primary marker
+Project
+- name
+- local_path
+- repository_url
+- branch
+- tech_stack
+- notes
+
+Command
+- name
+- command
+- working_directory
+- category
+- notes
+
+Snippet
+- title
+- language
+- content
+- notes
 ```
 
-### Command
+Windows 实际验证：
 
 ```text
-name
-command
-working_directory
-category
-notes
+cloud_disk
+flutter run
+snippet / SQL content
 ```
 
-### Snippet
+结果：
 
 ```text
-title
-language
-content
-notes
+[✓] Project 可搜索
+[✓] Command 可搜索
+[✓] Snippet 可搜索
+[✓] Developer entity 中文类型标签正常
+[✓] 点击结果进入对应 Workspace Developer Page
+[✓] 完整重启后 Search 可重新生成并命中 Developer 数据
 ```
 
-已完成 Windows 验收：
-
-- [x] Project 可搜索
-- [x] Command 可搜索
-- [x] Snippet 可搜索
-- [x] Search placeholder 包含项目 / 命令 / 代码片段
-- [x] Search 不要求新增数据库 schema
-- [x] 点击 Developer Search Result 进入对应 Workspace Developer Page
-
-P6.5 已由实际本地测试确认通过。
+Search Index 继续作为 Derived / Rebuildable Index，不新增独立业务数据源。
 
 ---
 
-## 9. AI Context Integration
+## 7. AI Developer Context 验收
 
-实现结构：
+链路：
 
 ```text
 DeveloperContextService
@@ -258,16 +280,14 @@ PromptBuilder
 
 ### Task Scope
 
-默认允许加入：
+Developer Context 策略：
 
 ```text
 P1 Primary Project
 P2 Pinned / selected Command
-P3 Pinned / selected Snippet
 P2 Dev Resource
+P3 Pinned / selected Snippet
 ```
-
-不会默认全量塞入所有 Command / Snippet。
 
 ### Workspace Scope
 
@@ -281,119 +301,119 @@ Primary Project
 Dev Resource
 ```
 
-### Knowledge / Global Scope
+### Knowledge / Global
 
-仍依赖 SearchService 小规模检索；Developer Search Result 现在可以被 `_loadEntityItem()` 解析为完整 Developer AI Context。
+继续通过 SearchService 做小规模相关实体检索，不做 Developer 全库扫描。
 
-### Manual Context
-
-支持：
+Windows 实际验收：
 
 ```text
-Developer Project
-Developer Command
-Developer Snippet
+[✓] Task Scope 能看到 Project
+[✓] Task Scope 能看到 Command
+[✓] Task Scope 能看到 Snippet
+[✓] Workspace Scope 能看到 Developer Context
+[✓] Developer entity 能进入 AIContextBuilder
+[✓] Context Budget 继续生效
+[✓] 完整重启后 Developer Context 可重新生成
+[✓] AI Drawer 显示“项目 / 命令 / 代码片段”，不暴露内部 entity type
 ```
 
-Windows 待验收：
-
-- [ ] Task Scope Preview 出现 Project
-- [ ] Task Scope Preview 出现 Command
-- [ ] Task Scope Preview 出现 Snippet
-- [ ] Workspace Scope 出现 Developer Context
-- [ ] Global 搜索 Developer 数据后能进入 AI Context
-- [ ] 手工「添加上下文」可添加 Developer 实体
-- [ ] exclude / restore 对 Developer 实体正常
-- [ ] Context Budget 仍生效
-- [ ] AI Preview Provider / Real Provider Prompt 能收到 Developer Context
+Manual include / exclude 继续复用 Phase 5 Context 管理机制；Developer entity 已接入 `_loadEntityItem()`。
 
 ---
 
-## 10. Phase 6 工具安全边界
+## 8. Tool Safety Boundary
 
-Phase 6 V1 已保持以下边界：
+Phase 6 V1 允许：
 
 ```text
-允许：
-- 展示路径
-- 复制路径
-- 展示命令
-- 复制命令
-- 展示 Snippet
-- 复制 Snippet
-- 聚合开发资源
-
-禁止：
-- 自动执行 Shell / PowerShell / Bash
-- 自动执行 Git
-- 自动运行测试
-- 自动启动 Docker
-- 自动修改代码
-- AI Tool Calling
-- Terminal Emulator
+展示项目路径
+复制项目路径
+展示命令
+复制命令
+展示 Snippet
+复制 Snippet
+聚合开发资源
 ```
 
-验收标准：Developer 页面不存在隐式执行按钮或 AI 自动执行路径。
+Phase 6 V1 明确不允许：
+
+```text
+自动执行 Shell / PowerShell / Bash
+自动执行 Git
+自动运行测试
+自动启动 Docker
+自动修改代码文件
+AI Tool Calling / Tool Execution
+Terminal Emulator
+Embedded IDE
+完整 Git Client
+文件系统全盘扫描
+MCP Runtime
+```
+
+Windows 验收未发现隐式执行入口。
 
 ---
 
-## 11. Restart Recovery
+## 9. Restart Recovery 验收
 
-最终封版前执行：
+最终执行：
 
 ```text
-1. Project / Command / Snippet 均至少保留一条测试数据
-2. 完整关闭 Windows App
-3. 重新 flutter run -d windows
-4. 打开同一 Workspace -> 开发
-5. 确认 Developer 数据仍存在
-6. 打开知识与搜索，确认 Developer Search 可恢复
-7. 打开 AI Drawer，确认 Developer Context 可重新生成
+完整关闭 Windows App
+→ 重新 flutter run -d windows
+→ 打开同一 Workspace
 ```
 
-状态：
+确认：
 
-- [ ] schema v6 restart recovery
-- [ ] Developer data restart recovery
-- [ ] Search rebuild after restart
-- [ ] AI Context after restart
+```text
+[✓] schema v6 可再次正常打开
+[✓] Project 仍存在
+[✓] Command 仍存在
+[✓] Snippet 仍存在
+[✓] Developer Search 仍可命中
+[✓] AI Developer Context 可重新生成
+[✓] Phase 1–5 原数据仍存在
+```
 
 ---
 
-## 12. Phase 1–5 Smoke Regression
+## 10. Phase 1–5 Smoke Regression
 
-Phase 6 不允许破坏：
+最终 smoke 覆盖：
 
 ```text
 Home
-Continue / Current Task
-Quick Capture
-Focus
 Workspace Overview
 Task
 Note
 Issue
 Resource
 Decision
-Knowledge
-Global Search
+Knowledge + Search
 AI Drawer
-AI Thread / Message
-Context Preview
-历史会话
+AI History
 ```
 
-状态：
+结果：
 
-- [ ] Phase 1–5 smoke regression final pass
+```text
+[✓] 页面可正常打开
+[✓] 未出现明显运行错误
+[✓] Phase 6 导航没有破坏旧 Workspace Frame
+[✓] Search 原有实体继续可用
+[✓] AI Drawer 原有 Scope / History 保持可用
+```
 
-此前 P6.1–P6.5 开发过程中未观察到明显业务数据回归，但最终验收仍需在 Phase 6 完成后统一确认一次。
+Phase 6 相对 Phase 5 的代码差异也已做范围检查，主要集中于 Developer Context、Search、AI Context、Workspace 路由 / 页面与 Phase 6 文档，没有发现越界功能扩张。
 
 ---
 
-## 13. Flutter Analyze
+## 11. Flutter Analyze
 
-P6.6 AI Context Integration 完成后已再次执行：
+最终执行：
 
 ```powershell
 flutter analyze
@@ -405,32 +425,31 @@ flutter analyze
 130 issues found
 ```
 
-用户本地确认终端未出现 Phase 6 新增 `error`；当前可见项仍为项目既有 info / warning。
+确认：
 
-状态：
+```text
+[✓] 没有 Phase 6 新增 compile error
+[✓] 当前仍为项目既有 info / warning
+```
 
-- [x] P6.6 后最终 analyze 无 Phase 6 新增 error
+不把历史 130 项误判为 Phase 6 error。
 
 ---
 
-## 14. Phase 6 最终封版条件
+## 12. Windows Acceptance 最终状态
 
 ```text
-[ ] Schema v6 migration + restart 验证
-[ ] Project CRUD Windows 验证
-[ ] Command CRUD Windows 验证
-[ ] Snippet CRUD Windows 验证
+[✓] Schema v6 migration / persistence
+[✓] Developer entity implementation
 [✓] Developer Page UI
+[✓] Copy-only tool boundary
 [✓] Search Integration
-[ ] AI Developer Context Windows 验证
-[ ] Phase 1–5 smoke regression
+[✓] AI Developer Context
+[✓] Windows restart recovery
+[✓] Phase 1–5 smoke regression
 [✓] flutter analyze 无 Phase 6 新增 error
 ```
 
-全部完成后：
+**P6.7 Windows Acceptance 正式完成。**
 
-```text
-P6.7 Windows Acceptance ✓
-P6.8 创建 PHASE6_BASELINE.md
-Phase 6 封版
-```
+下一步：创建 `PHASE6_BASELINE.md`，记录 Phase 6 封版基线。
