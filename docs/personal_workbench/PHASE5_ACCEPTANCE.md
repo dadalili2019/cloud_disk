@@ -1,6 +1,6 @@
 # Personal Workbench Phase 5 Acceptance — AI Context + Global AI
 
-> 状态：**Windows 验收进行中**。Workbench 全局 UI、Workspace 子页面与 Global AI Drawer 已完成实际 Windows 截图 smoke；Preview Provider 单轮发送链路已通过；真实 DeepSeek Provider 已实现，但用户计划稍后再配置参数，因此 Real Provider 网络调用可后补验证。
+> 状态：**Windows 验收进行中**。Workbench 全局 UI、Workspace 子页面与 Global AI Drawer 已完成实际 Windows 截图 smoke；Preview Provider 单轮发送链路已通过；Context 手工排除 / 恢复 / 搜索 / 添加链路已通过；真实 DeepSeek Provider 已实现，但用户计划稍后再配置参数，因此 Real Provider 网络调用可后补验证。
 
 ## 0. 当前验收进度
 
@@ -24,13 +24,16 @@
 [✓] Context 摘要 / 管理视图可展示
 [✓] Preview Provider 单轮发送与回复链路
 [✓] 首轮 AI Thread / User Message / Assistant Message 写入链路
+[✓] Context 手工排除 / 恢复
+[✓] Context 搜索 / 手工添加
+[✓] Context Preview 数量重新计算
 ```
 
 仍需重点手工验证：
 
 ```text
 Workspace / Knowledge / Global Scope
-Context include / exclude
+调整后的 Context 实际发送
 AI 多轮 Thread / Message persistence
 Context Snapshot
 Windows 重启恢复
@@ -94,13 +97,26 @@ maxCharacters = 18000
 
 ### 手工控制
 
-- [ ] Included Context 可以手工排除。
-- [ ] 排除项会显示在“已排除”。
-- [ ] 排除项可以恢复。
-- [ ] `添加上下文` 可以搜索 Task / Note / Issue / Resource / Decision / Knowledge。
-- [ ] 搜索结果可以手工加入当前 Context。
-- [ ] 手工加入 / 排除以后 Preview 会重新计算。
+- [x] Included Context 可以手工排除。
+- [x] 排除项会显示在“已排除”。
+- [x] 排除项可以恢复。
+- [x] `添加上下文` 搜索弹窗可以正常返回工作上下文结果。
+- [x] 搜索结果可以手工加入当前 Context。
+- [x] 手工加入 / 排除以后 Preview 会重新计算。
 - [ ] 实际发送消息时使用调整后的 Context。
+
+实际 Windows 验收记录：
+
+```text
+初始 Context：11 条
+排除一条 Activity：11 → 10
+恢复该 Activity：10 → 11
+搜索 testnote：返回「笔记 · testnote」
+手工加入 testnote：11 → 12
+新增项优先级：P2
+```
+
+已实际看到搜索返回 Task / Note / Resource / Decision；Issue / Knowledge 类型可在后续 Scope / Regression 测试中继续覆盖。
 
 ## 4. PromptBuilder
 
@@ -323,25 +339,30 @@ flutter run -d windows
 
 “正在思考…”属于瞬时 UI 状态，当前最终截图未单独捕获，不据此标记通过或失败。
 
-### Case B — Context 手工管理
+### Case B — Context 手工管理（核心链路已通过）
 
 ```text
-1. 点击“管理”
-2. 排除一条非 P0 Context
-3. 确认进入“已排除”
-4. 点击恢复
-5. 点击“添加上下文”
-6. 搜索现有 Task / Note / Resource / Decision / Knowledge
-7. 添加一条 Context
-8. 确认摘要数量与字符数重新计算
+[✓] 点击“管理”
+[✓] 排除一条非 P0 Context
+[✓] 确认进入“已排除”
+[✓] 点击恢复
+[✓] 点击“添加上下文”
+[✓] 搜索 testnote
+[✓] 添加「笔记 · testnote」
+[✓] Context 数量 11 → 12
+```
+
+待后续发送链路顺带确认：
+
+```text
+[ ] 实际发送消息时使用调整后的 Context
 ```
 
 ### Case C — 四种 Scope
 
-分别验证：
+Task Scope 已通过。接下来只需验证：
 
 ```text
-任务
 工作区
 知识
 全局
@@ -378,7 +399,7 @@ flutter run -d windows
 [ ] flutter analyze 无 Phase 5 新增编译错误
 [✓] Preview Provider 单轮本地链路通过
 [ ] 四种 AI Scope Preview 通过
-[ ] 手工 include / exclude 通过
+[✓] 手工 include / exclude 核心链路通过
 [ ] AI Thread / Message 多轮持久化通过
 [ ] Windows 重启恢复通过
 [ ] schema v4 → v5 迁移无数据回归
