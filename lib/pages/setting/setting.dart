@@ -5,6 +5,7 @@ import '../../workbench/core/models.dart';
 import '../../workbench/core/workbench_settings.dart';
 import '../../workbench/workbench_runtime.dart';
 import 'ai_settings_section.dart';
+import 'data_backup_section.dart';
 
 enum _SettingsSection {
   general,
@@ -33,6 +34,7 @@ class _SettingPageState extends State<SettingPage> {
     'Noto Sans SC',
   ];
 
+  final ScrollController _scrollController = ScrollController();
   _SettingsSection _section = _SettingsSection.appearance;
   WorkbenchRuntime? _runtime;
   WorkbenchSettingsModel _settings = const WorkbenchSettingsModel();
@@ -44,6 +46,12 @@ class _SettingPageState extends State<SettingPage> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -90,8 +98,6 @@ class _SettingPageState extends State<SettingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final palette = ThemeScope.of(context).palette;
-
     return ScaffoldPage(
       header: const PageHeader(title: Text('设置')),
       content: _loading
@@ -102,6 +108,7 @@ class _SettingPageState extends State<SettingPage> {
                   builder: (context, constraints) {
                     final compact = constraints.maxWidth < 760;
                     return ListView(
+                      controller: _scrollController,
                       padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
                       children: [
                         Center(
@@ -109,20 +116,18 @@ class _SettingPageState extends State<SettingPage> {
                             constraints: const BoxConstraints(maxWidth: 1080),
                             child: compact
                                 ? Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
                                       _CompactNavigation(
                                         section: _section,
                                         onChanged: _setSection,
                                       ),
                                       const SizedBox(height: 12),
-                                      _sectionContent(palette),
+                                      _sectionContent(),
                                     ],
                                   )
                                 : Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       SizedBox(
                                         width: 190,
@@ -132,9 +137,7 @@ class _SettingPageState extends State<SettingPage> {
                                         ),
                                       ),
                                       const SizedBox(width: 14),
-                                      Expanded(
-                                        child: _sectionContent(palette),
-                                      ),
+                                      Expanded(child: _sectionContent()),
                                     ],
                                   ),
                           ),
@@ -149,9 +152,14 @@ class _SettingPageState extends State<SettingPage> {
   void _setSection(_SettingsSection value) {
     if (_section == value) return;
     setState(() => _section = value);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(0);
+      }
+    });
   }
 
-  Widget _sectionContent(ThemePalette palette) {
+  Widget _sectionContent() {
     return switch (_section) {
       _SettingsSection.general => _GeneralSection(
           settings: _settings.general,
@@ -173,10 +181,13 @@ class _SettingPageState extends State<SettingPage> {
               settings: _settings.ai,
               onSettingsChanged: _refreshSettings,
             ),
-      _SettingsSection.data => const _PendingSection(
-          title: '数据与备份',
-          rows: ['本地数据目录', '自动备份', '导出', '恢复'],
-        ),
+      _SettingsSection.data => _runtime == null
+          ? const Center(child: ProgressRing())
+          : DataBackupSection(
+              runtime: _runtime!,
+              settings: _settings.backup,
+              onSettingsChanged: _refreshSettings,
+            ),
       _SettingsSection.shortcuts => const _ShortcutsSection(),
     };
   }
@@ -381,11 +392,11 @@ class _ShortcutsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeading(title: '快捷键'),
-        const _SettingsGroup(
+        _SectionHeading(title: '快捷键'),
+        _SettingsGroup(
           title: 'Shortcuts',
           children: [
             _SettingRow(
@@ -724,34 +735,6 @@ class _AppearanceSection extends StatelessWidget {
             onPressed: themeCtrl.reset,
             child: const Text('恢复默认外观'),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PendingSection extends StatelessWidget {
-  const _PendingSection({required this.title, required this.rows});
-
-  final String title;
-  final List<String> rows;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _SectionHeading(title: title),
-        _SettingsGroup(
-          title: title,
-          children: rows
-              .map(
-                (row) => _SettingRow(
-                  title: row,
-                  control: const Text('待配置', style: TextStyle(fontSize: 10)),
-                ),
-              )
-              .toList(growable: false),
         ),
       ],
     );
