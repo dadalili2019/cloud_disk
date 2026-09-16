@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/services.dart';
 
 import '../core/models.dart';
+import '../core/workbench_settings.dart';
 import '../workbench_runtime.dart';
+import 'assistant_markdown.dart';
 import 'workbench_ui.dart';
 
 class WorkbenchNotesEditorPage extends StatefulWidget {
@@ -25,6 +28,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
   List<NoteModel> _notes = const [];
   List<TaskModel> _linkedTasks = const [];
   NoteModel? _selected;
+  NotesSettings _notesSettings = const NotesSettings();
   bool _loading = true;
   bool _saving = false;
   bool _dirty = false;
@@ -42,7 +46,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
     _saveDebounce?.cancel();
     final note = _selected;
     final content = _editor.text;
-    if (_dirty && note != null) {
+    if (_notesSettings.autoSave && _dirty && note != null) {
       unawaited(
         WorkbenchRuntime.instance.then(
           (runtime) => runtime.noteService.saveContent(note, content),
@@ -69,6 +73,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
       if (!mounted) return;
 
       setState(() {
+        _notesSettings = runtime.settingsService.current.notes;
         _notes = notes;
         _loading = false;
       });
@@ -104,7 +109,9 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
 
   Future<void> _selectNote(NoteModel note) async {
     if (_selected?.id == note.id) return;
-    await _flushPendingSave();
+    if (_notesSettings.autoSave) {
+      await _flushPendingSave();
+    }
 
     final runtime = await WorkbenchRuntime.instance;
     final results = await Future.wait([
@@ -125,6 +132,17 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
     if (_selected == null) return;
     _dirty = true;
     _saveDebounce?.cancel();
+
+    if (!_notesSettings.autoSave) {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _error = null;
+        });
+      }
+      return;
+    }
+
     if (mounted) setState(() => _saving = true);
     _saveDebounce = Timer(
       const Duration(milliseconds: 650),
@@ -201,7 +219,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
       );
 
       if (result != true || !mounted) return;
-      await _flushPendingSave();
+      if (_notesSettings.autoSave) await _flushPendingSave();
 
       final title = titleController.text.trim();
       final runtime = await WorkbenchRuntime.instance;
@@ -234,186 +252,247 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
     final theme = FluentTheme.of(context);
     final textColor = theme.typography.body?.color;
 
-    return WorkbenchSectionPage(
-      title: '笔记',
-      subtitle: '用 Markdown 记录过程信息，并与当前任务建立上下文关联。',
-      actions: [
-        FilledButton(
-          onPressed: _createNote,
-          child: const Text('新建笔记'),
-        ),
-      ],
-      headerGap: 14,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            width: 250,
-            decoration: BoxDecoration(
-              color: theme.cardColor,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: theme.inactiveColor.withOpacity(0.14),
-              ),
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
+          _flushPendingSave();
+        },
+      },
+      child: Focus(
+        autofocus: true,
+        child: WorkbenchSectionPage(
+          title: '笔记',
+          subtitle: '用 Markdown 记录过程信息，并与当前任务建立上下文关联。',
+          actions: [
+            FilledButton(
+              onPressed: _createNote,
+              child: const Text('新建笔记'),
             ),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 13, 14, 11),
-                  child: Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          '全部笔记',
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      WorkbenchTag(label: '${_notes.length}'),
-                    ],
+          ],
+          headerGap: 14,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 250,
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: theme.inactiveColor.withOpacity(0.14),
                   ),
                 ),
-                Container(
-                  height: 1,
-                  color: theme.inactiveColor.withOpacity(0.10),
-                ),
-                Expanded(
-                  child: _notes.isEmpty
-                      ? Center(
-                          child: Button(
-                            onPressed: _createNote,
-                            child: const Text('新建第一条笔记'),
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 7),
-                          itemCount: _notes.length,
-                          itemBuilder: (context, index) {
-                            final note = _notes[index];
-                            final selected = note.id == _selected?.id;
-                            return _NoteListItem(
-                              note: note,
-                              selected: selected,
-                              onPressed: () => _selectNote(note),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: theme.inactiveColor.withOpacity(0.14),
-                ),
-              ),
-              child: _selected == null
-                  ? Center(
-                      child: Button(
-                        onPressed: _createNote,
-                        child: const Text('新建笔记'),
-                      ),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 13, 14, 11),
+                      child: Row(
                         children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      _selected!.title,
-                                      style: const TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Wrap(
-                                      spacing: 10,
-                                      runSpacing: 5,
-                                      children: [
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              FluentIcons.page,
-                                              size: 10,
-                                              color: textColor?.withOpacity(0.42),
-                                            ),
-                                            const SizedBox(width: 5),
-                                            Text(
-                                              _selected!.filePath.split('/').last,
-                                              style: TextStyle(
-                                                fontSize: 9.5,
-                                                color: textColor?.withOpacity(0.46),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        if (_linkedTasks.isNotEmpty)
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                FluentIcons.link,
-                                                size: 10,
-                                                color: textColor?.withOpacity(0.42),
-                                              ),
-                                              const SizedBox(width: 5),
-                                              Text(
-                                                '关联任务 · ${_linkedTasks.map((task) => task.title).join('、')}',
-                                                style: TextStyle(
-                                                  fontSize: 9.5,
-                                                  color: textColor?.withOpacity(0.50),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                          const Expanded(
+                            child: Text(
+                              '全部笔记',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
                               ),
-                              _SaveState(saving: _saving),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Expanded(
-                            child: TextBox(
-                              controller: _editor,
-                              expands: true,
-                              minLines: null,
-                              maxLines: null,
-                              textAlignVertical: TextAlignVertical.top,
-                              placeholder: '输入 Markdown 内容',
                             ),
                           ),
-                          if (_error != null) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              '保存失败：$_error',
-                              style: const TextStyle(fontSize: 11),
-                            ),
-                          ],
+                          WorkbenchTag(label: '${_notes.length}'),
                         ],
                       ),
                     ),
-            ),
+                    Container(
+                      height: 1,
+                      color: theme.inactiveColor.withOpacity(0.10),
+                    ),
+                    Expanded(
+                      child: _notes.isEmpty
+                          ? Center(
+                              child: Button(
+                                onPressed: _createNote,
+                                child: const Text('新建第一条笔记'),
+                              ),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(vertical: 7),
+                              itemCount: _notes.length,
+                              itemBuilder: (context, index) {
+                                final note = _notes[index];
+                                final selected = note.id == _selected?.id;
+                                return _NoteListItem(
+                                  note: note,
+                                  selected: selected,
+                                  onPressed: () => _selectNote(note),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: theme.inactiveColor.withOpacity(0.14),
+                    ),
+                  ),
+                  child: _selected == null
+                      ? Center(
+                          child: Button(
+                            onPressed: _createNote,
+                            child: const Text('新建笔记'),
+                          ),
+                        )
+                      : Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _selected!.title,
+                                          style: const TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Wrap(
+                                          spacing: 10,
+                                          runSpacing: 5,
+                                          children: [
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  FluentIcons.page,
+                                                  size: 10,
+                                                  color:
+                                                      textColor?.withOpacity(0.42),
+                                                ),
+                                                const SizedBox(width: 5),
+                                                Text(
+                                                  _selected!.filePath
+                                                      .split('/')
+                                                      .last,
+                                                  style: TextStyle(
+                                                    fontSize: 9.5,
+                                                    color: textColor
+                                                        ?.withOpacity(0.46),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            if (_linkedTasks.isNotEmpty)
+                                              Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    FluentIcons.link,
+                                                    size: 10,
+                                                    color: textColor
+                                                        ?.withOpacity(0.42),
+                                                  ),
+                                                  const SizedBox(width: 5),
+                                                  Text(
+                                                    '关联任务 · ${_linkedTasks.map((task) => task.title).join('、')}',
+                                                    style: TextStyle(
+                                                      fontSize: 9.5,
+                                                      color: textColor
+                                                          ?.withOpacity(0.50),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (!_notesSettings.autoSave) ...[
+                                    Button(
+                                      onPressed: _dirty ? _flushPendingSave : null,
+                                      child: const Text('保存'),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                  _SaveState(
+                                    saving: _saving,
+                                    dirty: _dirty,
+                                    autoSave: _notesSettings.autoSave,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Expanded(child: _noteBody()),
+                              if (_error != null) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  '保存失败：$_error',
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _noteBody() {
+    return switch (_notesSettings.defaultView) {
+      NoteDefaultView.edit => _editorPane(),
+      NoteDefaultView.preview => _previewPane(),
+      NoteDefaultView.split => Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: _editorPane()),
+            const SizedBox(width: 12),
+            Expanded(child: _previewPane()),
+          ],
+        ),
+    };
+  }
+
+  Widget _editorPane() {
+    return TextBox(
+      controller: _editor,
+      expands: true,
+      minLines: null,
+      maxLines: null,
+      textAlignVertical: TextAlignVertical.top,
+      placeholder: '输入 Markdown 内容',
+    );
+  }
+
+  Widget _previewPane() {
+    final palette = ThemeScope.of(context).palette;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: palette.surfaceMuted,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: palette.cardBorder),
+      ),
+      child: SingleChildScrollView(
+        child: AssistantMarkdown(data: _editor.text),
       ),
     );
   }
@@ -475,7 +554,8 @@ class _NoteListItem extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12.5,
-                          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight:
+                              selected ? FontWeight.w600 : FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 3),
@@ -501,13 +581,25 @@ class _NoteListItem extends StatelessWidget {
 }
 
 class _SaveState extends StatelessWidget {
-  const _SaveState({required this.saving});
+  const _SaveState({
+    required this.saving,
+    required this.dirty,
+    required this.autoSave,
+  });
 
   final bool saving;
+  final bool dirty;
+  final bool autoSave;
 
   @override
   Widget build(BuildContext context) {
     final textColor = FluentTheme.of(context).typography.body?.color;
+    final label = saving
+        ? '保存中…'
+        : dirty
+            ? (autoSave ? '等待保存…' : '未保存')
+            : '已保存';
+
     return Padding(
       padding: const EdgeInsets.only(top: 3),
       child: Row(
@@ -521,13 +613,13 @@ class _SaveState extends StatelessWidget {
             )
           else
             Icon(
-              FluentIcons.check_mark,
+              dirty ? FluentIcons.edit : FluentIcons.check_mark,
               size: 10,
               color: textColor?.withOpacity(0.46),
             ),
           const SizedBox(width: 5),
           Text(
-            saving ? '保存中…' : '已保存',
+            label,
             style: TextStyle(
               fontSize: 10,
               color: textColor?.withOpacity(0.48),
