@@ -172,6 +172,9 @@ class WorkbenchRuntime {
       resources: resourceRepository,
       decisions: decisionRepository,
       knowledge: knowledgeRepository,
+      developerProjects: developerProjectRepository,
+      developerCommands: developerCommandRepository,
+      developerSnippets: developerSnippetRepository,
       markdownStore: markdownStore,
       index: searchIndexRepository,
     );
