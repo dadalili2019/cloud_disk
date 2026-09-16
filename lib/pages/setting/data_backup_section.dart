@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:fluent_ui/fluent_ui.dart';
 
 import '../../theme/theme_controller.dart';
 import '../../workbench/core/workbench_settings.dart';
 import '../../workbench/workbench_runtime.dart';
+import 'restore_panel.dart';
 
 class DataBackupSection extends StatefulWidget {
   const DataBackupSection({
@@ -80,7 +79,6 @@ class _DataBackupSectionState extends State<DataBackupSection> {
 
   @override
   Widget build(BuildContext context) {
-    final palette = ThemeScope.of(context).palette;
     final settings = widget.settings;
 
     return Column(
@@ -214,11 +212,10 @@ class _DataBackupSectionState extends State<DataBackupSection> {
         const SizedBox(height: 12),
         _Group(
           title: 'Restore',
-          children: const [
-            _Row(
-              title: '从备份恢复',
-              subtitle: 'P7.6 实现：校验 Manifest → Safety Backup → Restore → Rebuild Search Index。',
-              control: _Badge('下一步'),
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+              child: RestorePanel(runtime: widget.runtime),
             ),
           ],
         ),
