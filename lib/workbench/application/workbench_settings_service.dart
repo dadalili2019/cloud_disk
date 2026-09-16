@@ -7,8 +7,10 @@ class WorkbenchSettingsService {
 
   final SharedPreferences _preferences;
   WorkbenchSettingsModel _current;
+  String _sessionAIKey = '';
 
   WorkbenchSettingsModel get current => _current;
+  String get sessionAIKey => _sessionAIKey;
 
   static Future<WorkbenchSettingsService> create() async {
     final preferences = await SharedPreferences.getInstance();
@@ -93,6 +95,14 @@ class WorkbenchSettingsService {
     await _preferences.setInt(_Keys.aiTimeoutSeconds, normalized.timeoutSeconds);
   }
 
+  void setSessionAIKey(String value) {
+    _sessionAIKey = value.trim();
+  }
+
+  void clearSessionAIKey() {
+    _sessionAIKey = '';
+  }
+
   String? get lastActiveLocation =>
       _nullableString(_preferences.getString(_Keys.lastActiveLocation));
 
@@ -109,7 +119,10 @@ class WorkbenchSettingsService {
 
   Future<void> resetNotes() => updateNotes(const NotesSettings());
 
-  Future<void> resetAI() => updateAI(const AISettings());
+  Future<void> resetAI() async {
+    clearSessionAIKey();
+    await updateAI(const AISettings());
+  }
 
   static bool _isRestorableLocation(String location) {
     return location == '/home' ||
