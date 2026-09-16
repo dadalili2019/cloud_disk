@@ -21,6 +21,7 @@ import 'application/knowledge_service.dart';
 import 'application/phase2_overview_service.dart';
 import 'application/quick_capture_service.dart';
 import 'application/resource_service.dart';
+import 'application/restore_service.dart';
 import 'application/search_service.dart';
 import 'application/task_context_service.dart';
 import 'application/today_service.dart';
@@ -51,6 +52,7 @@ class WorkbenchRuntime {
     required this.settingsService,
     required this.backupService,
     required this.exportService,
+    required this.restoreService,
     required this.workspaceService,
     required this.workspaceAdminService,
     required this.taskService,
@@ -85,6 +87,7 @@ class WorkbenchRuntime {
   final WorkbenchSettingsService settingsService;
   final BackupService backupService;
   final ExportService exportService;
+  final RestoreService restoreService;
   final WorkspaceService workspaceService;
   final WorkspaceAdminService workspaceAdminService;
   final TaskService taskService;
@@ -119,10 +122,15 @@ class WorkbenchRuntime {
 
   static Future<WorkbenchRuntime> _create() async {
     final paths = await AppPaths.create();
+    final restored = await RestoreService.applyPendingRestoreIfPresent(paths);
     final database = await WorkbenchDatabase.open(paths.databasePath);
     final settingsService = await WorkbenchSettingsService.create();
     final backupService = BackupService(paths: paths, database: database);
     final exportService = ExportService(paths: paths, database: database);
+    final restoreService = RestoreService(
+      paths: paths,
+      backupService: backupService,
+    );
     final workspaceRepository = SqliteWorkspaceRepository(database);
     final taskRepository = SqliteTaskRepository(database);
     final noteRepository = SqliteNoteRepository(database);
@@ -272,12 +280,17 @@ class WorkbenchRuntime {
     );
     final todayService = TodayService(focusSessions: focusSessionService);
 
+    if (restored) {
+      await searchService.rebuildIndex();
+    }
+
     final runtime = WorkbenchRuntime._(
       paths: paths,
       database: database,
       settingsService: settingsService,
       backupService: backupService,
       exportService: exportService,
+      restoreService: restoreService,
       workspaceService: workspaceService,
       workspaceAdminService: WorkspaceAdminService(
         workspaces: workspaceRepository,
