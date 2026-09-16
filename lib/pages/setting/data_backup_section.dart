@@ -1,0 +1,402 @@
+import 'dart:io';
+
+import 'package:fluent_ui/fluent_ui.dart';
+
+import '../../theme/theme_controller.dart';
+import '../../workbench/core/workbench_settings.dart';
+import '../../workbench/workbench_runtime.dart';
+
+class DataBackupSection extends StatefulWidget {
+  const DataBackupSection({
+    super.key,
+    required this.runtime,
+    required this.settings,
+    required this.onSettingsChanged,
+  });
+
+  final WorkbenchRuntime runtime;
+  final BackupSettings settings;
+  final VoidCallback onSettingsChanged;
+
+  @override
+  State<DataBackupSection> createState() => _DataBackupSectionState();
+}
+
+class _DataBackupSectionState extends State<DataBackupSection> {
+  bool _backupRunning = false;
+  bool _exportRunning = false;
+  String? _success;
+  String? _error;
+
+  Future<void> _update(BackupSettings value) async {
+    await widget.runtime.settingsService.updateBackup(value);
+    widget.onSettingsChanged();
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _createBackup() async {
+    if (_backupRunning || _exportRunning) return;
+    setState(() {
+      _backupRunning = true;
+      _success = null;
+      _error = null;
+    });
+    try {
+      final result = await widget.runtime.backupService.createManualBackup();
+      if (!mounted) return;
+      setState(() {
+        _success = '备份完成：${result.file.path}';
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _error = _readableError(error));
+    } finally {
+      if (mounted) setState(() => _backupRunning = false);
+    }
+  }
+
+  Future<void> _exportAll() async {
+    if (_backupRunning || _exportRunning) return;
+    setState(() {
+      _exportRunning = true;
+      _success = null;
+      _error = null;
+    });
+    try {
+      final result = await widget.runtime.exportService.exportAll(
+        includeAttachments: widget.settings.includeAttachmentsInExport,
+      );
+      if (!mounted) return;
+      setState(() {
+        _success = '导出完成：${result.file.path}';
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _error = _readableError(error));
+    } finally {
+      if (mounted) setState(() => _exportRunning = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    final settings = widget.settings;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SectionHeading(title: '数据与备份'),
+        _Group(
+          title: 'Local Data',
+          children: [
+            _Row(
+              title: '本地数据目录',
+              subtitle: 'Personal Workbench 的数据库、Markdown、附件、备份和导出都位于该目录下。',
+              control: SizedBox(
+                width: 390,
+                child: SelectableText(
+                  widget.runtime.paths.root.path,
+                  maxLines: 2,
+                  style: const TextStyle(fontSize: 10),
+                ),
+              ),
+            ),
+            _Row(
+              title: '数据库',
+              subtitle: '当前 schema v6；Backup 会先生成一致性 SQLite 快照。',
+              control: _Badge(widget.runtime.paths.databasePath),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _Group(
+          title: 'Backup',
+          children: [
+            _Row(
+              title: '自动备份',
+              subtitle: '应用启动时检查是否达到备份周期；不会依赖 Windows Task Scheduler。',
+              control: SizedBox(
+                width: 230,
+                child: ComboBox<BackupFrequency>(
+                  value: settings.frequency,
+                  isExpanded: true,
+                  items: const [
+                    ComboBoxItem(
+                      value: BackupFrequency.off,
+                      child: Text('关闭'),
+                    ),
+                    ComboBoxItem(
+                      value: BackupFrequency.daily,
+                      child: Text('每天'),
+                    ),
+                    ComboBoxItem(
+                      value: BackupFrequency.weekly,
+                      child: Text('每周'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      _update(settings.copyWith(frequency: value));
+                    }
+                  },
+                ),
+              ),
+            ),
+            _Row(
+              title: '自动备份保留数量',
+              subtitle: '仅清理 Auto Backup；Manual / Safety Backup 不会自动删除。',
+              control: SizedBox(
+                width: 230,
+                child: NumberBox<int>(
+                  value: settings.keepAutoBackups,
+                  min: 1,
+                  max: 50,
+                  mode: SpinButtonPlacementMode.inline,
+                  onChanged: (value) {
+                    if (value != null) {
+                      _update(settings.copyWith(keepAutoBackups: value));
+                    }
+                  },
+                ),
+              ),
+            ),
+            _Row(
+              title: '上次自动备份',
+              control: _Badge(
+                settings.lastAutoBackupAt == null
+                    ? '尚未执行'
+                    : _formatDateTime(settings.lastAutoBackupAt!),
+              ),
+            ),
+            _Row(
+              title: '备份目录',
+              control: _Badge(widget.runtime.paths.backupsDirectory.path),
+            ),
+            _Row(
+              title: '立即备份',
+              subtitle: '包含 workbench.db 一致性快照、Workspace Markdown、Knowledge、Attachments 与非敏感设置。',
+              control: FilledButton(
+                onPressed: _backupRunning || _exportRunning ? null : _createBackup,
+                child: Text(_backupRunning ? '备份中…' : '创建备份'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _Group(
+          title: 'Export',
+          children: [
+            _Row(
+              title: '导出附件',
+              subtitle: '关闭后 Portable Export 只导出结构化 JSON 与 Markdown。',
+              control: ToggleSwitch(
+                checked: settings.includeAttachmentsInExport,
+                onChanged: (value) => _update(
+                  settings.copyWith(includeAttachmentsInExport: value),
+                ),
+              ),
+            ),
+            _Row(
+              title: '导出目录',
+              control: _Badge(widget.runtime.paths.exportsDirectory.path),
+            ),
+            _Row(
+              title: '导出全部数据',
+              subtitle: '生成 Portable ZIP：业务表 JSON + Notes / Knowledge Markdown；Export 不用于 Restore。',
+              control: Button(
+                onPressed: _backupRunning || _exportRunning ? null : _exportAll,
+                child: Text(_exportRunning ? '导出中…' : '导出'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _Group(
+          title: 'Restore',
+          children: const [
+            _Row(
+              title: '从备份恢复',
+              subtitle: 'P7.6 实现：校验 Manifest → Safety Backup → Restore → Rebuild Search Index。',
+              control: _Badge('下一步'),
+            ),
+          ],
+        ),
+        if (_error != null) ...[
+          const SizedBox(height: 12),
+          InfoBar(
+            title: const Text('数据操作失败'),
+            content: Text(_error!),
+            severity: InfoBarSeverity.error,
+            isLong: true,
+          ),
+        ],
+        if (_success != null) ...[
+          const SizedBox(height: 12),
+          InfoBar(
+            title: const Text('数据操作完成'),
+            content: SelectableText(_success!),
+            severity: InfoBarSeverity.success,
+            isLong: true,
+          ),
+        ],
+        const SizedBox(height: 4),
+        Text(
+          'Backup / Export 不包含 API Key、Session Key 或其他 Secret。',
+          style: TextStyle(
+            fontSize: 9.5,
+            color: FluentTheme.of(context).typography.body?.color?.withOpacity(0.5),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionHeading extends StatelessWidget {
+  const _SectionHeading({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(2, 2, 2, 12),
+      child: Text(
+        title,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+class _Group extends StatelessWidget {
+  const _Group({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    final textColor = FluentTheme.of(context).typography.body?.color;
+    return Container(
+      decoration: BoxDecoration(
+        color: palette.cardBackground,
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: palette.cardBorder),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(13, 11, 13, 10),
+            child: Text(
+              title.toUpperCase(),
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.7,
+                color: textColor?.withOpacity(0.48),
+              ),
+            ),
+          ),
+          Container(height: 1, color: palette.cardBorder),
+          for (var index = 0; index < children.length; index++) ...[
+            children[index],
+            if (index != children.length - 1)
+              Container(height: 1, color: palette.cardBorder),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _Row extends StatelessWidget {
+  const _Row({required this.title, required this.control, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+  final Widget control;
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = FluentTheme.of(context).typography.body?.color;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle!,
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      height: 1.35,
+                      color: textColor?.withOpacity(0.48),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 18),
+          control,
+        ],
+      ),
+    );
+  }
+}
+
+class _Badge extends StatelessWidget {
+  const _Badge(this.value);
+
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 390),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: palette.surfaceMuted,
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: palette.cardBorder),
+      ),
+      child: SelectableText(
+        value,
+        maxLines: 2,
+        style: const TextStyle(fontSize: 10),
+      ),
+    );
+  }
+}
+
+String _formatDateTime(DateTime value) {
+  final local = value.toLocal();
+  String two(int number) => number.toString().padLeft(2, '0');
+  return '${local.year}-${two(local.month)}-${two(local.day)} '
+      '${two(local.hour)}:${two(local.minute)}';
+}
+
+String _readableError(Object error) {
+  var value = error.toString().trim();
+  value = value.replaceFirst(RegExp(r'^(StateError|Exception):\s*'), '');
+  if (value.length > 420) value = '${value.substring(0, 420)}…';
+  return value;
+}
