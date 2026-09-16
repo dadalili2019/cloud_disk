@@ -4,6 +4,7 @@ import '../../theme/theme_controller.dart';
 import '../../workbench/core/models.dart';
 import '../../workbench/core/workbench_settings.dart';
 import '../../workbench/workbench_runtime.dart';
+import 'ai_settings_section.dart';
 
 enum _SettingsSection {
   general,
@@ -78,6 +79,12 @@ class _SettingPageState extends State<SettingPage> {
     if (runtime == null) return;
     await runtime.settingsService.updateNotes(value);
     if (!mounted) return;
+    setState(() => _settings = runtime.settingsService.current);
+  }
+
+  void _refreshSettings() {
+    final runtime = _runtime;
+    if (runtime == null || !mounted) return;
     setState(() => _settings = runtime.settingsService.current);
   }
 
@@ -159,10 +166,13 @@ class _SettingPageState extends State<SettingPage> {
               : '${_runtime!.paths.workspacesDirectory.path}\\<workspace>\\notes',
           onChanged: _updateNotes,
         ),
-      _SettingsSection.ai => const _PendingSection(
-          title: 'AI',
-          rows: ['Provider', 'Base URL', 'Model', 'API Key', '连接测试'],
-        ),
+      _SettingsSection.ai => _runtime == null
+          ? const Center(child: ProgressRing())
+          : AISettingsSection(
+              runtime: _runtime!,
+              settings: _settings.ai,
+              onSettingsChanged: _refreshSettings,
+            ),
       _SettingsSection.data => const _PendingSection(
           title: '数据与备份',
           rows: ['本地数据目录', '自动备份', '导出', '恢复'],
