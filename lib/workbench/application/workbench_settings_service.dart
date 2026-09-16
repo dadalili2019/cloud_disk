@@ -37,6 +37,17 @@ class WorkbenchSettingsService {
           ),
           autoSave: preferences.getBool(_Keys.noteAutoSave) ?? true,
         ),
+        ai: AISettings(
+          mode: _enumValue(
+            AIProviderMode.values,
+            preferences.getString(_Keys.aiMode),
+            AIProviderMode.environment,
+          ),
+          baseUrl: preferences.getString(_Keys.aiBaseUrl)?.trim() ?? '',
+          model: preferences.getString(_Keys.aiModel)?.trim() ?? '',
+          chatPath: preferences.getString(_Keys.aiChatPath)?.trim() ?? '',
+          timeoutSeconds: preferences.getInt(_Keys.aiTimeoutSeconds) ?? 90,
+        ),
       ),
     );
   }
@@ -66,6 +77,22 @@ class WorkbenchSettingsService {
     await _preferences.setBool(_Keys.noteAutoSave, value.autoSave);
   }
 
+  Future<void> updateAI(AISettings value) async {
+    final normalized = AISettings(
+      mode: value.mode,
+      baseUrl: value.baseUrl.trim(),
+      model: value.model.trim(),
+      chatPath: value.chatPath.trim(),
+      timeoutSeconds: value.timeoutSeconds.clamp(5, 600),
+    );
+    _current = _current.copyWith(ai: normalized);
+    await _preferences.setString(_Keys.aiMode, normalized.mode.name);
+    await _preferences.setString(_Keys.aiBaseUrl, normalized.baseUrl);
+    await _preferences.setString(_Keys.aiModel, normalized.model);
+    await _preferences.setString(_Keys.aiChatPath, normalized.chatPath);
+    await _preferences.setInt(_Keys.aiTimeoutSeconds, normalized.timeoutSeconds);
+  }
+
   String? get lastActiveLocation =>
       _nullableString(_preferences.getString(_Keys.lastActiveLocation));
 
@@ -81,6 +108,8 @@ class WorkbenchSettingsService {
   }
 
   Future<void> resetNotes() => updateNotes(const NotesSettings());
+
+  Future<void> resetAI() => updateAI(const AISettings());
 
   static bool _isRestorableLocation(String location) {
     return location == '/home' ||
@@ -100,6 +129,11 @@ class _Keys {
   static const lastActiveLocation = 'workbench.general.last_active_location';
   static const noteDefaultView = 'workbench.notes.default_view';
   static const noteAutoSave = 'workbench.notes.auto_save';
+  static const aiMode = 'workbench.ai.mode';
+  static const aiBaseUrl = 'workbench.ai.base_url';
+  static const aiModel = 'workbench.ai.model';
+  static const aiChatPath = 'workbench.ai.chat_path';
+  static const aiTimeoutSeconds = 'workbench.ai.timeout_seconds';
 }
 
 T _enumValue<T extends Enum>(
