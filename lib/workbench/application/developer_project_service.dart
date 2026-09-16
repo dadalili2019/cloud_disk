@@ -32,15 +32,21 @@ class DeveloperProjectService {
     }
     final existing = await projects.listByWorkspace(workspaceId);
     final makePrimary = isPrimary || existing.isEmpty;
-    if (makePrimary) {
-      await _clearPrimary(workspaceId);
-    }
+    if (makePrimary) await _clearPrimary(workspaceId);
+
     final now = DateTime.now().toUtc();
     final project = DeveloperProjectModel(
-      id: newWorkbenchId(), workspaceId: workspaceId, name: trimmed,
-      localPath: localPath.trim(), repositoryUrl: repositoryUrl.trim(),
-      branch: branch.trim(), techStack: techStack.trim(), notes: notes.trim(),
-      isPrimary: makePrimary, createdAt: now, updatedAt: now,
+      id: newWorkbenchId(),
+      workspaceId: workspaceId,
+      name: trimmed,
+      localPath: localPath.trim(),
+      repositoryUrl: repositoryUrl.trim(),
+      branch: branch.trim(),
+      techStack: techStack.trim(),
+      notes: notes.trim(),
+      isPrimary: makePrimary,
+      createdAt: now,
+      updatedAt: now,
     );
     await projects.insert(project);
     await _activity(project, 'project_created', project.name, now);
@@ -58,14 +64,25 @@ class DeveloperProjectService {
     required bool isPrimary,
   }) async {
     final trimmed = name.trim();
-    if (trimmed.isEmpty) throw ArgumentError.value(name, 'name', 'Project name is required.');
+    if (trimmed.isEmpty) {
+      throw ArgumentError.value(name, 'name', 'Project name is required.');
+    }
     if (isPrimary && !project.isPrimary) await _clearPrimary(project.workspaceId);
+
     final now = DateTime.now().toUtc();
     final updated = DeveloperProjectModel(
-      id: project.id, workspaceId: project.workspaceId, name: trimmed,
-      localPath: localPath.trim(), repositoryUrl: repositoryUrl.trim(), branch: branch.trim(),
-      techStack: techStack.trim(), notes: notes.trim(), isPrimary: isPrimary,
-      createdAt: project.createdAt, updatedAt: now, archivedAt: project.archivedAt,
+      id: project.id,
+      workspaceId: project.workspaceId,
+      name: trimmed,
+      localPath: localPath.trim(),
+      repositoryUrl: repositoryUrl.trim(),
+      branch: branch.trim(),
+      techStack: techStack.trim(),
+      notes: notes.trim(),
+      isPrimary: isPrimary,
+      createdAt: project.createdAt,
+      updatedAt: now,
+      archivedAt: project.archivedAt,
     );
     await projects.update(updated);
     await _activity(updated, 'project_updated', updated.name, now);
@@ -76,28 +93,79 @@ class DeveloperProjectService {
     if (project.isPrimary) return project;
     await _clearPrimary(project.workspaceId);
     return update(
-      project: project, name: project.name, localPath: project.localPath,
-      repositoryUrl: project.repositoryUrl, branch: project.branch,
-      techStack: project.techStack, notes: project.notes, isPrimary: true,
+      project: project,
+      name: project.name,
+      localPath: project.localPath,
+      repositoryUrl: project.repositoryUrl,
+      branch: project.branch,
+      techStack: project.techStack,
+      notes: project.notes,
+      isPrimary: true,
     );
+  }
+
+  Future<void> archive(DeveloperProjectModel project) async {
+    final now = DateTime.now().toUtc();
+    final archived = DeveloperProjectModel(
+      id: project.id,
+      workspaceId: project.workspaceId,
+      name: project.name,
+      localPath: project.localPath,
+      repositoryUrl: project.repositoryUrl,
+      branch: project.branch,
+      techStack: project.techStack,
+      notes: project.notes,
+      isPrimary: false,
+      createdAt: project.createdAt,
+      updatedAt: now,
+      archivedAt: now,
+    );
+    await projects.update(archived);
+    await _activity(archived, 'project_archived', archived.name, now);
+
+    if (project.isPrimary) {
+      final remaining = await projects.listByWorkspace(project.workspaceId);
+      if (remaining.isNotEmpty) await setPrimary(remaining.first);
+    }
   }
 
   Future<void> _clearPrimary(String workspaceId) async {
     final items = await projects.listByWorkspace(workspaceId);
     for (final item in items.where((item) => item.isPrimary)) {
-      await projects.update(DeveloperProjectModel(
-        id: item.id, workspaceId: item.workspaceId, name: item.name,
-        localPath: item.localPath, repositoryUrl: item.repositoryUrl, branch: item.branch,
-        techStack: item.techStack, notes: item.notes, isPrimary: false,
-        createdAt: item.createdAt, updatedAt: DateTime.now().toUtc(), archivedAt: item.archivedAt,
-      ));
+      await projects.update(
+        DeveloperProjectModel(
+          id: item.id,
+          workspaceId: item.workspaceId,
+          name: item.name,
+          localPath: item.localPath,
+          repositoryUrl: item.repositoryUrl,
+          branch: item.branch,
+          techStack: item.techStack,
+          notes: item.notes,
+          isPrimary: false,
+          createdAt: item.createdAt,
+          updatedAt: DateTime.now().toUtc(),
+          archivedAt: item.archivedAt,
+        ),
+      );
     }
   }
 
-  Future<void> _activity(DeveloperProjectModel project, String type, String summary, DateTime at) =>
-      activities.insert(ActivityEventModel(
-        id: newWorkbenchId(), workspaceId: project.workspaceId,
-        entityType: 'project', entityId: project.id, eventType: type,
-        summary: summary, createdAt: at,
-      ));
+  Future<void> _activity(
+    DeveloperProjectModel project,
+    String type,
+    String summary,
+    DateTime at,
+  ) =>
+      activities.insert(
+        ActivityEventModel(
+          id: newWorkbenchId(),
+          workspaceId: project.workspaceId,
+          entityType: 'project',
+          entityId: project.id,
+          eventType: type,
+          summary: summary,
+          createdAt: at,
+        ),
+      );
 }
