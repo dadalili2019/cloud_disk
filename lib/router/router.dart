@@ -28,6 +28,7 @@ import '../pages/speedtestpage/speedtestpage.dart' deferred as speed;
 import '../pages/subscribe.dart';
 import '../pages/todo.dart';
 import '../workbench/presentation/workbench_decision_page.dart';
+import '../workbench/presentation/workbench_developer_page.dart';
 import '../workbench/presentation/workbench_home_page.dart';
 import '../workbench/presentation/workbench_issue_page.dart';
 import '../workbench/presentation/workbench_knowledge_page.dart';
@@ -104,6 +105,13 @@ final router = GoRouter(
           pageBuilder: (context, state) {
             final workspaceId = state.params['workspaceId']!;
             return NoTransitionPage(child: WorkbenchWorkspaceFrameV2(workspaceId: workspaceId, section: 'decisions', child: WorkbenchDecisionPage(workspaceId: workspaceId)));
+          },
+        ),
+        GoRoute(
+          name: 'workbenchDeveloper', path: '/workspace/:workspaceId/developer',
+          pageBuilder: (context, state) {
+            final workspaceId = state.params['workspaceId']!;
+            return NoTransitionPage(child: WorkbenchWorkspaceFrameV2(workspaceId: workspaceId, section: 'developer', child: WorkbenchDeveloperPage(workspaceId: workspaceId)));
           },
         ),
         GoRoute(name: 'file', path: '/file', pageBuilder: (context, state) => const NoTransitionPage(child: FilePage())),
