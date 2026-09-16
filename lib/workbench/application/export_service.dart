@@ -31,12 +31,23 @@ class ExportService {
   static const int formatVersion = 1;
   static const String appVersion = '1.0.0+1';
 
-  Future<ExportResult> exportAll({bool includeAttachments = true}) async {
+  String suggestedFileName([DateTime? now]) {
+    final createdAt = now ?? DateTime.now();
+    return 'PersonalWorkbench_Export_${_timestamp(createdAt)}.zip';
+  }
+
+  Future<ExportResult> exportAll({
+    bool includeAttachments = true,
+    String? destinationPath,
+  }) async {
     await paths.ensureBaseDirectories();
     final createdAt = DateTime.now();
     final stamp = _timestamp(createdAt);
+    final normalizedDestination = destinationPath?.trim();
     final output = File(
-      p.join(paths.exportsDirectory.path, 'PersonalWorkbench_Export_$stamp.zip'),
+      normalizedDestination == null || normalizedDestination.isEmpty
+          ? p.join(paths.exportsDirectory.path, suggestedFileName(createdAt))
+          : _ensureZipExtension(normalizedDestination),
     );
     final staging = Directory(
       p.join(paths.exportsDirectory.path, '.staging_export_$stamp'),
@@ -185,6 +196,10 @@ Future<void> _zipDirectory(Directory source, File output) async {
     encoder.addFile(entity, relative);
   }
   encoder.close();
+}
+
+String _ensureZipExtension(String value) {
+  return value.toLowerCase().endsWith('.zip') ? value : '$value.zip';
 }
 
 String _timestamp(DateTime value) {
