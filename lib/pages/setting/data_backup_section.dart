@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/services.dart';
 
@@ -62,6 +63,15 @@ class _DataBackupSectionState extends State<DataBackupSection> {
 
   Future<void> _exportAll() async {
     if (_backupRunning || _exportRunning) return;
+
+    final destinationPath = await FilePicker.platform.saveFile(
+      dialogTitle: '导出 Personal Workbench 数据',
+      fileName: widget.runtime.exportService.suggestedFileName(),
+      type: FileType.custom,
+      allowedExtensions: const ['zip'],
+    );
+    if (destinationPath == null || destinationPath.trim().isEmpty) return;
+
     setState(() {
       _exportRunning = true;
       _success = null;
@@ -70,16 +80,12 @@ class _DataBackupSectionState extends State<DataBackupSection> {
     try {
       final result = await widget.runtime.exportService.exportAll(
         includeAttachments: widget.settings.includeAttachmentsInExport,
+        destinationPath: destinationPath,
       );
       if (!mounted) return;
       setState(() {
         _success = '导出完成：${result.file.path}';
       });
-      await _showCompletedDialog(
-        title: '导出完成',
-        description: 'Portable Export 已生成，可用于归档或外部处理。',
-        path: result.file.path,
-      );
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = _readableError(error));
@@ -258,9 +264,10 @@ class _DataBackupSectionState extends State<DataBackupSection> {
                 ),
               ),
             ),
-            _Row(
-              title: '导出目录',
-              control: _Badge(widget.runtime.paths.exportsDirectory.path),
+            const _Row(
+              title: '导出位置',
+              subtitle: '点击“导出”后，通过 Windows“另存为”窗口选择保存目录和文件名。',
+              control: _Badge('每次导出时选择'),
             ),
             _Row(
               title: '导出全部数据',
