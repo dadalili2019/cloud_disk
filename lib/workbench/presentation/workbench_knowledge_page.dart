@@ -170,6 +170,8 @@ class _WorkbenchKnowledgePageState extends State<WorkbenchKnowledgePage> {
       'issue' => 'issues',
       'resource' => 'resources',
       'decision' => 'decisions',
+      'developer_project' || 'developer_command' || 'developer_snippet' =>
+        'developer',
       _ => 'overview',
     };
     context.go('/workspace/$workspaceId/$section');
@@ -192,7 +194,7 @@ class _WorkbenchKnowledgePageState extends State<WorkbenchKnowledgePage> {
 
     return WorkbenchPage(
       title: '知识与搜索',
-      subtitle: '把工作过程沉淀为可复用知识，并统一搜索任务、笔记、问题、资源与决策。',
+      subtitle: '把工作过程沉淀为可复用知识，并统一搜索任务、笔记、问题、资源、决策与开发上下文。',
       actions: [
         Button(
           onPressed: _distillFromWorkspace,
@@ -210,7 +212,7 @@ class _WorkbenchKnowledgePageState extends State<WorkbenchKnowledgePage> {
       children: [
         TextBox(
           controller: _searchController,
-          placeholder: '搜索知识、任务、笔记、问题、资源、决策…',
+          placeholder: '搜索知识、任务、笔记、问题、资源、决策、项目、命令、代码片段…',
           prefix: const Padding(
             padding: EdgeInsets.only(left: 10),
             child: Icon(FluentIcons.search, size: 15),
@@ -672,6 +674,9 @@ String _entityLabel(String type) {
     'resource' => '资源',
     'decision' => '决策',
     'knowledge' => '知识',
+    'developer_project' => '项目',
+    'developer_command' => '命令',
+    'developer_snippet' => '代码片段',
     _ => type,
   };
 }
