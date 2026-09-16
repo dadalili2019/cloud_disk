@@ -50,6 +50,19 @@ class WorkbenchSettingsService {
           chatPath: preferences.getString(_Keys.aiChatPath)?.trim() ?? '',
           timeoutSeconds: preferences.getInt(_Keys.aiTimeoutSeconds) ?? 90,
         ),
+        backup: BackupSettings(
+          frequency: _enumValue(
+            BackupFrequency.values,
+            preferences.getString(_Keys.backupFrequency),
+            BackupFrequency.off,
+          ),
+          keepAutoBackups: preferences.getInt(_Keys.backupKeepCount) ?? 10,
+          includeAttachmentsInExport:
+              preferences.getBool(_Keys.exportIncludeAttachments) ?? true,
+          lastAutoBackupAt: _dateTime(
+            preferences.getString(_Keys.lastAutoBackupAt),
+          ),
+        ),
       ),
     );
   }
@@ -100,6 +113,44 @@ class WorkbenchSettingsService {
     await _preferences.setInt(_Keys.aiTimeoutSeconds, normalized.timeoutSeconds);
   }
 
+  Future<void> updateBackup(BackupSettings value) async {
+    final keepCount = value.keepAutoBackups < 1
+        ? 1
+        : value.keepAutoBackups > 50
+            ? 50
+            : value.keepAutoBackups;
+    final normalized = BackupSettings(
+      frequency: value.frequency,
+      keepAutoBackups: keepCount,
+      includeAttachmentsInExport: value.includeAttachmentsInExport,
+      lastAutoBackupAt: value.lastAutoBackupAt,
+    );
+    _current = _current.copyWith(backup: normalized);
+    await _preferences.setString(
+      _Keys.backupFrequency,
+      normalized.frequency.name,
+    );
+    await _preferences.setInt(_Keys.backupKeepCount, normalized.keepAutoBackups);
+    await _preferences.setBool(
+      _Keys.exportIncludeAttachments,
+      normalized.includeAttachmentsInExport,
+    );
+    if (normalized.lastAutoBackupAt == null) {
+      await _preferences.remove(_Keys.lastAutoBackupAt);
+    } else {
+      await _preferences.setString(
+        _Keys.lastAutoBackupAt,
+        normalized.lastAutoBackupAt!.toUtc().toIso8601String(),
+      );
+    }
+  }
+
+  Future<void> markAutoBackupCompleted(DateTime value) async {
+    await updateBackup(
+      _current.backup.copyWith(lastAutoBackupAt: value.toUtc()),
+    );
+  }
+
   void setSessionAIKey(String value) {
     _sessionAIKey = value.trim();
   }
@@ -129,6 +180,8 @@ class WorkbenchSettingsService {
     await updateAI(const AISettings());
   }
 
+  Future<void> resetBackup() => updateBackup(const BackupSettings());
+
   static bool _isRestorableLocation(String location) {
     return location == '/home' ||
         location == '/workspace' ||
@@ -152,6 +205,11 @@ class _Keys {
   static const aiModel = 'workbench.ai.model';
   static const aiChatPath = 'workbench.ai.chat_path';
   static const aiTimeoutSeconds = 'workbench.ai.timeout_seconds';
+  static const backupFrequency = 'workbench.backup.frequency';
+  static const backupKeepCount = 'workbench.backup.keep_count';
+  static const exportIncludeAttachments =
+      'workbench.export.include_attachments';
+  static const lastAutoBackupAt = 'workbench.backup.last_auto_backup_at';
 }
 
 T _enumValue<T extends Enum>(
@@ -169,4 +227,9 @@ T _enumValue<T extends Enum>(
 String? _nullableString(String? value) {
   final trimmed = value?.trim();
   return trimmed == null || trimmed.isEmpty ? null : trimmed;
+}
+
+DateTime? _dateTime(String? value) {
+  if (value == null || value.trim().isEmpty) return null;
+  return DateTime.tryParse(value)?.toLocal();
 }
