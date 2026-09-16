@@ -505,7 +505,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
           }
           final data = snapshot.data!;
           return ListView(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.fromLTRB(0, 0, 14, 12),
             children: [
               _projectsSection(data),
               const SizedBox(height: 14),
