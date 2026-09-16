@@ -33,7 +33,7 @@ abstract interface class WorkbenchSqlExecutor {
 class WorkbenchDatabase implements WorkbenchSqlExecutor {
   WorkbenchDatabase._(this._executor, this._executorUser);
 
-  static const int schemaVersion = 5;
+  static const int schemaVersion = 6;
 
   final QueryExecutor _executor;
   final _WorkbenchExecutorUser _executorUser;
@@ -151,6 +151,7 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
       await _createSchema(executor, _schemaV3);
       await _createSchema(executor, _schemaV4);
       await _createSchema(executor, _schemaV5);
+      await _createSchema(executor, _schemaV6);
       return;
     }
 
@@ -183,6 +184,9 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
           break;
         case 4:
           await _createSchema(executor, _schemaV5);
+          break;
+        case 5:
+          await _createSchema(executor, _schemaV6);
           break;
         default:
           throw StateError(
@@ -476,5 +480,87 @@ CREATE TABLE IF NOT EXISTS ai_messages (
   '''
 CREATE INDEX IF NOT EXISTS ix_ai_messages_thread_created
 ON ai_messages(thread_id, created_at ASC)
+''',
+];
+
+const List<String> _schemaV6 = [
+  '''
+CREATE TABLE IF NOT EXISTS developer_projects (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  local_path TEXT NOT NULL DEFAULT '',
+  repository_url TEXT NOT NULL DEFAULT '',
+  branch TEXT NOT NULL DEFAULT '',
+  tech_stack TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
+  is_primary INTEGER NOT NULL DEFAULT 0 CHECK (is_primary IN (0, 1)),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  archived_at TEXT,
+  FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_developer_projects_workspace_updated
+ON developer_projects(workspace_id, is_primary DESC, updated_at DESC)
+''',
+  '''
+CREATE UNIQUE INDEX IF NOT EXISTS ux_developer_projects_primary_workspace
+ON developer_projects(workspace_id)
+WHERE is_primary = 1 AND archived_at IS NULL
+''',
+  '''
+CREATE TABLE IF NOT EXISTS developer_commands (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL,
+  project_id TEXT,
+  name TEXT NOT NULL,
+  command TEXT NOT NULL,
+  working_directory TEXT,
+  category TEXT NOT NULL DEFAULT 'other' CHECK (
+    category IN ('run', 'build', 'test', 'database', 'docker', 'git', 'other')
+  ),
+  notes TEXT NOT NULL DEFAULT '',
+  is_pinned INTEGER NOT NULL DEFAULT 0 CHECK (is_pinned IN (0, 1)),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  archived_at TEXT,
+  FOREIGN KEY (workspace_id) REFERENCES workspaces(id),
+  FOREIGN KEY (project_id) REFERENCES developer_projects(id)
+)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_developer_commands_workspace_updated
+ON developer_commands(workspace_id, is_pinned DESC, updated_at DESC)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_developer_commands_project_updated
+ON developer_commands(project_id, is_pinned DESC, updated_at DESC)
+''',
+  '''
+CREATE TABLE IF NOT EXISTS developer_snippets (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL,
+  project_id TEXT,
+  title TEXT NOT NULL,
+  language TEXT NOT NULL DEFAULT '',
+  content TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
+  is_pinned INTEGER NOT NULL DEFAULT 0 CHECK (is_pinned IN (0, 1)),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  archived_at TEXT,
+  FOREIGN KEY (workspace_id) REFERENCES workspaces(id),
+  FOREIGN KEY (project_id) REFERENCES developer_projects(id)
+)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_developer_snippets_workspace_updated
+ON developer_snippets(workspace_id, is_pinned DESC, updated_at DESC)
+''',
+  '''
+CREATE INDEX IF NOT EXISTS ix_developer_snippets_project_updated
+ON developer_snippets(project_id, is_pinned DESC, updated_at DESC)
 ''',
 ];
