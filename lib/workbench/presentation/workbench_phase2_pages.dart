@@ -262,6 +262,11 @@ class _WorkspaceNavigation extends StatelessWidget {
                           selected: section == 'decisions',
                           onTap: () => context.go('/workspace/$workspaceId/decisions'),
                         ),
+                        _WorkspaceTab(
+                          label: '开发',
+                          selected: section == 'developer',
+                          onTap: () => context.go('/workspace/$workspaceId/developer'),
+                        ),
                       ],
                     ),
                   ),
@@ -439,6 +444,24 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
         return '更新决策 · ${activity.summary}';
       case 'decision_linked_task':
         return '关联决策到任务 · ${activity.summary}';
+      case 'project_created':
+        return '新建开发项目 · ${activity.summary}';
+      case 'project_updated':
+        return '更新开发项目 · ${activity.summary}';
+      case 'project_archived':
+        return '归档开发项目 · ${activity.summary}';
+      case 'command_created':
+        return '新建开发命令 · ${activity.summary}';
+      case 'command_updated':
+        return '更新开发命令 · ${activity.summary}';
+      case 'command_archived':
+        return '归档开发命令 · ${activity.summary}';
+      case 'snippet_created':
+        return '新建代码片段 · ${activity.summary}';
+      case 'snippet_updated':
+        return '更新代码片段 · ${activity.summary}';
+      case 'snippet_archived':
+        return '归档代码片段 · ${activity.summary}';
       default:
         return activity.summary;
     }
