@@ -1,16 +1,19 @@
 import '../core/models.dart';
 import 'workbench_services.dart';
+import 'workbench_settings_service.dart';
 
 class QuickCaptureService {
   const QuickCaptureService({
     required this.workspaces,
     required this.tasks,
     required this.notes,
+    required this.settings,
   });
 
   final WorkspaceService workspaces;
   final TaskService tasks;
   final NoteService notes;
+  final WorkbenchSettingsService settings;
 
   Future<List<WorkspaceModel>> listTargetWorkspaces() => workspaces.listActive();
 
@@ -28,7 +31,7 @@ class QuickCaptureService {
       workspaceId: workspaceId,
       title: title,
       initialContent: '# $title\n\n$content\n',
-      linkToCurrentTask: true,
+      linkToCurrentTask: settings.current.general.quickCaptureToCurrentTask,
     );
   }
 
