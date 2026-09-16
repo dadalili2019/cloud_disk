@@ -17,6 +17,12 @@ enum AIProviderMode {
   openAICompatible,
 }
 
+enum BackupFrequency {
+  off,
+  daily,
+  weekly,
+}
+
 class GeneralSettings {
   const GeneralSettings({
     this.defaultWorkspaceId,
@@ -106,26 +112,74 @@ class AISettings {
   }
 }
 
+class BackupSettings {
+  const BackupSettings({
+    this.frequency = BackupFrequency.off,
+    this.keepAutoBackups = 10,
+    this.includeAttachmentsInExport = true,
+    this.lastAutoBackupAt,
+  });
+
+  final BackupFrequency frequency;
+  final int keepAutoBackups;
+  final bool includeAttachmentsInExport;
+  final DateTime? lastAutoBackupAt;
+
+  bool shouldRunAutoBackup(DateTime now) {
+    if (frequency == BackupFrequency.off) return false;
+    final last = lastAutoBackupAt;
+    if (last == null) return true;
+    final elapsed = now.difference(last);
+    return switch (frequency) {
+      BackupFrequency.off => false,
+      BackupFrequency.daily => elapsed >= const Duration(hours: 24),
+      BackupFrequency.weekly => elapsed >= const Duration(days: 7),
+    };
+  }
+
+  BackupSettings copyWith({
+    BackupFrequency? frequency,
+    int? keepAutoBackups,
+    bool? includeAttachmentsInExport,
+    DateTime? lastAutoBackupAt,
+    bool clearLastAutoBackupAt = false,
+  }) {
+    return BackupSettings(
+      frequency: frequency ?? this.frequency,
+      keepAutoBackups: keepAutoBackups ?? this.keepAutoBackups,
+      includeAttachmentsInExport:
+          includeAttachmentsInExport ?? this.includeAttachmentsInExport,
+      lastAutoBackupAt: clearLastAutoBackupAt
+          ? null
+          : (lastAutoBackupAt ?? this.lastAutoBackupAt),
+    );
+  }
+}
+
 class WorkbenchSettingsModel {
   const WorkbenchSettingsModel({
     this.general = const GeneralSettings(),
     this.notes = const NotesSettings(),
     this.ai = const AISettings(),
+    this.backup = const BackupSettings(),
   });
 
   final GeneralSettings general;
   final NotesSettings notes;
   final AISettings ai;
+  final BackupSettings backup;
 
   WorkbenchSettingsModel copyWith({
     GeneralSettings? general,
     NotesSettings? notes,
     AISettings? ai,
+    BackupSettings? backup,
   }) {
     return WorkbenchSettingsModel(
       general: general ?? this.general,
       notes: notes ?? this.notes,
       ai: ai ?? this.ai,
+      backup: backup ?? this.backup,
     );
   }
 }
