@@ -10,6 +10,13 @@ enum NoteDefaultView {
   split,
 }
 
+enum AIProviderMode {
+  environment,
+  preview,
+  deepseek,
+  openAICompatible,
+}
+
 class GeneralSettings {
   const GeneralSettings({
     this.defaultWorkspaceId,
@@ -63,22 +70,62 @@ class NotesSettings {
   }
 }
 
+class AISettings {
+  const AISettings({
+    this.mode = AIProviderMode.environment,
+    this.baseUrl = '',
+    this.model = '',
+    this.chatPath = '',
+    this.timeoutSeconds = 90,
+  });
+
+  final AIProviderMode mode;
+  final String baseUrl;
+  final String model;
+  final String chatPath;
+  final int timeoutSeconds;
+
+  bool get usesCustomConfiguration =>
+      mode == AIProviderMode.deepseek ||
+      mode == AIProviderMode.openAICompatible;
+
+  AISettings copyWith({
+    AIProviderMode? mode,
+    String? baseUrl,
+    String? model,
+    String? chatPath,
+    int? timeoutSeconds,
+  }) {
+    return AISettings(
+      mode: mode ?? this.mode,
+      baseUrl: baseUrl ?? this.baseUrl,
+      model: model ?? this.model,
+      chatPath: chatPath ?? this.chatPath,
+      timeoutSeconds: timeoutSeconds ?? this.timeoutSeconds,
+    );
+  }
+}
+
 class WorkbenchSettingsModel {
   const WorkbenchSettingsModel({
     this.general = const GeneralSettings(),
     this.notes = const NotesSettings(),
+    this.ai = const AISettings(),
   });
 
   final GeneralSettings general;
   final NotesSettings notes;
+  final AISettings ai;
 
   WorkbenchSettingsModel copyWith({
     GeneralSettings? general,
     NotesSettings? notes,
+    AISettings? ai,
   }) {
     return WorkbenchSettingsModel(
       general: general ?? this.general,
       notes: notes ?? this.notes,
+      ai: ai ?? this.ai,
     );
   }
 }
