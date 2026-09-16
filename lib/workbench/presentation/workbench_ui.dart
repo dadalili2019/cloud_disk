@@ -1,6 +1,7 @@
 import 'package:fluent_ui/fluent_ui.dart';
 
 import '../../theme/theme_controller.dart';
+export '../../theme/theme_controller.dart' show ThemePalette, ThemeScope;
 
 class WorkbenchPage extends StatelessWidget {
   const WorkbenchPage({
