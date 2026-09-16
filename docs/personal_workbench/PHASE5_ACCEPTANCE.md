@@ -1,6 +1,6 @@
 # Personal Workbench Phase 5 Acceptance — AI Context + Global AI
 
-> 状态：**Windows 验收进行中**。Workbench 全局 UI、Workspace 子页面与 Global AI Drawer 已完成实际 Windows 截图 smoke；真实 DeepSeek Provider 已实现，但用户计划稍后再配置参数，因此 Real Provider 网络调用可后补验证。
+> 状态：**Windows 验收进行中**。Workbench 全局 UI、Workspace 子页面与 Global AI Drawer 已完成实际 Windows 截图 smoke；Preview Provider 单轮发送链路已通过；真实 DeepSeek Provider 已实现，但用户计划稍后再配置参数，因此 Real Provider 网络调用可后补验证。
 
 ## 0. 当前验收进度
 
@@ -22,15 +22,16 @@
 [✓] Workspace 页面打开 AI 自动继承 Current Task
 [✓] Task Scope Context Preview 自动构建
 [✓] Context 摘要 / 管理视图可展示
+[✓] Preview Provider 单轮发送与回复链路
+[✓] 首轮 AI Thread / User Message / Assistant Message 写入链路
 ```
 
 仍需重点手工验证：
 
 ```text
-Preview Provider 完整发送链路
 Workspace / Knowledge / Global Scope
 Context include / exclude
-AI Thread / Message persistence
+AI 多轮 Thread / Message persistence
 Context Snapshot
 Windows 重启恢复
 schema v4 → v5 数据回归
@@ -127,27 +128,29 @@ ai_messages
 
 - [ ] 既有 schema v4 数据升级后仍存在。
 - [ ] Workspace / Task / Note / Issue / Resource / Decision / Knowledge 无丢失。
-- [ ] `ai_threads` 可以正常写入。
-- [ ] `ai_messages` 可以正常写入。
+- [x] `ai_threads` 可以正常写入。
+- [x] `ai_messages` 可以正常写入。
 - [ ] schema v5 重启后可以再次打开。
 
 ## 6. AI Thread / Message
 
 ### Thread
 
-- [ ] 新对话可以创建 Thread。
-- [ ] Scope 正确保存。
-- [ ] Workspace / Task / Knowledge Anchor 正确保存。
+- [x] 新对话可以创建 Thread。
+- [x] Task Scope 正确用于首轮会话。
+- [x] Task Anchor 正确用于首轮会话。
 - [ ] 首条用户消息可以自动形成 Thread title。
 - [ ] 同一 Anchor 可以创建多个 Thread。
 - [ ] 历史会话可以重新打开 Thread。
 
 ### Message
 
-- [ ] User Message 正确保存。
-- [ ] Assistant Message 正确保存。
+- [x] User Message 正确保存并重新读取展示。
+- [x] Assistant Message 正确保存并重新读取展示。
 - [ ] 多轮消息按时间顺序恢复。
 - [ ] 完整退出 App 后再次启动，Thread / Message 仍存在。
+
+> 首轮发送截图中，Preview Provider 回复是在持久化后通过 Conversation Service 重新读取并显示，因此可确认首轮 Thread / User Message / Assistant Message 写入链路正常；重启持久化仍需单独验证。
 
 ## 7. Context Snapshot
 
@@ -175,8 +178,9 @@ context_snapshot_json
 - [x] Task Selector 可用。
 - [ ] Knowledge Selector 实际切换验证。
 - [x] Context Preview 可用。
-- [x] Message Input 可见且可输入。
-- [ ] 历史会话实际验证。
+- [x] Message Input 可用并完成实际发送。
+- [x] 首轮发送后历史会话入口出现。
+- [ ] 历史会话实际重新打开验证。
 - [x] 新建会话按钮可见。
 - [x] Home 打开 AI 时自动继承 Current Task。
 - [x] Workspace 打开 AI 时优先继承该 Workspace 的 Current Task。
@@ -187,10 +191,28 @@ context_snapshot_json
 
 - [x] App 正常启动。
 - [x] Provider 显示 `Preview` 状态。
-- [ ] 发送消息不会访问真实模型。
-- [ ] 收到 Preview Provider 回复。
-- [ ] Preview 回复仍写入 AI Message。
+- [x] 实际发送使用 Preview Provider，没有调用真实模型。
+- [x] 收到 Preview Provider 回复。
+- [x] Preview 回复写入 AI Message 并重新读取展示。
 - [ ] Context Snapshot 正常保存。
+
+实际验收问题：
+
+```text
+帮我总结一下当前任务做到哪里了，下一步应该做什么？
+```
+
+实际返回包含：
+
+```text
+Phase 5 Preview Provider
+已接收用户问题
+已接收 Workbench Context
+已经过 PromptBuilder
+尚未调用真实模型
+```
+
+说明 Preview Provider 的本地完整调用链已跑通。
 
 ## 10. Real AI Provider
 
@@ -288,20 +310,18 @@ flutter run -d windows
 
 ## 14. 下一轮推荐验收路径
 
-### Case A — Preview Provider 完整链路
+### Case A — Preview Provider 单轮链路（已通过）
 
 ```text
-1. 保持不配置任何 AI 环境变量
-2. 打开首页或 Workspace
-3. 打开 AI Drawer
-4. 确认 Provider = Preview
-5. 确认自动继承 Current Task
-6. 输入：帮我总结一下当前任务做到哪里了，下一步应该做什么？
-7. 点击发送
-8. 确认显示“正在思考…”
-9. 确认收到 Preview 回复
-10. 再发送第二轮消息
+[✓] 保持不配置任何 AI 环境变量
+[✓] 打开 AI Drawer
+[✓] Provider = Preview
+[✓] 自动继承 Current Task
+[✓] 输入问题并发送
+[✓] 收到 Preview Provider 回复
 ```
+
+“正在思考…”属于瞬时 UI 状态，当前最终截图未单独捕获，不据此标记通过或失败。
 
 ### Case B — Context 手工管理
 
@@ -332,7 +352,7 @@ flutter run -d windows
 ### Case D — Thread Persistence
 
 ```text
-1. Preview Provider 连续发送两轮消息
+1. 在当前 Thread 再发送第二轮消息
 2. 记录 Thread title
 3. 完全退出应用
 4. flutter run -d windows
@@ -356,10 +376,10 @@ flutter run -d windows
 
 ```text
 [ ] flutter analyze 无 Phase 5 新增编译错误
-[ ] Preview Provider 完整链路通过
+[✓] Preview Provider 单轮本地链路通过
 [ ] 四种 AI Scope Preview 通过
 [ ] 手工 include / exclude 通过
-[ ] AI Thread / Message 持久化通过
+[ ] AI Thread / Message 多轮持久化通过
 [ ] Windows 重启恢复通过
 [ ] schema v4 → v5 迁移无数据回归
 [ ] Phase 1–4 功能 smoke regression 通过
