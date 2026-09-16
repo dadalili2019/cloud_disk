@@ -1,6 +1,9 @@
 import 'package:fluent_ui/fluent_ui.dart';
 
 import '../../theme/theme_controller.dart';
+import '../../workbench/core/models.dart';
+import '../../workbench/core/workbench_settings.dart';
+import '../../workbench/workbench_runtime.dart';
 
 enum _SettingsSection {
   general,
@@ -19,8 +22,9 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
-  static const List<String?> fonts = <String?>[
-    null,
+  static const String _systemFont = '__system__';
+  static const List<String> fonts = <String>[
+    _systemFont,
     'Microsoft YaHei UI',
     'Segoe UI',
     'Microsoft YaHei',
@@ -29,6 +33,53 @@ class _SettingPageState extends State<SettingPage> {
   ];
 
   _SettingsSection _section = _SettingsSection.appearance;
+  WorkbenchRuntime? _runtime;
+  WorkbenchSettingsModel _settings = const WorkbenchSettingsModel();
+  List<WorkspaceModel> _workspaces = const [];
+  bool _loading = true;
+  Object? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final runtime = await WorkbenchRuntime.instance;
+      final workspaces = await runtime.workspaceService.listActive();
+      if (!mounted) return;
+      setState(() {
+        _runtime = runtime;
+        _settings = runtime.settingsService.current;
+        _workspaces = workspaces;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error;
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _updateGeneral(GeneralSettings value) async {
+    final runtime = _runtime;
+    if (runtime == null) return;
+    await runtime.settingsService.updateGeneral(value);
+    if (!mounted) return;
+    setState(() => _settings = runtime.settingsService.current);
+  }
+
+  Future<void> _updateNotes(NotesSettings value) async {
+    final runtime = _runtime;
+    if (runtime == null) return;
+    await runtime.settingsService.updateNotes(value);
+    if (!mounted) return;
+    setState(() => _settings = runtime.settingsService.current);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,47 +87,55 @@ class _SettingPageState extends State<SettingPage> {
 
     return ScaffoldPage(
       header: const PageHeader(title: Text('设置')),
-      content: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 760;
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
-            children: [
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1080),
-                  child: compact
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _CompactNavigation(
-                              section: _section,
-                              onChanged: _setSection,
-                            ),
-                            const SizedBox(height: 12),
-                            _sectionContent(palette),
-                          ],
-                        )
-                      : Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: 190,
-                              child: _SettingsNavigation(
-                                section: _section,
-                                onChanged: _setSection,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(child: _sectionContent(palette)),
-                          ],
+      content: _loading
+          ? const Center(child: ProgressRing())
+          : _error != null
+              ? Center(child: Text('设置加载失败：$_error'))
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxWidth < 760;
+                    return ListView(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+                      children: [
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 1080),
+                            child: compact
+                                ? Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      _CompactNavigation(
+                                        section: _section,
+                                        onChanged: _setSection,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _sectionContent(palette),
+                                    ],
+                                  )
+                                : Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(
+                                        width: 190,
+                                        child: _SettingsNavigation(
+                                          section: _section,
+                                          onChanged: _setSection,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: _sectionContent(palette),
+                                      ),
+                                    ],
+                                  ),
+                          ),
                         ),
+                      ],
+                    );
+                  },
                 ),
-              ),
-            ],
-          );
-        },
-      ),
     );
   }
 
@@ -87,14 +146,18 @@ class _SettingPageState extends State<SettingPage> {
 
   Widget _sectionContent(ThemePalette palette) {
     return switch (_section) {
-      _SettingsSection.general => const _PendingSection(
-          title: '常规',
-          rows: ['默认工作区', '启动页面', '快速记录', '恢复上次工作上下文'],
+      _SettingsSection.general => _GeneralSection(
+          settings: _settings.general,
+          workspaces: _workspaces,
+          onChanged: _updateGeneral,
         ),
       _SettingsSection.appearance => _AppearanceSection(fonts: fonts),
-      _SettingsSection.notes => const _PendingSection(
-          title: '笔记',
-          rows: ['Markdown 格式', '默认视图', '自动保存', '笔记目录'],
+      _SettingsSection.notes => _NotesSection(
+          settings: _settings.notes,
+          notesPath: _runtime == null
+              ? 'PersonalWorkbench/workspaces/<workspace>/notes'
+              : '${_runtime!.paths.workspacesDirectory.path}\\<workspace>\\notes',
+          onChanged: _updateNotes,
         ),
       _SettingsSection.ai => const _PendingSection(
           title: 'AI',
@@ -104,11 +167,248 @@ class _SettingPageState extends State<SettingPage> {
           title: '数据与备份',
           rows: ['本地数据目录', '自动备份', '导出', '恢复'],
         ),
-      _SettingsSection.shortcuts => const _PendingSection(
-          title: '快捷键',
-          rows: ['全局搜索', '快速记录', 'AI', '继续工作', '保存笔记'],
-        ),
+      _SettingsSection.shortcuts => const _ShortcutsSection(),
     };
+  }
+}
+
+class _GeneralSection extends StatelessWidget {
+  const _GeneralSection({
+    required this.settings,
+    required this.workspaces,
+    required this.onChanged,
+  });
+
+  final GeneralSettings settings;
+  final List<WorkspaceModel> workspaces;
+  final ValueChanged<GeneralSettings> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final defaultWorkspaceValid = settings.defaultWorkspaceId != null &&
+        workspaces.any((item) => item.id == settings.defaultWorkspaceId);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SectionHeading(title: '常规'),
+        _SettingsGroup(
+          title: '常规',
+          children: [
+            _SettingRow(
+              title: '默认工作区',
+              subtitle: '启动到工作台时优先进入该工作区。',
+              control: SizedBox(
+                width: 250,
+                child: ComboBox<String>(
+                  value: defaultWorkspaceValid
+                      ? settings.defaultWorkspaceId
+                      : '__none__',
+                  isExpanded: true,
+                  items: [
+                    const ComboBoxItem(
+                      value: '__none__',
+                      child: Text('不指定'),
+                    ),
+                    ...workspaces.map(
+                      (workspace) => ComboBoxItem(
+                        value: workspace.id,
+                        child: Text(workspace.name),
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) return;
+                    if (value == '__none__') {
+                      onChanged(settings.copyWith(clearDefaultWorkspace: true));
+                    } else {
+                      onChanged(settings.copyWith(defaultWorkspaceId: value));
+                    }
+                  },
+                ),
+              ),
+            ),
+            _SettingRow(
+              title: '启动页面',
+              control: SizedBox(
+                width: 250,
+                child: ComboBox<WorkbenchStartupPage>(
+                  value: settings.startupPage,
+                  isExpanded: true,
+                  items: const [
+                    ComboBoxItem(
+                      value: WorkbenchStartupPage.home,
+                      child: Text('首页'),
+                    ),
+                    ComboBoxItem(
+                      value: WorkbenchStartupPage.workspace,
+                      child: Text('工作台'),
+                    ),
+                    ComboBoxItem(
+                      value: WorkbenchStartupPage.knowledge,
+                      child: Text('知识与搜索'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      onChanged(settings.copyWith(startupPage: value));
+                    }
+                  },
+                ),
+              ),
+            ),
+            _SettingRow(
+              title: '快速记录关联当前任务',
+              subtitle: '保存为笔记时自动关联目标工作区的 Current Task。',
+              control: ToggleSwitch(
+                checked: settings.quickCaptureToCurrentTask,
+                onChanged: (value) => onChanged(
+                  settings.copyWith(quickCaptureToCurrentTask: value),
+                ),
+              ),
+            ),
+            _SettingRow(
+              title: '恢复上次工作上下文',
+              subtitle: '下次进入应用时优先回到最近使用的 Workbench 页面。',
+              control: ToggleSwitch(
+                checked: settings.restoreLastActiveContext,
+                onChanged: (value) => onChanged(
+                  settings.copyWith(restoreLastActiveContext: value),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _NotesSection extends StatelessWidget {
+  const _NotesSection({
+    required this.settings,
+    required this.notesPath,
+    required this.onChanged,
+  });
+
+  final NotesSettings settings;
+  final String notesPath;
+  final ValueChanged<NotesSettings> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SectionHeading(title: '笔记'),
+        _SettingsGroup(
+          title: 'Markdown Notes',
+          children: [
+            const _SettingRow(
+              title: '存储格式',
+              subtitle: 'Workbench 笔记正文保持为可移植 Markdown 文件。',
+              control: _ValueBadge('.md'),
+            ),
+            _SettingRow(
+              title: '默认视图',
+              control: SizedBox(
+                width: 250,
+                child: ComboBox<NoteDefaultView>(
+                  value: settings.defaultView,
+                  isExpanded: true,
+                  items: const [
+                    ComboBoxItem(
+                      value: NoteDefaultView.edit,
+                      child: Text('编辑'),
+                    ),
+                    ComboBoxItem(
+                      value: NoteDefaultView.preview,
+                      child: Text('预览'),
+                    ),
+                    ComboBoxItem(
+                      value: NoteDefaultView.split,
+                      child: Text('分栏'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      onChanged(settings.copyWith(defaultView: value));
+                    }
+                  },
+                ),
+              ),
+            ),
+            _SettingRow(
+              title: '自动保存',
+              subtitle: '关闭后通过笔记页“保存”按钮或 Ctrl + S 保存。',
+              control: ToggleSwitch(
+                checked: settings.autoSave,
+                onChanged: (value) =>
+                    onChanged(settings.copyWith(autoSave: value)),
+              ),
+            ),
+            _SettingRow(
+              title: '笔记目录',
+              subtitle: 'V1 仅显示实际存储位置，不允许任意迁移根目录。',
+              control: SizedBox(
+                width: 320,
+                child: SelectableText(
+                  notesPath,
+                  maxLines: 2,
+                  style: const TextStyle(fontSize: 10),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ShortcutsSection extends StatelessWidget {
+  const _ShortcutsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SectionHeading(title: '快捷键'),
+        const _SettingsGroup(
+          title: 'Shortcuts',
+          children: [
+            _SettingRow(
+              title: '保存笔记',
+              control: _ValueBadge('Ctrl + S'),
+            ),
+            _SettingRow(
+              title: '发送 AI 消息',
+              control: _ValueBadge('Ctrl + Enter'),
+            ),
+            _SettingRow(
+              title: '关闭 AI Drawer',
+              control: _ValueBadge('Esc'),
+            ),
+            _SettingRow(
+              title: '全局搜索',
+              subtitle: '当前通过顶部搜索入口打开。',
+              control: _ValueBadge('未绑定'),
+            ),
+            _SettingRow(
+              title: '快速记录',
+              subtitle: '当前通过 Home 的 Quick Capture 入口打开。',
+              control: _ValueBadge('未绑定'),
+            ),
+            _SettingRow(
+              title: '打开 AI',
+              subtitle: '当前通过顶部 AI 入口打开。',
+              control: _ValueBadge('未绑定'),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }
 
@@ -248,7 +548,7 @@ class _SettingsNavigationItem extends StatelessWidget {
 class _AppearanceSection extends StatelessWidget {
   const _AppearanceSection({required this.fonts});
 
-  final List<String?> fonts;
+  final List<String> fonts;
 
   @override
   Widget build(BuildContext context) {
@@ -262,6 +562,7 @@ class _AppearanceSection extends StatelessWidget {
           orElse: () => ThemeController.accents.entries.first,
         )
         .key;
+    final fontValue = themeCtrl.fontFamily ?? _SettingsPageDefaults.systemFont;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -352,18 +653,26 @@ class _AppearanceSection extends StatelessWidget {
               title: '字体',
               control: SizedBox(
                 width: 230,
-                child: ComboBox<String?>(
-                  value: themeCtrl.fontFamily,
+                child: ComboBox<String>(
+                  value: fontValue,
                   isExpanded: true,
                   items: fonts
                       .map(
-                        (font) => ComboBoxItem<String?>(
+                        (font) => ComboBoxItem<String>(
                           value: font,
-                          child: Text(font ?? '系统默认'),
+                          child: Text(
+                            font == _SettingsPageDefaults.systemFont
+                                ? '系统默认'
+                                : font,
+                          ),
                         ),
                       )
                       .toList(growable: false),
-                  onChanged: (font) => themeCtrl.fontFamily = font,
+                  onChanged: (font) {
+                    if (font == null) return;
+                    themeCtrl.fontFamily =
+                        font == _SettingsPageDefaults.systemFont ? null : font;
+                  },
                 ),
               ),
             ),
@@ -429,10 +738,7 @@ class _PendingSection extends StatelessWidget {
               .map(
                 (row) => _SettingRow(
                   title: row,
-                  control: const Text(
-                    '待配置',
-                    style: TextStyle(fontSize: 10),
-                  ),
+                  control: const Text('待配置', style: TextStyle(fontSize: 10)),
                 ),
               )
               .toList(growable: false),
@@ -565,6 +871,26 @@ class _SettingRow extends StatelessWidget {
   }
 }
 
+class _ValueBadge extends StatelessWidget {
+  const _ValueBadge(this.value);
+
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: palette.surfaceMuted,
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: palette.cardBorder),
+      ),
+      child: Text(value, style: const TextStyle(fontSize: 10)),
+    );
+  }
+}
+
 class _SwatchBox extends StatelessWidget {
   const _SwatchBox({required this.label, required this.color});
 
@@ -591,6 +917,10 @@ class _SwatchBox extends StatelessWidget {
       ],
     );
   }
+}
+
+class _SettingsPageDefaults {
+  static const systemFont = '__system__';
 }
 
 String _sectionLabel(_SettingsSection section) {
