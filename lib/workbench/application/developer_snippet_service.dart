@@ -35,9 +35,16 @@ class DeveloperSnippetService {
     await _validateProject(workspaceId, projectId);
     final now = DateTime.now().toUtc();
     final model = DeveloperSnippetModel(
-      id: newWorkbenchId(), workspaceId: workspaceId, projectId: projectId,
-      title: trimmedTitle, language: language.trim(), content: content,
-      notes: notes.trim(), isPinned: isPinned, createdAt: now, updatedAt: now,
+      id: newWorkbenchId(),
+      workspaceId: workspaceId,
+      projectId: projectId,
+      title: trimmedTitle,
+      language: language.trim(),
+      content: content,
+      notes: notes.trim(),
+      isPinned: isPinned,
+      createdAt: now,
+      updatedAt: now,
     );
     await snippets.insert(model);
     await _activity(model, 'snippet_created', model.title, now);
@@ -60,28 +67,67 @@ class DeveloperSnippetService {
     await _validateProject(snippet.workspaceId, projectId);
     final now = DateTime.now().toUtc();
     final updated = DeveloperSnippetModel(
-      id: snippet.id, workspaceId: snippet.workspaceId, projectId: projectId,
-      title: trimmedTitle, language: language.trim(), content: content,
-      notes: notes.trim(), isPinned: isPinned, createdAt: snippet.createdAt,
-      updatedAt: now, archivedAt: snippet.archivedAt,
+      id: snippet.id,
+      workspaceId: snippet.workspaceId,
+      projectId: projectId,
+      title: trimmedTitle,
+      language: language.trim(),
+      content: content,
+      notes: notes.trim(),
+      isPinned: isPinned,
+      createdAt: snippet.createdAt,
+      updatedAt: now,
+      archivedAt: snippet.archivedAt,
     );
     await snippets.update(updated);
     await _activity(updated, 'snippet_updated', updated.title, now);
     return updated;
   }
 
+  Future<void> archive(DeveloperSnippetModel snippet) async {
+    final now = DateTime.now().toUtc();
+    final archived = DeveloperSnippetModel(
+      id: snippet.id,
+      workspaceId: snippet.workspaceId,
+      projectId: snippet.projectId,
+      title: snippet.title,
+      language: snippet.language,
+      content: snippet.content,
+      notes: snippet.notes,
+      isPinned: false,
+      createdAt: snippet.createdAt,
+      updatedAt: now,
+      archivedAt: now,
+    );
+    await snippets.update(archived);
+    await _activity(archived, 'snippet_archived', archived.title, now);
+  }
+
   Future<void> _validateProject(String workspaceId, String? projectId) async {
     if (projectId == null) return;
     final project = await projects.getById(projectId);
-    if (project == null || project.archivedAt != null || project.workspaceId != workspaceId) {
+    if (project == null ||
+        project.archivedAt != null ||
+        project.workspaceId != workspaceId) {
       throw StateError('Developer project is not available in this workspace.');
     }
   }
 
-  Future<void> _activity(DeveloperSnippetModel snippet, String type, String summary, DateTime at) =>
-      activities.insert(ActivityEventModel(
-        id: newWorkbenchId(), workspaceId: snippet.workspaceId,
-        entityType: 'snippet', entityId: snippet.id, eventType: type,
-        summary: summary, createdAt: at,
-      ));
+  Future<void> _activity(
+    DeveloperSnippetModel snippet,
+    String type,
+    String summary,
+    DateTime at,
+  ) =>
+      activities.insert(
+        ActivityEventModel(
+          id: newWorkbenchId(),
+          workspaceId: snippet.workspaceId,
+          entityType: 'snippet',
+          entityId: snippet.id,
+          eventType: type,
+          summary: summary,
+          createdAt: at,
+        ),
+      );
 }
