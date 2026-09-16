@@ -22,6 +22,7 @@ import 'application/search_service.dart';
 import 'application/task_context_service.dart';
 import 'application/today_service.dart';
 import 'application/workbench_services.dart';
+import 'application/workbench_settings_service.dart';
 import 'application/workspace_admin_service.dart';
 import 'core/ai_provider_config.dart';
 import 'core/app_paths.dart';
@@ -44,6 +45,7 @@ class WorkbenchRuntime {
   WorkbenchRuntime._({
     required this.paths,
     required this.database,
+    required this.settingsService,
     required this.workspaceService,
     required this.workspaceAdminService,
     required this.taskService,
@@ -75,6 +77,7 @@ class WorkbenchRuntime {
 
   final AppPaths paths;
   final WorkbenchDatabase database;
+  final WorkbenchSettingsService settingsService;
   final WorkspaceService workspaceService;
   final WorkspaceAdminService workspaceAdminService;
   final TaskService taskService;
@@ -110,6 +113,7 @@ class WorkbenchRuntime {
   static Future<WorkbenchRuntime> _create() async {
     final paths = await AppPaths.create();
     final database = await WorkbenchDatabase.open(paths.databasePath);
+    final settingsService = await WorkbenchSettingsService.create();
     final workspaceRepository = SqliteWorkspaceRepository(database);
     final taskRepository = SqliteTaskRepository(database);
     final noteRepository = SqliteNoteRepository(database);
@@ -248,6 +252,7 @@ class WorkbenchRuntime {
       workspaces: workspaceService,
       tasks: taskService,
       notes: noteService,
+      settings: settingsService,
     );
     final focusSessionService = FocusSessionService(
       sessions: focusSessionRepository,
@@ -260,6 +265,7 @@ class WorkbenchRuntime {
     return WorkbenchRuntime._(
       paths: paths,
       database: database,
+      settingsService: settingsService,
       workspaceService: workspaceService,
       workspaceAdminService: WorkspaceAdminService(
         workspaces: workspaceRepository,
