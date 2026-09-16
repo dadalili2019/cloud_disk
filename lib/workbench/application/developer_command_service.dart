@@ -35,18 +35,29 @@ class DeveloperCommandService {
   }) async {
     final title = name.trim();
     final value = command.trim();
-    if (title.isEmpty) throw ArgumentError.value(name, 'name', 'Command name is required.');
-    if (value.isEmpty) throw ArgumentError.value(command, 'command', 'Command is required.');
+    if (title.isEmpty) {
+      throw ArgumentError.value(name, 'name', 'Command name is required.');
+    }
+    if (value.isEmpty) {
+      throw ArgumentError.value(command, 'command', 'Command is required.');
+    }
     if (!allowedCategories.contains(category)) {
       throw ArgumentError.value(category, 'category', 'Unsupported command category.');
     }
     await _validateProject(workspaceId, projectId);
     final now = DateTime.now().toUtc();
     final model = DeveloperCommandModel(
-      id: newWorkbenchId(), workspaceId: workspaceId, projectId: projectId,
-      name: title, command: value, workingDirectory: _nullable(workingDirectory),
-      category: category, notes: notes.trim(), isPinned: isPinned,
-      createdAt: now, updatedAt: now,
+      id: newWorkbenchId(),
+      workspaceId: workspaceId,
+      projectId: projectId,
+      name: title,
+      command: value,
+      workingDirectory: _nullable(workingDirectory),
+      category: category,
+      notes: notes.trim(),
+      isPinned: isPinned,
+      createdAt: now,
+      updatedAt: now,
     );
     await commands.insert(model);
     await _activity(model, 'command_created', model.name, now);
@@ -65,28 +76,62 @@ class DeveloperCommandService {
   }) async {
     final title = name.trim();
     final value = command.trim();
-    if (title.isEmpty) throw ArgumentError.value(name, 'name', 'Command name is required.');
-    if (value.isEmpty) throw ArgumentError.value(command, 'command', 'Command is required.');
+    if (title.isEmpty) {
+      throw ArgumentError.value(name, 'name', 'Command name is required.');
+    }
+    if (value.isEmpty) {
+      throw ArgumentError.value(command, 'command', 'Command is required.');
+    }
     if (!allowedCategories.contains(category)) {
       throw ArgumentError.value(category, 'category', 'Unsupported command category.');
     }
     await _validateProject(commandModel.workspaceId, projectId);
     final now = DateTime.now().toUtc();
     final updated = DeveloperCommandModel(
-      id: commandModel.id, workspaceId: commandModel.workspaceId, projectId: projectId,
-      name: title, command: value, workingDirectory: _nullable(workingDirectory),
-      category: category, notes: notes.trim(), isPinned: isPinned,
-      createdAt: commandModel.createdAt, updatedAt: now, archivedAt: commandModel.archivedAt,
+      id: commandModel.id,
+      workspaceId: commandModel.workspaceId,
+      projectId: projectId,
+      name: title,
+      command: value,
+      workingDirectory: _nullable(workingDirectory),
+      category: category,
+      notes: notes.trim(),
+      isPinned: isPinned,
+      createdAt: commandModel.createdAt,
+      updatedAt: now,
+      archivedAt: commandModel.archivedAt,
     );
     await commands.update(updated);
     await _activity(updated, 'command_updated', updated.name, now);
     return updated;
   }
 
+  Future<void> archive(DeveloperCommandModel command) async {
+    final now = DateTime.now().toUtc();
+    final archived = DeveloperCommandModel(
+      id: command.id,
+      workspaceId: command.workspaceId,
+      projectId: command.projectId,
+      name: command.name,
+      command: command.command,
+      workingDirectory: command.workingDirectory,
+      category: command.category,
+      notes: command.notes,
+      isPinned: false,
+      createdAt: command.createdAt,
+      updatedAt: now,
+      archivedAt: now,
+    );
+    await commands.update(archived);
+    await _activity(archived, 'command_archived', archived.name, now);
+  }
+
   Future<void> _validateProject(String workspaceId, String? projectId) async {
     if (projectId == null) return;
     final project = await projects.getById(projectId);
-    if (project == null || project.archivedAt != null || project.workspaceId != workspaceId) {
+    if (project == null ||
+        project.archivedAt != null ||
+        project.workspaceId != workspaceId) {
       throw StateError('Developer project is not available in this workspace.');
     }
   }
@@ -96,10 +141,21 @@ class DeveloperCommandService {
     return trimmed == null || trimmed.isEmpty ? null : trimmed;
   }
 
-  Future<void> _activity(DeveloperCommandModel command, String type, String summary, DateTime at) =>
-      activities.insert(ActivityEventModel(
-        id: newWorkbenchId(), workspaceId: command.workspaceId,
-        entityType: 'command', entityId: command.id, eventType: type,
-        summary: summary, createdAt: at,
-      ));
+  Future<void> _activity(
+    DeveloperCommandModel command,
+    String type,
+    String summary,
+    DateTime at,
+  ) =>
+      activities.insert(
+        ActivityEventModel(
+          id: newWorkbenchId(),
+          workspaceId: command.workspaceId,
+          entityType: 'command',
+          entityId: command.id,
+          eventType: type,
+          summary: summary,
+          createdAt: at,
+        ),
+      );
 }
