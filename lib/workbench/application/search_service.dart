@@ -1,6 +1,9 @@
 import '../core/models.dart';
 import '../data/markdown_store.dart';
 import '../domain/decision_repository.dart';
+import '../domain/developer_command_repository.dart';
+import '../domain/developer_project_repository.dart';
+import '../domain/developer_snippet_repository.dart';
 import '../domain/issue_repository.dart';
 import '../domain/knowledge_repository.dart';
 import '../domain/repositories.dart';
@@ -16,6 +19,9 @@ class SearchService {
     required this.resources,
     required this.decisions,
     required this.knowledge,
+    required this.developerProjects,
+    required this.developerCommands,
+    required this.developerSnippets,
     required this.markdownStore,
     required this.index,
     this.freshnessWindow = const Duration(minutes: 2),
@@ -28,6 +34,9 @@ class SearchService {
   final ResourceRepository resources;
   final DecisionRepository decisions;
   final KnowledgeRepository knowledge;
+  final DeveloperProjectRepository developerProjects;
+  final DeveloperCommandRepository developerCommands;
+  final DeveloperSnippetRepository developerSnippets;
   final MarkdownStore markdownStore;
   final SearchIndexRepository index;
   final Duration freshnessWindow;
@@ -69,6 +78,12 @@ class SearchService {
       final workspaceIssues = await issues.listByWorkspace(workspaceId);
       final workspaceResources = await resources.listByWorkspace(workspaceId);
       final workspaceDecisions = await decisions.listByWorkspace(workspaceId);
+      final workspaceDeveloperProjects =
+          await developerProjects.listByWorkspace(workspaceId);
+      final workspaceDeveloperCommands =
+          await developerCommands.listByWorkspace(workspaceId);
+      final workspaceDeveloperSnippets =
+          await developerSnippets.listByWorkspace(workspaceId);
 
       for (final task in workspaceTasks) {
         await index.replace(
@@ -133,6 +148,50 @@ class SearchService {
             decision.revisitCondition,
             decision.status,
           ].where((value) => value.trim().isNotEmpty).join('\n'),
+        );
+      }
+
+      for (final project in workspaceDeveloperProjects) {
+        await index.replace(
+          entityType: 'developer_project',
+          entityId: project.id,
+          workspaceId: workspaceId,
+          title: project.name,
+          body: [
+            project.localPath,
+            project.repositoryUrl,
+            project.branch,
+            project.techStack,
+            project.notes,
+            if (project.isPrimary) 'primary project 主项目',
+          ].where((value) => value.trim().isNotEmpty).join('\n'),
+        );
+      }
+
+      for (final command in workspaceDeveloperCommands) {
+        await index.replace(
+          entityType: 'developer_command',
+          entityId: command.id,
+          workspaceId: workspaceId,
+          title: command.name,
+          body: <String?>[
+            command.command,
+            command.workingDirectory,
+            command.category,
+            command.notes,
+          ].whereType<String>().where((value) => value.trim().isNotEmpty).join('\n'),
+        );
+      }
+
+      for (final snippet in workspaceDeveloperSnippets) {
+        await index.replace(
+          entityType: 'developer_snippet',
+          entityId: snippet.id,
+          workspaceId: workspaceId,
+          title: snippet.title,
+          body: [snippet.language, snippet.content, snippet.notes]
+              .where((value) => value.trim().isNotEmpty)
+              .join('\n'),
         );
       }
     }
