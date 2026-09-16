@@ -133,10 +133,6 @@ class BackupService {
       final finalFiles = await _relativeFiles(staging);
       await _zipDirectory(staging, output);
 
-      if (kind == 'auto') {
-        await pruneAutoBackups();
-      }
-
       return BackupResult(
         file: output,
         createdAt: createdAt,
