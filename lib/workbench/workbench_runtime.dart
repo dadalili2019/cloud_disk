@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'application/ai_context_builder.dart';
 import 'application/ai_context_budget.dart';
 import 'application/ai_context_preview_service.dart';
 import 'application/ai_conversation_service.dart';
 import 'application/ai_prompt_builder.dart';
+import 'application/backup_service.dart';
 import 'application/configurable_ai_provider.dart';
 import 'application/continue_service.dart';
 import 'application/decision_service.dart';
@@ -10,6 +13,7 @@ import 'application/developer_command_service.dart';
 import 'application/developer_context_service.dart';
 import 'application/developer_project_service.dart';
 import 'application/developer_snippet_service.dart';
+import 'application/export_service.dart';
 import 'application/focus_session_service.dart';
 import 'application/issue_service.dart';
 import 'application/knowledge_distill_service.dart';
@@ -45,6 +49,8 @@ class WorkbenchRuntime {
     required this.paths,
     required this.database,
     required this.settingsService,
+    required this.backupService,
+    required this.exportService,
     required this.workspaceService,
     required this.workspaceAdminService,
     required this.taskService,
@@ -77,6 +83,8 @@ class WorkbenchRuntime {
   final AppPaths paths;
   final WorkbenchDatabase database;
   final WorkbenchSettingsService settingsService;
+  final BackupService backupService;
+  final ExportService exportService;
   final WorkspaceService workspaceService;
   final WorkspaceAdminService workspaceAdminService;
   final TaskService taskService;
@@ -113,6 +121,8 @@ class WorkbenchRuntime {
     final paths = await AppPaths.create();
     final database = await WorkbenchDatabase.open(paths.databasePath);
     final settingsService = await WorkbenchSettingsService.create();
+    final backupService = BackupService(paths: paths, database: database);
+    final exportService = ExportService(paths: paths, database: database);
     final workspaceRepository = SqliteWorkspaceRepository(database);
     final taskRepository = SqliteTaskRepository(database);
     final noteRepository = SqliteNoteRepository(database);
@@ -262,10 +272,12 @@ class WorkbenchRuntime {
     );
     final todayService = TodayService(focusSessions: focusSessionService);
 
-    return WorkbenchRuntime._(
+    final runtime = WorkbenchRuntime._(
       paths: paths,
       database: database,
       settingsService: settingsService,
+      backupService: backupService,
+      exportService: exportService,
       workspaceService: workspaceService,
       workspaceAdminService: WorkspaceAdminService(
         workspaces: workspaceRepository,
@@ -317,5 +329,21 @@ class WorkbenchRuntime {
       developerSnippetService: developerSnippetService,
       developerContextService: developerContextService,
     );
+
+    unawaited(_runAutoBackup(runtime));
+    return runtime;
+  }
+}
+
+Future<void> _runAutoBackup(WorkbenchRuntime runtime) async {
+  final settings = runtime.settingsService.current.backup;
+  if (!settings.shouldRunAutoBackup(DateTime.now())) return;
+  try {
+    await runtime.backupService.createAutoBackup();
+    await runtime.backupService.pruneAutoBackups(keep: settings.keepAutoBackups);
+    await runtime.settingsService.markAutoBackupCompleted(DateTime.now());
+  } catch (_) {
+    // Auto backup must never prevent Workbench startup. A manual backup still
+    // surfaces the actual error in Settings > Data & Backup.
   }
 }
