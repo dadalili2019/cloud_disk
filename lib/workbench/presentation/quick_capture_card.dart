@@ -2,6 +2,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 
 import '../core/models.dart';
 import '../workbench_runtime.dart';
+import 'workbench_ui.dart';
 
 class QuickCaptureCard extends StatefulWidget {
   const QuickCaptureCard({
@@ -136,51 +137,47 @@ class _QuickCaptureCardState extends State<QuickCaptureCard> {
     final theme = FluentTheme.of(context);
     final defaultWorkspace = widget.defaultWorkspace;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: theme.inactiveColor.withOpacity(0.14)),
-      ),
+    return WorkbenchCard(
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Text(
-                '快速记录',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-              ),
-              if (defaultWorkspace != null) ...[
-                const Spacer(),
-                Text(
-                  defaultWorkspace.name,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: theme.typography.body?.color?.withOpacity(0.50),
-                  ),
+              const Expanded(
+                child: Text(
+                  '快速记录',
+                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
                 ),
-              ],
+              ),
+              if (defaultWorkspace != null)
+                WorkbenchTag(label: defaultWorkspace.name),
             ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            '先记下来，需要时再整理成完整上下文。',
+            style: TextStyle(
+              fontSize: 10.5,
+              color: theme.typography.body?.color?.withOpacity(0.48),
+            ),
           ),
           const SizedBox(height: 12),
           TextBox(
             controller: _controller,
-            minLines: 2,
-            maxLines: 4,
-            placeholder: '先记下来，稍后再整理…',
+            minLines: 3,
+            maxLines: 5,
+            placeholder: '输入任务、想法或临时记录…',
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Button(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 340;
+              final noteButton = Button(
                 onPressed: _saving ? null : () => _capture(asNote: true),
-                child: const Text('保存为笔记'),
-              ),
-              const SizedBox(width: 10),
-              FilledButton(
+                child: const Text('存为笔记'),
+              );
+              final taskButton = FilledButton(
                 onPressed: _saving ? null : () => _capture(asNote: false),
                 child: _saving
                     ? const SizedBox(
@@ -188,9 +185,27 @@ class _QuickCaptureCardState extends State<QuickCaptureCard> {
                         height: 14,
                         child: ProgressRing(strokeWidth: 2),
                       )
-                    : const Text('保存为任务'),
-              ),
-            ],
+                    : const Text('存为任务'),
+              );
+              if (compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(width: double.infinity, child: taskButton),
+                    const SizedBox(height: 8),
+                    SizedBox(width: double.infinity, child: noteButton),
+                  ],
+                );
+              }
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  noteButton,
+                  const SizedBox(width: 8),
+                  taskButton,
+                ],
+              );
+            },
           ),
         ],
       ),
