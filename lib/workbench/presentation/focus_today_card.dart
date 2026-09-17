@@ -5,6 +5,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import '../application/continue_service.dart';
 import '../application/today_service.dart';
 import '../workbench_runtime.dart';
+import 'workbench_ui.dart';
 
 class FocusTodayCard extends StatefulWidget {
   const FocusTodayCard({
@@ -126,20 +127,19 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FluentTheme.of(context);
     return FutureBuilder<TodaySnapshot>(
       future: _snapshot,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return _shell(
-            theme,
-            const SizedBox(height: 90, child: Center(child: ProgressRing())),
+          return const WorkbenchCard(
+            padding: EdgeInsets.all(18),
+            child: SizedBox(height: 120, child: Center(child: ProgressRing())),
           );
         }
         if (snapshot.hasError) {
-          return _shell(
-            theme,
-            Text('时间记录加载失败：${snapshot.error}'),
+          return WorkbenchCard(
+            padding: const EdgeInsets.all(18),
+            child: Text('时间记录加载失败：${snapshot.error}'),
           );
         }
 
@@ -150,131 +150,66 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
             ? Duration.zero
             : DateTime.now().toUtc().difference(active.session.startedAt.toUtc());
 
-        return _shell(
-          theme,
-          Column(
+        return WorkbenchCard(
+          padding: const EdgeInsets.all(18),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Text(
-                    '专注',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  const Spacer(),
-                  _SummaryValue(
-                    label: '今日专注',
-                    value: _formatDuration(
-                      Duration(seconds: focus.totalSeconds),
+                  const Expanded(
+                    child: Text(
+                      '专注',
+                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
                     ),
                   ),
-                  const SizedBox(width: 18),
-                  _SummaryValue(
-                    label: '工作区',
-                    value: '${data.workspaceCount}',
-                  ),
-                  const SizedBox(width: 18),
-                  _SummaryValue(
-                    label: '完成专注',
-                    value: '${data.completedSessionCount}',
+                  WorkbenchTag(
+                    label: '今日 ${_formatDuration(Duration(seconds: focus.totalSeconds))}',
+                    selected: active != null,
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              if (active != null)
+                _ActiveFocusBlock(
+                  title: '${active.workspace?.name ?? '工作区'} · ${active.task?.title ?? '任务'}',
+                  elapsed: _formatClock(elapsed),
+                  busy: _busy,
+                  onFinish: _finish,
+                )
+              else
+                _IdleFocusBlock(
+                  title: widget.primary == null
+                      ? '暂无可开始专注的当前任务'
+                      : '${widget.primary!.workspace.name} · ${widget.primary!.context.task.title}',
+                  enabled: widget.primary != null && !_busy,
+                  onStart: _start,
+                ),
               const SizedBox(height: 14),
-              if (active != null) ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${active.workspace?.name ?? '工作区'} · ${active.task?.title ?? '任务'}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            _formatClock(elapsed),
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    FilledButton(
-                      onPressed: _busy ? null : _finish,
-                      child: const Text('结束专注'),
-                    ),
-                  ],
-                ),
-              ] else ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.primary == null
-                            ? '暂无可开始专注的当前任务'
-                            : '${widget.primary!.workspace.name} · ${widget.primary!.context.task.title}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: theme.typography.body?.color?.withOpacity(0.72),
-                        ),
-                      ),
-                    ),
-                    FilledButton(
-                      onPressed: widget.primary == null || _busy ? null : _start,
-                      child: const Text('开始专注'),
-                    ),
-                  ],
-                ),
-              ],
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _MetricPill(label: '工作区', value: '${data.workspaceCount}'),
+                  _MetricPill(label: '已完成', value: '${data.completedSessionCount}'),
+                  _MetricPill(label: '记录', value: '${focus.sessions.length}'),
+                ],
+              ),
               if (focus.sessions.isNotEmpty) ...[
                 const SizedBox(height: 18),
-                const Text(
-                  '今日时间线',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                ),
+                const WorkbenchSectionHeader(title: '今日时间线'),
                 const SizedBox(height: 8),
-                ...focus.sessions.take(6).map(
+                ...focus.sessions.take(4).map(
                   (entry) => Padding(
                     padding: const EdgeInsets.only(bottom: 7),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 104,
-                          child: Text(
-                            _timeRange(entry.session.startedAt, entry.session.endedAt),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: theme.typography.body?.color?.withOpacity(0.52),
+                    child: _TimelineRow(
+                      time: _timeRange(entry.session.startedAt, entry.session.endedAt),
+                      title: '${entry.workspace?.name ?? '工作区'} / ${entry.task?.title ?? '任务'}',
+                      duration: entry.session.endedAt == null
+                          ? '进行中'
+                          : _formatDuration(
+                              Duration(seconds: entry.session.durationSeconds),
                             ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            '${entry.workspace?.name ?? '工作区'} / ${entry.task?.title ?? '任务'}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                        Text(
-                          entry.session.endedAt == null
-                              ? '进行中'
-                              : _formatDuration(
-                                  Duration(seconds: entry.session.durationSeconds),
-                                ),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: theme.typography.body?.color?.withOpacity(0.58),
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ),
@@ -285,45 +220,123 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
       },
     );
   }
+}
 
-  Widget _shell(FluentThemeData theme, Widget child) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: theme.inactiveColor.withOpacity(0.14)),
-      ),
-      child: child,
+class _ActiveFocusBlock extends StatelessWidget {
+  const _ActiveFocusBlock({
+    required this.title,
+    required this.elapsed,
+    required this.busy,
+    required this.onFinish,
+  });
+
+  final String title;
+  final String elapsed;
+  final bool busy;
+  final VoidCallback onFinish;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 420;
+        final content = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              elapsed,
+              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
+            ),
+          ],
+        );
+        final button = FilledButton(
+          onPressed: busy ? null : onFinish,
+          child: const Text('结束专注'),
+        );
+        if (compact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              content,
+              const SizedBox(height: 12),
+              button,
+            ],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: content),
+            const SizedBox(width: 14),
+            button,
+          ],
+        );
+      },
     );
-  }
-
-  String _formatClock(Duration duration) {
-    final hours = duration.inHours.toString().padLeft(2, '0');
-    final minutes = (duration.inMinutes % 60).toString().padLeft(2, '0');
-    final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
-    return '$hours:$minutes:$seconds';
-  }
-
-  String _formatDuration(Duration duration) {
-    if (duration.inHours > 0) {
-      return '${duration.inHours}小时${duration.inMinutes % 60}分钟';
-    }
-    if (duration.inMinutes > 0) return '${duration.inMinutes}分钟';
-    return '${duration.inSeconds}秒';
-  }
-
-  String _timeRange(DateTime startUtc, DateTime? endUtc) {
-    final start = startUtc.toLocal();
-    final end = endUtc?.toLocal();
-    String hhmm(DateTime value) =>
-        '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
-    return end == null ? '${hhmm(start)} - 现在' : '${hhmm(start)} - ${hhmm(end)}';
   }
 }
 
-class _SummaryValue extends StatelessWidget {
-  const _SummaryValue({required this.label, required this.value});
+class _IdleFocusBlock extends StatelessWidget {
+  const _IdleFocusBlock({
+    required this.title,
+    required this.enabled,
+    required this.onStart,
+  });
+
+  final String title;
+  final bool enabled;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FluentTheme.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 420;
+        final text = Text(
+          title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12.5,
+            height: 1.4,
+            color: theme.typography.body?.color?.withOpacity(0.72),
+          ),
+        );
+        final button = FilledButton(
+          onPressed: enabled ? onStart : null,
+          child: const Text('开始专注'),
+        );
+        if (compact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              text,
+              const SizedBox(height: 12),
+              button,
+            ],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: text),
+            const SizedBox(width: 14),
+            button,
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _MetricPill extends StatelessWidget {
+  const _MetricPill({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -331,22 +344,90 @@ class _SummaryValue extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.inactiveColor.withOpacity(0.18)),
+      ),
+      child: Text(
+        '$label  $value',
+        style: TextStyle(
+          fontSize: 10.5,
+          color: theme.typography.body?.color?.withOpacity(0.62),
+        ),
+      ),
+    );
+  }
+}
+
+class _TimelineRow extends StatelessWidget {
+  const _TimelineRow({
+    required this.time,
+    required this.title,
+    required this.duration,
+  });
+
+  final String time;
+  final String title;
+  final String duration;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FluentTheme.of(context);
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: theme.typography.body?.color?.withOpacity(0.5),
+        SizedBox(
+          width: 94,
+          child: Text(
+            time,
+            style: TextStyle(
+              fontSize: 10.5,
+              color: theme.typography.body?.color?.withOpacity(0.48),
+            ),
           ),
         ),
-        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 11.5),
+          ),
+        ),
+        const SizedBox(width: 10),
         Text(
-          value,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          duration,
+          style: TextStyle(
+            fontSize: 10.5,
+            color: theme.typography.body?.color?.withOpacity(0.54),
+          ),
         ),
       ],
     );
   }
+}
+
+String _formatClock(Duration duration) {
+  final hours = duration.inHours.toString().padLeft(2, '0');
+  final minutes = (duration.inMinutes % 60).toString().padLeft(2, '0');
+  final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
+  return '$hours:$minutes:$seconds';
+}
+
+String _formatDuration(Duration duration) {
+  if (duration.inHours > 0) {
+    return '${duration.inHours}小时${duration.inMinutes % 60}分钟';
+  }
+  if (duration.inMinutes > 0) return '${duration.inMinutes}分钟';
+  return '${duration.inSeconds}秒';
+}
+
+String _timeRange(DateTime startUtc, DateTime? endUtc) {
+  final start = startUtc.toLocal();
+  final end = endUtc?.toLocal();
+  String hhmm(DateTime value) =>
+      '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+  return end == null ? '${hhmm(start)} - 现在' : '${hhmm(start)} - ${hhmm(end)}';
 }
