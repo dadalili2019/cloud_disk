@@ -628,7 +628,7 @@ class _SidebarSectionLabel extends StatelessWidget {
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _NavItem extends StatefulWidget {
   const _NavItem({
     required this.compact,
     required this.icon,
@@ -644,28 +644,42 @@ class _NavItem extends StatelessWidget {
   final VoidCallback onPressed;
 
   @override
+  State<_NavItem> createState() => _NavItemState();
+}
+
+class _NavItemState extends State<_NavItem> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final palette = ThemeScope.of(context).palette;
     final theme = FluentTheme.of(context);
     final primary = theme.typography.body?.color ?? const Color(0xFFE5E8EB);
     final foreground =
-        active ? primary : primary.withValues(alpha: 0.62);
+        widget.active ? primary : primary.withValues(alpha: 0.62);
+
+    final background = widget.active
+        ? palette.navItemSelected
+        : _hovered
+            ? palette.navItemHover
+            : Colors.transparent;
 
     final child = MouseRegion(
       cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
-        onTap: onPressed,
+        onTap: widget.onPressed,
         child: Container(
           height: 36,
           margin: const EdgeInsets.only(bottom: 3),
-          padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 8),
           decoration: BoxDecoration(
-            color: active ? palette.navItemSelected : Colors.transparent,
+            color: background,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Stack(
             children: [
-              if (active)
+              if (widget.active)
                 Positioned(
                   left: 0,
                   top: 7,
@@ -678,35 +692,49 @@ class _NavItem extends StatelessWidget {
                     ),
                   ),
                 ),
-              Row(
-                mainAxisAlignment:
-                    compact ? MainAxisAlignment.center : MainAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: Center(
-                      child: Icon(icon, size: 15.5, color: foreground),
-                    ),
+              Positioned.fill(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: widget.compact ? 0 : 8,
+                    right: widget.compact ? 0 : 8,
                   ),
-                  if (!compact) ...[
-                    const SizedBox(width: 9),
-                    Expanded(
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          height: 1.0,
-                          fontWeight:
-                              active ? FontWeight.w600 : FontWeight.w500,
-                          color: foreground,
+                  child: Row(
+                    mainAxisAlignment: widget.compact
+                        ? MainAxisAlignment.center
+                        : MainAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: Center(
+                          child: Icon(
+                            widget.icon,
+                            size: 15.5,
+                            color: foreground,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ],
+                      if (!widget.compact) ...[
+                        const SizedBox(width: 9),
+                        Expanded(
+                          child: Text(
+                            widget.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              height: 1.0,
+                              fontWeight: widget.active
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: foreground,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -714,8 +742,8 @@ class _NavItem extends StatelessWidget {
       ),
     );
 
-    if (!compact) return child;
-    return Tooltip(message: label, child: child);
+    if (!widget.compact) return child;
+    return Tooltip(message: widget.label, child: child);
   }
 }
 
