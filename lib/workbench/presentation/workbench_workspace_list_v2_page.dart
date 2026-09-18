@@ -141,18 +141,17 @@ class _WorkbenchWorkspaceListPageV2State
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
                 child: Row(
                   children: [
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             '暂无活动工作区',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-
                         ],
                       ),
                     ),
@@ -183,7 +182,7 @@ class _WorkbenchWorkspaceListPageV2State
                           width: 34,
                           height: 34,
                           decoration: BoxDecoration(
-                            color: theme.accentColor.withOpacity(0.08),
+                            color: theme.accentColor.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
@@ -209,7 +208,7 @@ class _WorkbenchWorkspaceListPageV2State
                                   workspace.slug,
                                   style: TextStyle(
                                     fontSize: 10.5,
-                                    color: theme.typography.body?.color?.withOpacity(0.46),
+                                    color: theme.typography.body?.color?.withValues(alpha: 0.46),
                                   ),
                                 ),
                               ],
