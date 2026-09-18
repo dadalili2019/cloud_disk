@@ -50,7 +50,7 @@ class ThemeController extends ChangeNotifier {
   ThemeMode get mode => _mode;
   AccentColor get accent => _accent;
   String? get fontFamily => _fontFamily;
-  String get effectiveFontFamily => _fontFamily ?? 'Microsoft YaHei UI';
+  String get effectiveFontFamily => _fontFamily ?? 'Segoe UI Variable';
   String get presetId => _presetId;
   ThemePalette get palette => palettes[_presetId] ?? palettes['comfort_dark']!;
 
