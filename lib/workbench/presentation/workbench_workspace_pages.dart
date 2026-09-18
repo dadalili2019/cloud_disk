@@ -807,7 +807,7 @@ class _SectionPanel extends StatelessWidget {
                     .typography
                     .body
                     ?.color
-                    ?.withOpacity(0.56),
+                    ?.withValues(alpha: 0.56),
               ),
             )
           else
@@ -888,33 +888,23 @@ class _ActivityRow extends StatelessWidget {
 class _WorkbenchCard extends StatelessWidget {
   const _WorkbenchCard({
     required this.child,
-    this.onTap,
   });
 
   final Widget child;
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
-    final container = Container(
+    return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.inactiveColor.withOpacity(0.14)),
+        border: Border.all(
+          color: theme.inactiveColor.withValues(alpha: 0.14),
+        ),
       ),
       child: child,
-    );
-
-    if (onTap == null) return container;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: container,
-      ),
     );
   }
 }
