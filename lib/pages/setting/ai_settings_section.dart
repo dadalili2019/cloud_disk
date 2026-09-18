@@ -77,18 +77,18 @@ class _AISettingsSectionState extends State<AISettingsSection> {
   Future<AISettings?> _settingsFromForm() async {
     final timeout = int.tryParse(_timeoutController.text.trim());
     if (timeout == null || timeout < 5 || timeout > 600) {
-      _setError('Timeout 必须是 5–600 秒之间的整数。');
+      _setError('超时时间必须是 5–600 秒之间的整数。');
       return null;
     }
 
     final model = _modelController.text.trim();
     final baseUrl = _baseUrlController.text.trim();
     if (_customProvider && model.isEmpty) {
-      _setError('请填写 Model。');
+      _setError('请填写模型名称。');
       return null;
     }
     if (_mode == AIProviderMode.openAICompatible && baseUrl.isEmpty) {
-      _setError('OpenAI Compatible Provider 需要填写 Base URL。');
+      _setError('OpenAI 兼容服务需要填写服务地址。');
       return null;
     }
 
@@ -121,7 +121,7 @@ class _AISettingsSectionState extends State<AISettingsSection> {
       widget.onSettingsChanged();
       if (!mounted) return true;
       setState(() {
-        _success = showSuccess ? 'AI 配置已保存，并立即应用到 Workbench AI。' : null;
+        _success = showSuccess ? 'AI 配置已保存，并立即应用到 AI 助手。' : null;
       });
       return true;
     } catch (error) {
@@ -146,7 +146,7 @@ class _AISettingsSectionState extends State<AISettingsSection> {
     try {
       final provider = widget.runtime.aiProvider;
       if (provider is! ConfigurableAIProvider) {
-        throw StateError('当前 AI Provider 不支持连接测试。');
+        throw StateError('当前 AI 服务提供方不支持连接测试。');
       }
       final response = await provider.testConnection();
       if (!mounted) return;
@@ -226,11 +226,11 @@ class _AISettingsSectionState extends State<AISettingsSection> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _GroupTitle('Provider', palette: palette),
+              _GroupTitle('服务提供方', palette: palette),
               _Divider(palette),
               _Row(
-                title: 'Provider',
-                subtitle: 'Environment 保持兼容原有环境变量 / dart-define 配置。',
+                title: '服务提供方',
+                subtitle: '环境变量模式兼容原有环境变量和 dart-define 配置。',
                 control: SizedBox(
                   width: 300,
                   child: ComboBox<AIProviderMode>(
@@ -239,11 +239,11 @@ class _AISettingsSectionState extends State<AISettingsSection> {
                     items: const [
                       ComboBoxItem(
                         value: AIProviderMode.environment,
-                        child: Text('Environment'),
+                        child: Text('环境变量'),
                       ),
                       ComboBoxItem(
                         value: AIProviderMode.preview,
-                        child: Text('Preview'),
+                        child: Text('预览'),
                       ),
                       ComboBoxItem(
                         value: AIProviderMode.deepseek,
@@ -251,7 +251,7 @@ class _AISettingsSectionState extends State<AISettingsSection> {
                       ),
                       ComboBoxItem(
                         value: AIProviderMode.openAICompatible,
-                        child: Text('OpenAI Compatible'),
+                        child: Text('OpenAI 兼容'),
                       ),
                     ],
                     onChanged: _selectMode,
@@ -261,8 +261,8 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               _Divider(palette),
               _Row(
                 title: '当前状态',
-                subtitle: 'Workbench AI 当前实际使用的 Provider。',
-                control: _Badge(widget.runtime.aiProvider.name),
+                subtitle: 'AI 助手当前实际使用的服务提供方。',
+                control: _Badge(_displayProviderName(widget.runtime.aiProvider.name)),
               ),
             ],
           ),
@@ -278,7 +278,7 @@ class _AISettingsSectionState extends State<AISettingsSection> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _GroupTitle('Connection', palette: palette),
+              _GroupTitle('连接配置', palette: palette),
               _Divider(palette),
               _Row(
                 title: '服务地址',
@@ -286,7 +286,7 @@ class _AISettingsSectionState extends State<AISettingsSection> {
                     ? 'DeepSeek 默认使用 https://api.deepseek.com。'
                     : _customProvider
                         ? 'OpenAI 兼容接口的根地址。'
-                        : '当前模式由 AI Provider 自己管理。',
+                        : '当前模式由 AI 服务提供方自行管理。',
                 control: SizedBox(
                   width: 360,
                   child: TextBox(
@@ -315,7 +315,7 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               _Divider(palette),
               _Row(
                 title: '请求路径',
-                subtitle: '留空时按当前 Provider 使用默认路径。',
+                subtitle: '留空时按当前服务提供方使用默认路径。',
                 control: SizedBox(
                   width: 360,
                   child: TextBox(
@@ -418,12 +418,12 @@ class _AISettingsSectionState extends State<AISettingsSection> {
             Expanded(
               child: Text(
                 _mode == AIProviderMode.environment
-                    ? 'Environment 模式继续读取 WORKBENCH_AI_* 配置。'
+                    ? '环境变量模式继续读取 WORKBENCH_AI_* 配置。'
                     : _mode == AIProviderMode.preview
-                        ? 'Preview 模式不会访问外部模型。'
+                        ? '预览模式不会访问外部模型。'
                         : hasSessionKey
                             ? '本次会话 Key 已设置。'
-                            : '未填写 Session Key 时，可回退使用环境变量中的 API Key。',
+                            : '未填写本次会话 Key 时，可回退使用环境变量中的 API Key。',
                 style: TextStyle(
                   fontSize: 9.5,
                   color: textColor?.withValues(alpha: 0.52),
@@ -554,5 +554,13 @@ String _readableError(Object error) {
   var value = error.toString().trim();
   value = value.replaceFirst(RegExp(r'^(StateError|Exception):\s*'), '');
   if (value.length > 360) value = '${value.substring(0, 360)}…';
+  return value;
+}
+
+String _displayProviderName(String value) {
+  final normalized = value.trim().toLowerCase();
+  if (normalized.contains('preview')) return '预览';
+  if (normalized.contains('environment')) return '环境变量';
+  if (normalized.contains('openai')) return 'OpenAI 兼容';
   return value;
 }
