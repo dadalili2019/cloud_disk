@@ -45,7 +45,7 @@ class _WorkbenchTimePageState extends State<WorkbenchTimePage> {
             else if (snapshot.hasError)
               WorkbenchEmptyState(
                 title: '时间信息暂时无法加载',
-                description: '可以稍后再试。',
+                description: '',
                 actionLabel: '重试',
                 onAction: () => setState(() {
                   _snapshot = WorkbenchRuntime.instance.then(
