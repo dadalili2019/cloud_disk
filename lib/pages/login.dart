@@ -110,10 +110,14 @@ class _LoginPageState extends State<LoginPage>
     await Future<void>.delayed(const Duration(milliseconds: 140));
 
     if (Platform.isWindows) {
-      appWindow.minSize = const Size(860, 640);
+      // Windows applies the resize asynchronously. Centering immediately after
+      // changing size can still use the old login-window bounds, which makes
+      // the expanded workbench appear shifted down/right.
       appWindow.size = const Size(1280, 800);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      appWindow.minSize = const Size(860, 640);
       appWindow.alignment = Alignment.center;
-      await Future<void>.delayed(const Duration(milliseconds: 120));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
     }
 
     if (!mounted) return;
