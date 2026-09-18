@@ -393,37 +393,52 @@ class _Row extends StatelessWidget {
     final textColor = FluentTheme.of(context).typography.body?.color;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final label = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 3),
                 Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
+                  subtitle!,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    height: 1.35,
+                    color: textColor?.withValues(alpha: 0.48),
                   ),
                 ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle!,
-                    style: TextStyle(
-                      fontSize: 9.5,
-                      height: 1.35,
-                      color: textColor?.withValues(alpha: 0.48),
-                    ),
-                  ),
-                ],
               ],
-            ),
-          ),
-          const SizedBox(width: 18),
-          control,
-        ],
+            ],
+          );
+
+          if (constraints.maxWidth < 620) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                label,
+                const SizedBox(height: 10),
+                Align(alignment: Alignment.centerLeft, child: control),
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(child: label),
+              const SizedBox(width: 18),
+              control,
+            ],
+          );
+        },
       ),
     );
   }
