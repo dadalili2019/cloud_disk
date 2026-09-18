@@ -301,7 +301,7 @@ class _Topbar extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 12.5,
+                            fontSize: 13,
                             fontWeight: FontWeight.w700,
                             color: primary,
                           ),
@@ -567,21 +567,21 @@ class _Sidebar extends StatelessWidget {
             if (compact) const SizedBox(height: 10),
             _NavItem(
               compact: compact,
-              icon: FluentIcons.library,
+              icon: FluentIcons.doc_library,
               label: '知识',
               active: isActive(_NavTarget.knowledge, location),
               onPressed: onKnowledge,
             ),
             _NavItem(
               compact: compact,
-              icon: FluentIcons.link,
+              icon: FluentIcons.developer_tools,
               label: '开发者',
               active: isActive(_NavTarget.developer, location),
               onPressed: onDeveloper,
             ),
             _NavItem(
               compact: compact,
-              icon: FluentIcons.format_painter,
+              icon: FluentIcons.toolbox,
               label: '工具',
               active: isActive(_NavTarget.tools, location),
               onPressed: onTools,
@@ -697,7 +697,8 @@ class _NavItem extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 12.5,
+                          height: 1.0,
                           fontWeight:
                               active ? FontWeight.w600 : FontWeight.w500,
                           color: foreground,
