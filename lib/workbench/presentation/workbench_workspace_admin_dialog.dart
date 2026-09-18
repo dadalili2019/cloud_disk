@@ -154,7 +154,7 @@ Future<void> showArchivedWorkspacesDialog(BuildContext context) async {
                     return Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        border: Border.all(color: FluentTheme.of(context).inactiveColor.withOpacity(0.16)),
+                        border: Border.all(color: FluentTheme.of(context).inactiveColor.withValues(alpha: 0.16)),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
