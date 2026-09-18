@@ -253,7 +253,7 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
               builder: (context, constraints) {
                 final horizontal = constraints.maxWidth >= 1180 ? 34.0 : 28.0;
                 return ListView(
-                  padding: EdgeInsets.fromLTRB(horizontal, 14, horizontal, 28),
+                  padding: EdgeInsets.fromLTRB(horizontal, 18, horizontal, 32),
                   children: [
                     Center(
                       child: ConstrainedBox(
@@ -265,7 +265,7 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
                               workspaceId: workspaceId,
                               task: overview.currentTask,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 16),
                             _OverviewGrid(
                               currentTask: overview.currentTask,
                               blockers: overview.currentBlockers,
@@ -273,7 +273,7 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
                               resources: overview.linkedResources,
                               decisions: overview.linkedDecisions,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 16),
                             _Panel(
                               title: '最近动态',
                               emptyText: '暂无动态',
@@ -461,13 +461,13 @@ class _OverviewGrid extends StatelessWidget {
             children: [
               for (var i = 0; i < panels.length; i++) ...[
                 panels[i],
-                if (i != panels.length - 1) const SizedBox(height: 12),
+                if (i != panels.length - 1) const SizedBox(height: 16),
               ],
             ],
           );
         }
 
-        const gap = 12.0;
+        const gap = 16.0;
         final width = (constraints.maxWidth - gap) / 2;
         return Wrap(
           spacing: gap,
@@ -525,13 +525,13 @@ class _CurrentTaskCard extends StatelessWidget {
               WorkbenchTag(label: '进度 ${current.progress}%'),
             ],
           ),
-          const SizedBox(height: 9),
+          const SizedBox(height: 14),
           Text(
             current.title,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
           if (current.nextStep.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Text(
               '下一步 · ${current.nextStep}',
               style: const TextStyle(fontSize: 12.5),
@@ -609,6 +609,7 @@ class _Panel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WorkbenchCard(
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -629,7 +630,7 @@ class _Panel extends StatelessWidget {
           else
             ...children.map(
               (child) => Padding(
-                padding: const EdgeInsets.only(bottom: 9),
+                padding: const EdgeInsets.only(bottom: 11),
                 child: child,
               ),
             ),
