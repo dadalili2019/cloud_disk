@@ -153,13 +153,12 @@ class _DedupeToolPageState extends State<DedupeToolPage> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldPage(
-      header: const PageHeader(title: Text('去重与清理')),
       content: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
         children: [
           _card(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('1. 选择图片', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              const Text('1. 选择图片', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
               Row(children: [
                 FilledButton(onPressed: _running ? null : _pickImages, child: const Text('选择图片')),
@@ -170,7 +169,7 @@ class _DedupeToolPageState extends State<DedupeToolPage> {
           ),
           _card(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('2. 扫描重复', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              const Text('2. 扫描重复', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
               FilledButton(onPressed: (_imagePaths.isEmpty || _running) ? null : _scanDuplicates, child: Text(_running ? '扫描中...' : '开始扫描')),
               const SizedBox(height: 10),
@@ -182,7 +181,7 @@ class _DedupeToolPageState extends State<DedupeToolPage> {
           if (_duplicateGroups.isNotEmpty)
             _card(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('3. 重复分组（${_duplicateGroups.length} 组）', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                Text('3. 重复分组（${_duplicateGroups.length} 组）', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 10),
                 SizedBox(
                   height: 320,
