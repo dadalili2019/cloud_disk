@@ -130,14 +130,19 @@ class _NavigationPageState extends State<NavigationPage> {
     if (location == '/' || location.startsWith('/home')) return 0;
     if (location.startsWith('/workspace')) return 1;
     if (location.startsWith('/knowledge')) return 2;
-    if (location.startsWith('/todo')) return 4;
-    if (location.startsWith('/speedtestpage')) return 5;
-    if (location.startsWith('/jsonformat')) return 6;
-    if (location.startsWith('/comparison')) return 7;
-    if (location.startsWith('/imagetools')) return 9;
-    if (location.startsWith('/ragknowledge')) return 11;
-    if (location.startsWith('/game')) return 12;
-    if (location.startsWith('/setting')) return 14;
+    if (location.startsWith('/todo')) return 3;
+    if (location.startsWith('/speedtestpage')) return 4;
+    if (location.startsWith('/jsonformat')) return 5;
+    if (location.startsWith('/comparison')) return 6;
+    if (location.startsWith('/imagetools/convert')) return 8;
+    if (location.startsWith('/imagetools/watermark')) return 9;
+    if (location.startsWith('/imagetools/crop')) return 10;
+    if (location.startsWith('/imagetools/filter')) return 11;
+    if (location.startsWith('/imagetools/collage')) return 12;
+    if (location.startsWith('/imagetools/dedupe')) return 13;
+    if (location.startsWith('/ragknowledge')) return 14;
+    if (location.startsWith('/game')) return 15;
+    if (location.startsWith('/setting')) return 16;
     return null;
   }
 
@@ -408,7 +413,7 @@ class _NavigationPageState extends State<NavigationPage> {
               _topAction(
                 palette: palette,
                 icon: FluentIcons.chat_bot,
-                tooltip: 'Workbench AI',
+                tooltip: 'AI 助手',
                 active: _aiOpen,
                 accent: accent,
                 onPressed: () => setState(() => _aiOpen = !_aiOpen),
