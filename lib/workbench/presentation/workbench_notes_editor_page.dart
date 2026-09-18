@@ -270,7 +270,6 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
               child: const Text('新建笔记'),
             ),
           ],
-          headerGap: 8,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -284,7 +283,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 13, 14, 11),
+                      padding: const EdgeInsets.fromLTRB(16, 15, 16, 13),
                       child: Row(
                         children: [
                           const Expanded(
@@ -347,7 +346,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                           ),
                         )
                       : Padding(
-                          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
