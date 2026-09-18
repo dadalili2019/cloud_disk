@@ -99,7 +99,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
                     TextBox(controller: techStack, placeholder: '技术栈，例如 Flutter · Dart · SQLite'),
                     const SizedBox(height: 10),
                     TextBox(controller: notes, placeholder: '说明（可选）', maxLines: 4),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 24),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Checkbox(
@@ -257,7 +257,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
                     ),
                     const SizedBox(height: 10),
                     TextBox(controller: notes, placeholder: '说明（可选）', maxLines: 3),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 24),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Checkbox(
@@ -392,7 +392,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
                     ),
                     const SizedBox(height: 10),
                     TextBox(controller: notes, placeholder: '说明（可选）', maxLines: 3),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 24),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Checkbox(
@@ -490,9 +490,6 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
   Widget build(BuildContext context) {
     return WorkbenchSectionPage(
       title: '开发',
-      actions: [
-        Button(onPressed: _refresh, child: const Text('刷新')),
-      ],
       child: FutureBuilder<DeveloperContextModel>(
         future: _context,
         builder: (context, snapshot) {
@@ -504,14 +501,14 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
           }
           final data = snapshot.data!;
           return ListView(
-            padding: const EdgeInsets.fromLTRB(0, 0, 6, 12),
+            padding: const EdgeInsets.fromLTRB(0, 4, 6, 24),
             children: [
               _projectsSection(data),
-              const SizedBox(height: 18),
+              const SizedBox(height: 24),
               _commandsSection(data),
-              const SizedBox(height: 18),
+              const SizedBox(height: 24),
               _snippetsSection(data),
-              const SizedBox(height: 18),
+              const SizedBox(height: 24),
               _resourcesSection(data.devResources),
             ],
           );
@@ -526,18 +523,28 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
       children: [
         WorkbenchSectionHeader(
           title: '项目',
-          trailing: FilledButton(
-            onPressed: () => _editProject(),
-            child: const Text('新建项目'),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Button(
+                onPressed: _refresh,
+                child: const Text('刷新'),
+              ),
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: () => _editProject(),
+                child: const Text('新建项目'),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         if (data.projects.isEmpty)
           _emptyCard('暂无项目')
         else
           ...data.projects.map(
             (project) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 12),
               child: _projectCard(project),
             ),
           ),
@@ -548,7 +555,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
   Widget _projectCard(DeveloperProjectModel project) {
     final theme = FluentTheme.of(context);
     return WorkbenchCard(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -618,13 +625,13 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
             child: const Text('新建命令'),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         if (data.commands.isEmpty)
           _emptyCard('暂无常用命令')
         else
           ...data.commands.map(
             (command) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 12),
               child: _commandCard(command, data.projects),
             ),
           ),
@@ -638,7 +645,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
   ) {
     final palette = ThemeScope.of(context).palette;
     return WorkbenchCard(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -713,13 +720,13 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
             child: const Text('新建片段'),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         if (data.snippets.isEmpty)
           _emptyCard('暂无代码片段')
         else
           ...data.snippets.map(
             (snippet) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 12),
               child: _snippetCard(snippet, data.projects),
             ),
           ),
@@ -733,7 +740,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
   ) {
     final palette = ThemeScope.of(context).palette;
     return WorkbenchCard(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -787,19 +794,19 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const WorkbenchSectionHeader(title: '开发资源'),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         if (resources.isEmpty)
           _emptyCard('暂无开发资源')
         else
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 12,
+            runSpacing: 12,
             children: resources
                 .map(
                   (resource) => SizedBox(
                     width: 330,
                     child: WorkbenchCard(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(16),
                       child: Row(
                         children: [
                           const Icon(FluentIcons.link, size: 12),
@@ -847,13 +854,13 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
 
   Widget _emptyCard(String text) {
     final theme = FluentTheme.of(context);
-    return WorkbenchCard(
-      padding: const EdgeInsets.all(18),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(2, 10, 2, 14),
       child: Text(
         text,
         style: TextStyle(
           fontSize: 11,
-          color: theme.typography.body?.color?.withValues(alpha: 0.52),
+          color: theme.typography.body?.color?.withValues(alpha: 0.48),
         ),
       ),
     );
