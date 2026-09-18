@@ -1,56 +1,140 @@
-# cloud_disk
+# Personal Workbench
 
-自用小工具合集 ~.~
-将来会集成例如:天气显示小组件、日历、提醒待办项等等。。。。
+Personal Workbench 是一个 Windows Desktop 优先、本地优先（Local-first）的个人工作上下文系统。
 
-## Getting Started
+它的目标不是做一个普通 Todo App，而是让用户在重新进入工作时，能够快速恢复：
 
-This project is a starting point for a Flutter application.
+- 当前在做什么；
+- 下一步是什么；
+- 当前阻塞是什么；
+- 相关笔记、问题、资源和决策在哪里；
+- 最近发生了什么；
+- 哪些经验已经沉淀成可复用知识。
 
-A few resources to get you started if this is your first Flutter project:
+仓库名称仍保留为 cloud_disk，但当前主产品名称统一为 **Personal Workbench**。
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## 当前状态
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+当前主干版本已经完成 Personal Workbench v1.4 的 Desktop UI 与核心功能整合。
 
-## 目前已完成功能介绍
+已具备：
 
-- 获取局域网内共享目录中的内容(目前只支持windows系统)
+- Global Shell / Home / Continue / Quick Capture
+- Workspace / Current Task
+- Markdown Notes
+- Issue / Resource / Decision
+- Developer Context
+- Time / Focus
+- Knowledge Library / Knowledge Distill
+- FTS5 + LIKE fallback 全局搜索
+- Global AI / Context Builder / Conversation History
+- Settings
+- Manual / Auto / Safety Backup
+- Portable Export
+- Restore staging + next-start apply
+- JSON / Text Compare / Speed Test / Image Tools / RAG / Game
 
-PS：需要提前设置好windows电脑之间的网络共享，并且暂不支持加密访问。
+Windows Release Build 已验证可生成：
 
-1. 可以通过指定共享目录读取目录下所有的文件和文件夹
-2. 支持TXT文件双击打开和编译保存。
-3. 支持png&jpg&jpeg文件双击预览。
-4. 刷新当前目录的内容。
-5. 返回顶级目录的按钮。
-6. 通过文件名搜索文件所在位置。
-7. 支持目录下对文件的排序规则。
-8. 支持不同的网络共享目录地址的切换访问(需要填写对应的目录访问路径)。
-9. 可以添加待办事项，与主页面的待办事项展示关联。
+~~~text
+build/windows/x64/runner/Release/cloud_disk.exe
+~~~
 
-- 欢迎页面
+## 技术栈
 
-1. 天气显示
-2. 日历显示
-3. 待办事项展示
-4. gif图片展示
+- Flutter 3.47.4 stable（当前 Windows 验证基线）
+- fluent_ui
+- go_router
+- Drift + SQLite
+- SQLite FTS5
+- Markdown 文件存储
+- SharedPreferences
+- OpenAI-compatible HTTP Provider
+- Windows Desktop
 
-- 贪吃蛇小游戏
-- 文字比对功能
-- 网络测速功能
-- json格式化功能
-- 设置主题颜色、字体
+## 快速运行
 
+~~~powershell
+flutter pub get
+flutter run -d windows
+~~~
 
-## 目前项目中遇到的待解决的问题
+静态检查：
 
-- 共享网络目录功能中，操作上传或者新增文件夹或者文件，存在Access Denied的问题。(目前还未找到问题发生的原因)
-- 首页中 天气展示需要调用API，每天调用次数是1000次，需要考虑是否首次调用就将数据存储起来。减少调用次数，发生浪费的现象。(已解决)
-- 项目启动较慢，后期需要考虑懒加载解决。
+~~~powershell
+flutter analyze
+~~~
 
+Windows Release 构建：
 
+~~~powershell
+flutter build windows
+~~~
 
+## 文档
+
+项目当前文档入口：
+
+[docs/personal_workbench/README.md](docs/personal_workbench/README.md)
+
+建议先阅读：
+
+1. [产品与边界](docs/personal_workbench/01_PRODUCT_SCOPE.md)
+2. [功能说明](docs/personal_workbench/02_FUNCTIONAL_SPEC.md)
+3. [UI / UX 设计](docs/personal_workbench/03_UI_UX_DESIGN.md)
+4. [技术架构](docs/personal_workbench/04_TECHNICAL_ARCHITECTURE.md)
+5. [数据与存储](docs/personal_workbench/05_DATA_AND_STORAGE.md)
+6. [AI / Search / Knowledge](docs/personal_workbench/06_AI_SEARCH_KNOWLEDGE.md)
+7. [实施与运行](docs/personal_workbench/07_IMPLEMENTATION_OPERATIONS.md)
+8. [测试与验收](docs/personal_workbench/08_TESTING_ACCEPTANCE.md)
+9. [状态与 Roadmap](docs/personal_workbench/09_STATUS_ROADMAP.md)
+
+## 核心数据原则
+
+Personal Workbench 采用本地优先架构：
+
+~~~text
+SQLite
+  ├─ 业务元数据
+  ├─ 关系
+  ├─ Activity
+  ├─ AI Conversation
+  └─ Search Index
+
+Markdown
+  ├─ Workspace Notes
+  └─ Knowledge
+
+SharedPreferences
+  └─ 非敏感设置
+~~~
+
+API Key 不写入 Workbench SQLite，也不进入 Backup / Export。
+
+## 产品边界
+
+当前版本不是：
+
+- 云同步产品；
+- 多人协作平台；
+- Autonomous Coding Agent；
+- Shell / PowerShell 自动执行器；
+- Git / Docker / Test 自动执行器；
+- 完整 IDE；
+- CRDT / 实时协同系统。
+
+Developer 模块当前是 Context-aware Developer Assistant，主要负责保存和提供项目、命令、代码片段、开发资源上下文，不自动执行本地命令。
+
+## 文档维护规则
+
+以后功能变更时：
+
+- 功能行为变化：更新 02_FUNCTIONAL_SPEC.md；
+- UI / 交互变化：更新 03_UI_UX_DESIGN.md；
+- 架构或依赖变化：更新 04_TECHNICAL_ARCHITECTURE.md；
+- Schema / 文件目录变化：更新 05_DATA_AND_STORAGE.md；
+- AI / Search / Knowledge 变化：更新 06_AI_SEARCH_KNOWLEDGE.md；
+- 部署、运行、备份恢复流程变化：更新 07_IMPLEMENTATION_OPERATIONS.md；
+- 验收状态变化：更新 08_TESTING_ACCEPTANCE.md 和 09_STATUS_ROADMAP.md。
+
+历史 Phase 文档不再作为当前实现依据；历史信息通过 Git History 与 10_VERSION_HISTORY.md 追溯。
