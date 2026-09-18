@@ -222,7 +222,7 @@ class _WorkbenchIssuePageState extends State<WorkbenchIssuePage> {
           return ListView.separated(
             padding: const EdgeInsets.only(bottom: 8),
             itemCount: issues.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final issue = issues[index];
               return FutureBuilder<List<TaskModel>>(
@@ -235,7 +235,7 @@ class _WorkbenchIssuePageState extends State<WorkbenchIssuePage> {
 
                   return WorkbenchCard(
                     onTap: () => _editIssue(issue),
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
