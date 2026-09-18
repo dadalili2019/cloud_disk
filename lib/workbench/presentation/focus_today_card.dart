@@ -151,73 +151,100 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
             ? Duration.zero
             : DateTime.now().toUtc().difference(active.session.startedAt.toUtc());
 
-        return WorkbenchCard(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            WorkbenchCard(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Expanded(
-                    child: Text(
-                      '专注',
-                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  WorkbenchTag(
-                    label: '今日 ${_formatDuration(Duration(seconds: focus.totalSeconds))}',
-                    selected: active != null,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _FocusSurface(
-                child: active != null
-                    ? _ActiveFocusBlock(
-                        title: '${active.workspace?.name ?? '工作区'} · ${active.task?.title ?? '任务'}',
-                        elapsed: _formatClock(elapsed),
-                        busy: _busy,
-                        onFinish: _finish,
-                      )
-                    : _IdleFocusBlock(
-                        title: widget.primary == null
-                            ? '暂无可开始专注的当前任务'
-                            : '${widget.primary!.workspace.name} · ${widget.primary!.context.task.title}',
-                        enabled: widget.primary != null && !_busy,
-                        onStart: _start,
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          '专注',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _MetricPill(label: '工作区', value: '${data.workspaceCount}'),
-                  _MetricPill(label: '已完成', value: '${data.completedSessionCount}'),
-                  _MetricPill(label: '记录', value: '${focus.sessions.length}'),
+                      WorkbenchTag(
+                        label:
+                            '今日 ${_formatDuration(Duration(seconds: focus.totalSeconds))}',
+                        selected: active != null,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _FocusSurface(
+                    child: active != null
+                        ? _ActiveFocusBlock(
+                            title:
+                                '${active.workspace?.name ?? '工作区'} · ${active.task?.title ?? '任务'}',
+                            elapsed: _formatClock(elapsed),
+                            busy: _busy,
+                            onFinish: _finish,
+                          )
+                        : _IdleFocusBlock(
+                            title: widget.primary == null
+                                ? '暂无当前任务'
+                                : '${widget.primary!.workspace.name} · ${widget.primary!.context.task.title}',
+                            enabled: widget.primary != null && !_busy,
+                            onStart: _start,
+                          ),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      _MetricPill(label: '工作区', value: '${data.workspaceCount}'),
+                      _MetricPill(
+                        label: '已完成',
+                        value: '${data.completedSessionCount}',
+                      ),
+                      _MetricPill(label: '记录', value: '${focus.sessions.length}'),
+                    ],
+                  ),
                 ],
               ),
-              if (focus.sessions.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                const WorkbenchSectionHeader(title: '今日时间线'),
-                const SizedBox(height: 8),
-                ...focus.sessions.take(4).map(
-                  (entry) => Padding(
-                    padding: const EdgeInsets.only(bottom: 7),
-                    child: _TimelineRow(
-                      time: _timeRange(entry.session.startedAt, entry.session.endedAt),
-                      title: '${entry.workspace?.name ?? '工作区'} / ${entry.task?.title ?? '任务'}',
-                      duration: entry.session.endedAt == null
-                          ? '进行中'
-                          : _formatDuration(
-                              Duration(seconds: entry.session.durationSeconds),
-                            ),
+            ),
+            if (focus.sessions.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              WorkbenchCard(
+                padding: const EdgeInsets.all(22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const WorkbenchSectionHeader(title: '今日时间线'),
+                    const SizedBox(height: 16),
+                    ...focus.sessions.take(6).map(
+                      (entry) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _TimelineRow(
+                          time: _timeRange(
+                            entry.session.startedAt,
+                            entry.session.endedAt,
+                          ),
+                          title:
+                              '${entry.workspace?.name ?? '工作区'} / ${entry.task?.title ?? '任务'}',
+                          duration: entry.session.endedAt == null
+                              ? '进行中'
+                              : _formatDuration(
+                                  Duration(
+                                    seconds: entry.session.durationSeconds,
+                                  ),
+                                ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ],
-          ),
+          ],
         );
       },
     );
@@ -234,7 +261,7 @@ class _FocusSurface extends StatelessWidget {
     final palette = ThemeScope.of(context).palette;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
         color: palette.surfaceMuted,
         borderRadius: BorderRadius.circular(9),
@@ -376,7 +403,7 @@ class _MetricPill extends StatelessWidget {
     final theme = FluentTheme.of(context);
     final palette = ThemeScope.of(context).palette;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: palette.cardBackground.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(8),
