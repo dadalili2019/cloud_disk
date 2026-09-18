@@ -54,14 +54,11 @@ class _ComparisonPageState extends State<ComparisonPage> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldPage(
-      header: const PageHeader(title: Text('文字比对')),
       content: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("请输入要比对的两段文本（左 vs 右）："),
-            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -102,8 +99,6 @@ class _ComparisonPageState extends State<ComparisonPage> {
                   : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("比对结果（B中显示的差异）："),
-                  const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
