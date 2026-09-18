@@ -301,7 +301,7 @@ class _Topbar extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w700,
                             color: primary,
                           ),
@@ -539,7 +539,7 @@ class _Sidebar extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(compact ? 10 : 12, 14, compact ? 10 : 12, 12),
+        padding: EdgeInsets.fromLTRB(compact ? 8 : 10, 10, compact ? 8 : 10, 10),
         child: Column(
           children: [
             _NavItem(
@@ -564,7 +564,7 @@ class _Sidebar extends StatelessWidget {
               onPressed: onTime,
             ),
             if (!compact) const _SidebarSectionLabel('工作台'),
-            if (compact) const SizedBox(height: 14),
+            if (compact) const SizedBox(height: 10),
             _NavItem(
               compact: compact,
               icon: FluentIcons.library,
@@ -615,7 +615,7 @@ class _SidebarSectionLabel extends StatelessWidget {
         .withValues(alpha: 0.38);
     return Container(
       alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.fromLTRB(10, 16, 10, 7),
+      padding: const EdgeInsets.fromLTRB(10, 12, 10, 6),
       child: Text(
         label,
         style: TextStyle(
@@ -656,9 +656,9 @@ class _NavItem extends StatelessWidget {
       child: GestureDetector(
         onTap: onPressed,
         child: Container(
-          height: 38,
-          margin: const EdgeInsets.only(bottom: 4),
-          padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 10),
+          height: 36,
+          margin: const EdgeInsets.only(bottom: 3),
+          padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 8),
           decoration: BoxDecoration(
             color: active ? palette.navItemSelected : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
@@ -668,8 +668,8 @@ class _NavItem extends StatelessWidget {
               if (active)
                 Positioned(
                   left: 0,
-                  top: 8,
-                  bottom: 8,
+                  top: 7,
+                  bottom: 7,
                   child: Container(
                     width: 2,
                     decoration: BoxDecoration(
@@ -682,9 +682,15 @@ class _NavItem extends StatelessWidget {
                 mainAxisAlignment:
                     compact ? MainAxisAlignment.center : MainAxisAlignment.start,
                 children: [
-                  Icon(icon, size: 16, color: foreground),
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: Center(
+                      child: Icon(icon, size: 15.5, color: foreground),
+                    ),
+                  ),
                   if (!compact) ...[
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 9),
                     Expanded(
                       child: Text(
                         label,
