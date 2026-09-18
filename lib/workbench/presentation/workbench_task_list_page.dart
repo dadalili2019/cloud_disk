@@ -174,7 +174,7 @@ class _WorkbenchTaskListPageState extends State<WorkbenchTaskListPage> {
           return ListView.separated(
             padding: const EdgeInsets.only(bottom: 8),
             itemCount: tasks.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final task = tasks[index];
               return _TaskTile(
@@ -221,7 +221,7 @@ class _TaskTile extends StatelessWidget {
 
     return WorkbenchCard(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
