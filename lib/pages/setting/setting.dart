@@ -99,21 +99,22 @@ class _SettingPageState extends State<SettingPage> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldPage(
-      header: const PageHeader(title: Text('设置')),
-      content: _loading
-          ? const Center(child: ProgressRing())
-          : _error != null
-              ? Center(child: Text('设置加载失败：$_error'))
-              : LayoutBuilder(
+      content: Container(
+        color: ThemeScope.of(context).palette.appBackground,
+        child: _loading
+            ? const Center(child: ProgressRing())
+            : _error != null
+                ? Center(child: Text('设置加载失败：$_error'))
+                : LayoutBuilder(
                   builder: (context, constraints) {
                     final compact = constraints.maxWidth < 760;
                     return ListView(
                       controller: _scrollController,
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+                      padding: const EdgeInsets.fromLTRB(28, 22, 28, 32),
                       children: [
                         Center(
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 1080),
+                            constraints: const BoxConstraints(maxWidth: 1120),
                             child: compact
                                 ? Column(
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -130,13 +131,13 @@ class _SettingPageState extends State<SettingPage> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       SizedBox(
-                                        width: 190,
+                                        width: 184,
                                         child: _SettingsNavigation(
                                           section: _section,
                                           onChanged: _setSection,
                                         ),
                                       ),
-                                      const SizedBox(width: 14),
+                                      const SizedBox(width: 18),
                                       Expanded(child: _sectionContent()),
                                     ],
                                   ),
@@ -146,6 +147,7 @@ class _SettingPageState extends State<SettingPage> {
                     );
                   },
                 ),
+      ),
     );
   }
 
@@ -323,7 +325,7 @@ class _NotesSection extends StatelessWidget {
       children: [
         const _SectionHeading(title: '笔记'),
         _SettingsGroup(
-          title: 'Markdown Notes',
+          title: 'Markdown 笔记',
           children: [
             const _SettingRow(
               title: '存储格式',
@@ -397,7 +399,7 @@ class _ShortcutsSection extends StatelessWidget {
       children: [
         _SectionHeading(title: '快捷键'),
         _SettingsGroup(
-          title: 'Shortcuts',
+          title: '快捷键',
           children: [
             _SettingRow(
               title: '保存笔记',
@@ -408,7 +410,7 @@ class _ShortcutsSection extends StatelessWidget {
               control: _ValueBadge('Ctrl + Enter'),
             ),
             _SettingRow(
-              title: '关闭 AI Drawer',
+              title: '关闭 AI 助手',
               control: _ValueBadge('Esc'),
             ),
             _SettingRow(
@@ -418,12 +420,12 @@ class _ShortcutsSection extends StatelessWidget {
             ),
             _SettingRow(
               title: '快速记录',
-              subtitle: '当前通过 Home 的 Quick Capture 入口打开。',
+              subtitle: '当前通过首页的快速记录入口打开。'
               control: _ValueBadge('未绑定'),
             ),
             _SettingRow(
               title: '打开 AI',
-              subtitle: '当前通过顶部 AI 入口打开。',
+              subtitle: '当前通过顶部 AI 助手入口打开。'
               control: _ValueBadge('未绑定'),
             ),
           ],
@@ -449,7 +451,7 @@ class _SettingsNavigation extends StatelessWidget {
       padding: const EdgeInsets.all(7),
       decoration: BoxDecoration(
         color: palette.cardBackground,
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: palette.cardBorder),
       ),
       child: Column(
@@ -486,7 +488,7 @@ class _CompactNavigation extends StatelessWidget {
       padding: const EdgeInsets.all(7),
       decoration: BoxDecoration(
         color: palette.cardBackground,
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: palette.cardBorder),
       ),
       child: SingleChildScrollView(
@@ -548,7 +550,7 @@ class _SettingsNavigationItem extends StatelessWidget {
               size: 13,
               color: selected
                   ? theme.accentColor.normal
-                  : theme.typography.body?.color?.withOpacity(0.56),
+                  : theme.typography.body?.color?.withValues(alpha: 0.56),
             ),
             const SizedBox(width: 9),
             Text(
@@ -772,7 +774,7 @@ class _SettingsGroup extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: palette.cardBackground,
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: palette.cardBorder),
       ),
       clipBehavior: Clip.antiAlias,
@@ -787,7 +789,7 @@ class _SettingsGroup extends StatelessWidget {
                 fontSize: 9.5,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.7,
-                color: theme.typography.body?.color?.withOpacity(0.48),
+                color: theme.typography.body?.color?.withValues(alpha: 0.48),
               ),
             ),
           ),
@@ -849,7 +851,7 @@ class _SettingRow extends StatelessWidget {
                     subtitle!,
                     style: TextStyle(
                       fontSize: 9.5,
-                      color: theme.typography.body?.color?.withOpacity(0.48),
+                      color: theme.typography.body?.color?.withValues(alpha: 0.48),
                     ),
                   ),
                 ],
