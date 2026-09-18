@@ -123,8 +123,8 @@ class _LoginPageState extends State<LoginPage>
   @override
   Widget build(BuildContext context) {
     final palette = ThemeScope.of(context).palette;
-    const primary = Color(0xFFE5E8EB);
-    const secondary = Color(0xFF8F98A3);
+    const primary = Color(0xFFB2BAB2);
+    const secondary = Color(0xFF8D958E);
     final accent = ThemeScope.of(context).accent.normal;
 
     return Material(
