@@ -23,6 +23,7 @@ class _LoginPageState extends State<LoginPage>
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   bool _entering = false;
+  bool _transitioning = false;
 
   final List<String> iconPaths = [
     'assets/login/兔子.svg',
@@ -104,10 +105,18 @@ class _LoginPageState extends State<LoginPage>
     }
 
     if (!mounted) return;
+
+    setState(() => _transitioning = true);
+    await Future<void>.delayed(const Duration(milliseconds: 140));
+
     if (Platform.isWindows) {
+      appWindow.minSize = const Size(860, 640);
       appWindow.size = const Size(1280, 800);
       appWindow.alignment = Alignment.center;
+      await Future<void>.delayed(const Duration(milliseconds: 120));
     }
+
+    if (!mounted) return;
     context.go(target);
   }
 
@@ -120,8 +129,12 @@ class _LoginPageState extends State<LoginPage>
 
     return Material(
       color: palette.appBackground,
-      child: Column(
-        children: [
+      child: AnimatedOpacity(
+        opacity: _transitioning ? 0 : 1,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        child: Column(
+          children: [
           Container(
             height: 48,
             decoration: BoxDecoration(
@@ -264,6 +277,7 @@ class _LoginPageState extends State<LoginPage>
             ),
           ),
         ],
+        ),
       ),
     );
   }
