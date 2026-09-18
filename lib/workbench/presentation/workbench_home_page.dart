@@ -71,14 +71,14 @@ class _WorkbenchHomePageState extends State<WorkbenchHomePage> {
                 if (data.workspaces.isEmpty)
                   WorkbenchEmptyState(
                     title: '开始你的第一个工作区',
-                    description: '工作区用于保存任务、笔记、问题和工作上下文。',
+                    description: '',
                     actionLabel: '创建工作区',
                     onAction: () => context.go('/workspace'),
                   )
                 else if (primary == null)
                   WorkbenchEmptyState(
                     title: '当前没有正在进行的任务',
-                    description: '选择一个任务作为当前工作，之后这里会自动恢复下一步和最近上下文。',
+                    description: '',
                     actionLabel: '选择任务',
                     onAction: () => context.go('/workspace'),
                   )
@@ -191,12 +191,12 @@ class _CurrentFocusCard extends StatelessWidget {
     final palette = ThemeScope.of(context).palette;
     final secondary = theme.typography.body?.color?.withValues(alpha: 0.52);
     final nextStep =
-        task.nextStep.trim().isEmpty ? '暂未设置下一步。' : task.nextStep.trim();
+        task.nextStep.trim().isEmpty ? '暂无' : task.nextStep.trim();
     final lastContext = item.context.recentActivity.isNotEmpty
         ? item.context.recentActivity.first.summary
         : task.description.trim().isNotEmpty
             ? task.description.trim()
-            : '暂无最近上下文。';
+            : '暂无';
 
     return WorkbenchCard(
       onTap: onOpenTask,
@@ -427,7 +427,7 @@ class _TodayPanel extends StatelessWidget {
             onAction: onOpenTime,
           ),
           if (items.isEmpty)
-            const _PanelEmpty(text: '今天没有额外安排，继续当前任务即可。')
+            const _PanelEmpty(text: '暂无安排')
           else
             for (var index = 0; index < items.length; index++)
               _TodayRow(
@@ -465,7 +465,7 @@ class _RecentActivityPanel extends StatelessWidget {
             onAction: onOpenWorkspace,
           ),
           if (items.isEmpty)
-            const _PanelEmpty(text: '还没有最近动态。')
+            const _PanelEmpty(text: '暂无动态')
           else
             for (var index = 0; index < items.length; index++)
               _ActivityRow(
@@ -702,7 +702,7 @@ class _HomeError extends StatelessWidget {
       children: [
         WorkbenchEmptyState(
           title: '无法加载当前工作',
-          description: '工作数据暂时无法读取。',
+          description: '',
           actionLabel: '重试',
           onAction: onRetry,
         ),
