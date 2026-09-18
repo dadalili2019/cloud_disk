@@ -40,7 +40,8 @@ Windows Desktop V1 的封版目标：
 | Phase 5 | AI Context / Global AI / AI History | ✅ 已封版 |
 | Phase 6 | Developer Context / Project / Command / Snippet | ✅ 已封版 |
 | Phase 7 | Settings / Backup / Export / Restore | 🟡 功能实现基本完成，待最终验收 |
-| Desktop V1 UI Final Pass | 全应用 UI 统一收口 | ✅ UI.1–UI.6 已完成 |
+| Workbench Core UI Pass | Home / Workspace / Knowledge / AI / Settings | ✅ 已完成 |
+| Full App UI Implementation | Tools / Image / RAG / Game / Legacy Surfaces | 🟡 进行中 |
 | Windows Final Acceptance | Restore / Regression / Analyze | 🔴 未完成 |
 | Desktop V1 Baseline | 最终封版 | 🔴 未完成 |
 | Phase 8 | Mobile Adaptation | ⏳ 未开始 |
@@ -50,9 +51,10 @@ Windows Desktop V1 的封版目标：
 ```text
 核心功能        基本完成
 数据安全        接近完成
-整体 UI         进入系统收口
-最终验收        未完成
-Desktop V1      约 80%~85%
+Workbench UI    已完成核心链路
+全应用 UI       仍在进行
+最终验收        暂缓
+Desktop V1      先完成全部 UI 后再进入功能验收
 ```
 
 ## 3. 已完成能力
@@ -72,33 +74,49 @@ Restore Validation / Pending Restore / Restart Apply / Search Rebuild
 
 ## 4. Desktop V1 Blockers
 
-### 4.1 Desktop V1 UI Final Pass
+### 4.1 Full App UI Implementation
 
-当前最大剩余工作。过去 UI 按 Phase 分散实现，现在需要从整个产品视角统一收口。
+当前最高优先级。Workbench 核心链路已经完成第一轮统一，但并不代表全应用 UI 已完成。
 
-执行顺序：
-
-```text
-UI.1 Global Shell + Home
-UI.2 Workspace
-UI.3 Knowledge + Search
-UI.4 AI
-UI.5 Settings Final Polish
-UI.6 Windows Resize / Long Text / Empty / Loading / Error Review
-```
-
-统一检查：
+新的 UI First 顺序：
 
 ```text
-Sidebar / Header / Page Title
-Content Max Width / Page Padding / Section Spacing
-Card Radius / Border / Typography Hierarchy
-Button Placement / Helper Text Density / Form Width
-Empty / Loading / Error State
-Scrollbar / Long Text / Narrow Window / Light-Dark Theme
+UI.A Workbench Core                         ✅
+    Home / Workspace / Knowledge / AI / Settings
+
+UI.B Productivity Tools                     🟡
+    Todo / Speed Test / JSON / Text Compare
+
+UI.C Image Workbench                        🔴
+    Convert / Watermark / Crop / Filter / Collage / Dedupe
+
+UI.D RAG Knowledge                          🔴
+
+UI.E Game                                   🔴
+
+UI.F Legacy / Hidden Surfaces Review        🔴
+    File / Photo / Share / Profile / Favorites / Recent
+    Recycle / Device / Capacity / Subscribe / Password
+
+UI.G Full App Responsive + State Review     🔴
+    Resize / Long Text / Empty / Loading / Error
 ```
 
-原则：不重新设计产品、不改变已确认功能边界、不因视觉调整重写业务架构。
+统一设计基线：
+
+```text
+Compact / Low Noise
+统一 App Shell / Header / Page Title
+统一 Content Max Width / Page Padding / Section Spacing
+统一 Card Radius / Border / Typography Hierarchy
+主操作位置一致
+减少解释性文字，只保留标题 / 状态 / 关键数据 / 内容 / 操作
+Tools 统一为工作台模式，不再每页一套视觉
+Input / Output / Result / History 采用一致布局
+Empty / Loading / Error / Success 状态一致
+```
+
+原则：先完成所有用户可见 UI，再继续功能细化与最终验收。
 
 ### 4.2 Notes Unsaved Protection
 
@@ -182,12 +200,14 @@ Windows Desktop V1 封版后单独进入，预计关注 Responsive Navigation、
 ## 7. 最终执行顺序
 
 ```text
-① Desktop V1 UI Final Pass
-   ├─ Global Shell + Home
-   ├─ Workspace
-   ├─ Knowledge + Search
-   ├─ AI
-   └─ Settings Final Polish
+① Full App UI Implementation
+   ├─ Workbench Core                ✅
+   ├─ Productivity Tools
+   ├─ Image Workbench
+   ├─ RAG Knowledge
+   ├─ Game
+   ├─ Legacy / Hidden Surfaces Review
+   └─ Full App Responsive / State Review
 
 ② Notes Unsaved Protection
 ③ Restore Windows Full Verification
@@ -204,8 +224,8 @@ Windows Desktop V1 封版后单独进入，预计关注 Responsive Navigation、
 当前正式进入：
 
 ```text
-Phase 7 Final Acceptance
-P7.7 Windows Final Acceptance
+Full App UI Implementation
+UI.B Productivity Tools
 ```
 
 工作内容：
@@ -279,14 +299,21 @@ UI.6 Windows Resize / Long Text / Empty / Loading / Error Review
 当前下一步：
 
 ```text
-P7.7 Windows Final Acceptance
-1. Settings 重启持久化
-2. Manual Backup / Export / Restore 完整闭环
-3. Restore 后 Search Index 恢复
-4. AI Preview / Provider 设置回归
-5. Phase 1–6 Smoke Regression
-6. flutter analyze：确认无 Phase 7 新增 compile error
-7. 完成验收记录并准备 P7.8 Baseline Seal
+UI.B Productivity Tools
+1. Todo UI
+2. Speed Test UI
+3. JSON Formatter UI
+4. Text Compare UI
+5. 四个工具统一 Page Shell / Input / Result / Action / Empty 状态
+
+然后继续：
+UI.C Image Workbench
+UI.D RAG Knowledge
+UI.E Game
+UI.F Legacy / Hidden Surfaces Review
+UI.G Full App Responsive / State Review
+
+P7.7 Windows Final Acceptance 暂缓到全部 UI 完成之后。
 ```
 
 ## 9. 状态维护规则
