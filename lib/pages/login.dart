@@ -126,44 +126,44 @@ class _LoginPageState extends State<LoginPage>
           ),
         ),
         body: Center(
-          child: Container(
-            alignment: Alignment.center,
-            width: 400,
-            height: 400,
+          child: SizedBox(
+            width: 280,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SvgPicture.asset(
                   selectedIconPath,
-                  width: 200,
-                  height: 200,
+                  width: 128,
+                  height: 128,
+                  alignment: Alignment.center,
+                  fit: BoxFit.contain,
                 ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(
-                      const Color.fromRGBO(126, 145, 250, 1),
-                    ),
-                    shape: MaterialStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: 104,
+                  height: 40,
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                      elevation: MaterialStateProperty.all(0),
+                      backgroundColor: MaterialStateProperty.all(
+                        const Color.fromRGBO(126, 145, 250, 1),
+                      ),
+                      padding: MaterialStateProperty.all(EdgeInsets.zero),
+                      shape: MaterialStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
-                  ),
-                  onPressed: _entering ? null : _enterWorkbench,
-                  child: ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 15,
-                        horizontal: 15,
-                      ),
+                    onPressed: _entering ? null : _enterWorkbench,
+                    child: ScaleTransition(
+                      scale: _scaleAnimation,
                       child: Text(
                         _entering ? '正在进入…' : '进入',
                         style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
