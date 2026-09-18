@@ -98,8 +98,8 @@ class _NavigationPageState extends State<NavigationPage> {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
-    required ButtonState<Color?> tileColor,
-    required ButtonState<Color?> selectedTileColor,
+    required WidgetStateProperty<Color?> tileColor,
+    required WidgetStateProperty<Color?> selectedTileColor,
     bool sub = false,
   }) {
     return PaneItem(
@@ -131,12 +131,12 @@ class _NavigationPageState extends State<NavigationPage> {
   Widget build(BuildContext context) {
     final palette = ThemeScope.of(context).palette;
     final accent = FluentTheme.of(context).accentColor.normal;
-    final tileColor = ButtonState.resolveWith<Color?>((states) {
-      if (states.isPressing) return palette.navItemSelected;
-      if (states.isHovering) return palette.navItemHover;
+    final tileColor = WidgetStateProperty.resolveWith<Color?>((states) {
+      if (states.contains(WidgetState.pressed)) return palette.navItemSelected;
+      if (states.contains(WidgetState.hovered)) return palette.navItemHover;
       return Colors.transparent;
     });
-    final selectedTileColor = ButtonState.all<Color?>(palette.navItemSelected);
+    final selectedTileColor = WidgetStateProperty.all<Color?>(palette.navItemSelected);
 
     final items = <NavigationPaneItem>[
       _item(
@@ -284,7 +284,7 @@ class _NavigationPageState extends State<NavigationPage> {
                   paneBodyBuilder: (item, child) => widget.child,
                   pane: NavigationPane(
                     size: const NavigationPaneSize(openWidth: 224),
-                    displayMode: PaneDisplayMode.open,
+                    displayMode: PaneDisplayMode.expanded,
                     indicator: const StickyNavigationIndicator(
                       color: Color(0xFF8CCBA4),
                       indicatorSize: 2,
