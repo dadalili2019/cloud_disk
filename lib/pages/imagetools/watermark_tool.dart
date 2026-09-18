@@ -337,15 +337,14 @@ class _WatermarkToolPageState extends State<WatermarkToolPage> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldPage(
-      header: const PageHeader(title: Text('水印工具')),
       content: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
         children: [
           _card(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('1. 选择图片', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                const Text('1. 选择图片', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -383,7 +382,7 @@ class _WatermarkToolPageState extends State<WatermarkToolPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('2. 水印设置', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                const Text('2. 水印设置', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 10),
                 TextBox(controller: _watermarkController, placeholder: '输入水印文字', onChanged: (_) => _refreshPreview()),
                 const SizedBox(height: 8),
@@ -503,7 +502,7 @@ class _WatermarkToolPageState extends State<WatermarkToolPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('3. 导出设置', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                const Text('3. 导出设置', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -549,7 +548,7 @@ class _WatermarkToolPageState extends State<WatermarkToolPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('4. 执行', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                const Text('4. 执行', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 10),
                 Row(
                   children: [
