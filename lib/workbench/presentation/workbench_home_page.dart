@@ -1,6 +1,7 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../theme/theme_controller.dart';
 import '../application/continue_service.dart';
 import '../core/models.dart';
 import '../workbench_runtime.dart';
@@ -272,7 +273,7 @@ class _CurrentFocusCard extends StatelessWidget {
                       Row(
                         children: [
                           Icon(
-                            FluentIcons.accept,
+                            FluentIcons.check_mark,
                             size: 11,
                             color: secondary,
                           ),
