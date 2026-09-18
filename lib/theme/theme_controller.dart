@@ -42,17 +42,17 @@ class ThemePalette {
 }
 
 class ThemeController extends ChangeNotifier {
-  ThemeMode _mode = ThemeMode.light;
-  AccentColor _accent = Colors.teal.toAccentColor();
+  ThemeMode _mode = ThemeMode.dark;
+  AccentColor _accent = _limeAccent;
   String? _fontFamily;
-  String _presetId = 'default';
+  String _presetId = 'comfort_dark';
 
   ThemeMode get mode => _mode;
   AccentColor get accent => _accent;
   String? get fontFamily => _fontFamily;
   String get effectiveFontFamily => _fontFamily ?? 'Microsoft YaHei UI';
   String get presetId => _presetId;
-  ThemePalette get palette => palettes[_presetId] ?? palettes['default']!;
+  ThemePalette get palette => palettes[_presetId] ?? palettes['comfort_dark']!;
 
   set mode(ThemeMode v) {
     _mode = v;
@@ -83,22 +83,29 @@ class ThemeController extends ChangeNotifier {
 
   Future<void> load() async {
     final sp = await SharedPreferences.getInstance();
-    final modeIndex = sp.getInt('theme.mode') ?? ThemeMode.light.index;
+    final modeIndex = sp.getInt('theme.mode') ?? ThemeMode.dark.index;
     final safeModeIndex =
         modeIndex.clamp(0, ThemeMode.values.length - 1).toInt();
     _mode = ThemeMode.values[safeModeIndex];
-    _accent = _accentFromName(sp.getString('theme.accent') ?? 'teal');
+    _accent = _accentFromName(sp.getString('theme.accent') ?? 'lime');
     _fontFamily = sp.getString('theme.font');
-    _presetId = sp.getString('theme.preset') ?? 'default';
-    if (!palettes.containsKey(_presetId)) {
-      _presetId = 'default';
+    _presetId = sp.getString('theme.preset') ?? 'comfort_dark';
+    if (_presetId == 'default') {
+      _presetId = 'comfort_dark';
+      _mode = ThemeMode.dark;
+      _accent = _limeAccent;
+      await _save();
+    } else if (!palettes.containsKey(_presetId)) {
+      _presetId = 'comfort_dark';
+      _mode = ThemeMode.dark;
+      _accent = _limeAccent;
     }
     notifyListeners();
   }
 
   Future<void> reset() async {
-    _mode = ThemeMode.light;
-    _presetId = 'default';
+    _mode = ThemeMode.dark;
+    _presetId = 'comfort_dark';
     _accent = _accentFromName(palette.accentName);
     _fontFamily = null;
     await _save();
@@ -126,9 +133,29 @@ class ThemeController extends ChangeNotifier {
     'red': Colors.red.toAccentColor(),
     'gray': Colors.grey.toAccentColor(),
     'pink': _pinkAccent,
+    'lime': _limeAccent,
   };
 
   static final Map<String, ThemePalette> palettes = {
+    'comfort_dark': const ThemePalette(
+      id: 'comfort_dark',
+      label: 'Comfort Dark',
+      accentName: 'lime',
+      appBackground: Color(0xFF17191D),
+      navBackground: Color(0xFF181B1F),
+      cardBackground: Color(0xFF1D2025),
+      surfaceMuted: Color(0xFF22262C),
+      softAccent: Color(0xFF272C33),
+      successSoft: Color(0xFF273126),
+      dangerSoft: Color(0xFF352628),
+      cardBorder: Color(0xFF30353D),
+      navBorder: Color(0xFF30353D),
+      navItemHover: Color(0xFF21252A),
+      navItemSelected: Color(0xFF272C33),
+      appBarBackground: Color(0xFF17191D),
+      appBarBorder: Color(0xFF30353D),
+      shadow: Color(0xFF000000),
+    ),
     'default': const ThemePalette(
       id: 'default',
       label: '奶油薄荷',
@@ -207,6 +234,15 @@ class ThemeController extends ChangeNotifier {
     ),
   };
 
+  static final AccentColor _limeAccent =
+      AccentColor.swatch(const <String, Color>{
+    'normal': Color(0xFFD7FF6A),
+    'lighter': Color(0xFFE9FFAA),
+    'light': Color(0xFFE0FF8A),
+    'dark': Color(0xFFB7DC55),
+    'darker': Color(0xFF91B13D),
+  });
+
   static final AccentColor _pinkAccent =
       AccentColor.swatch(const <String, Color>{
     'normal': Color(0xFFE75D8D),
@@ -234,9 +270,9 @@ class ThemeController extends ChangeNotifier {
       brightness: b,
       accentColor: _accent,
       fontFamily: effectiveFontFamily,
-      scaffoldBackgroundColor: isLight ? palette.appBackground : null,
-      cardColor: isLight ? palette.cardBackground : null,
-      inactiveColor: isLight ? palette.cardBorder : null,
+      scaffoldBackgroundColor: palette.appBackground,
+      cardColor: palette.cardBackground,
+      inactiveColor: palette.cardBorder,
     );
   }
 }
