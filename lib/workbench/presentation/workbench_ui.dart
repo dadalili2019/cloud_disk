@@ -3,9 +3,9 @@ import 'package:fluent_ui/fluent_ui.dart';
 import '../../theme/theme_controller.dart';
 
 double _workbenchHorizontalPadding(double width) {
-  if (width >= 1280) return 34;
-  if (width >= 960) return 28;
-  if (width >= 720) return 24;
+  if (width >= 1280) return 40;
+  if (width >= 960) return 32;
+  if (width >= 720) return 26;
   return 16;
 }
 
@@ -17,9 +17,9 @@ class WorkbenchPage extends StatelessWidget {
     this.subtitle,
     this.actions = const [],
     this.maxWidth = 1180,
-    this.topPadding = 12,
+    this.topPadding = 18,
     this.bottomPadding = 48,
-    this.headerGap = 8,
+    this.headerGap = 14,
   });
 
   final String title;
@@ -85,9 +85,9 @@ class WorkbenchSectionPage extends StatelessWidget {
     this.subtitle,
     this.actions = const [],
     this.maxWidth = 1180,
-    this.topPadding = 12,
-    this.bottomPadding = 24,
-    this.headerGap = 8,
+    this.topPadding = 18,
+    this.bottomPadding = 32,
+    this.headerGap = 14,
   });
 
   final String title;
@@ -186,7 +186,7 @@ class WorkbenchCard extends StatelessWidget {
   const WorkbenchCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(18),
+    this.padding = const EdgeInsets.all(20),
     this.onTap,
     this.minHeight,
     this.backgroundColor,
