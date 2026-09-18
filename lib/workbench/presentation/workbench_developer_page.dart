@@ -505,14 +505,14 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
           }
           final data = snapshot.data!;
           return ListView(
-            padding: const EdgeInsets.fromLTRB(0, 0, 14, 12),
+            padding: const EdgeInsets.fromLTRB(0, 0, 6, 12),
             children: [
               _projectsSection(data),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               _commandsSection(data),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               _snippetsSection(data),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               _resourcesSection(data.devResources),
             ],
           );
@@ -549,7 +549,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
   Widget _projectCard(DeveloperProjectModel project) {
     final theme = FluentTheme.of(context);
     return WorkbenchCard(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -595,7 +595,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
               project.notes,
               style: TextStyle(
                 fontSize: 11,
-                color: theme.typography.body?.color?.withOpacity(0.60),
+                color: theme.typography.body?.color?.withValues(alpha: 0.60),
               ),
             ),
           ],
@@ -854,7 +854,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
         text,
         style: TextStyle(
           fontSize: 11,
-          color: theme.typography.body?.color?.withOpacity(0.52),
+          color: theme.typography.body?.color?.withValues(alpha: 0.52),
         ),
       ),
     );
@@ -870,7 +870,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
             label,
             style: TextStyle(
               fontSize: 10,
-              color: theme.typography.body?.color?.withOpacity(0.50),
+              color: theme.typography.body?.color?.withValues(alpha: 0.50),
             ),
           ),
         ),
