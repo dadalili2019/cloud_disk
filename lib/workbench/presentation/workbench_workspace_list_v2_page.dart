@@ -125,7 +125,6 @@ class _WorkbenchWorkspaceListPageV2State
 
         return WorkbenchPage(
           title: '工作台',
-          subtitle: '管理你的工作区，并快速回到当前项目上下文。',
           actions: [
             Button(
               onPressed: _openArchived,
@@ -153,14 +152,7 @@ class _WorkbenchWorkspaceListPageV2State
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(height: 5),
-                          Text(
-                            '创建一个工作区，开始组织任务、笔记、问题、资源与决策。',
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: theme.typography.body?.color?.withOpacity(0.56),
-                            ),
-                          ),
+
                         ],
                       ),
                     ),
@@ -178,23 +170,13 @@ class _WorkbenchWorkspaceListPageV2State
                 ),
               )
             else ...[
-              WorkbenchSectionHeader(
-                title: '活动工作区',
-                trailing: Text(
-                  '${workspaces.length} 个',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    color: theme.typography.body?.color?.withOpacity(0.48),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
+
               ...workspaces.map(
                 (workspace) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.only(bottom: 12),
                   child: WorkbenchCard(
                     onTap: () => context.go('/workspace/${workspace.id}/overview'),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(18),
                     child: Row(
                       children: [
                         Container(
