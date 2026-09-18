@@ -1,6 +1,7 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../theme/theme_controller.dart';
 import '../application/continue_service.dart';
 import 'workbench_ui.dart';
 
