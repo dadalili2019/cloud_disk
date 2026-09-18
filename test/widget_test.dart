@@ -20,7 +20,6 @@ Future<void> extractWordContent(String wordFilePath, String outputPdfPath) async
   }
 
   if (documentXml == null) {
-    print("未找到 document.xml 文件！");
     return;
   }
 
@@ -32,11 +31,6 @@ Future<void> extractWordContent(String wordFilePath, String outputPdfPath) async
   var texts = document.findAllElements('w:t');
   for (var text in texts) {
     extractedTexts.add(text.innerText);
-  }
-
-  // 打印提取的文本内容（仅供调试）
-  for (var text in extractedTexts) {
-    print(text);
   }
 
   // 生成 PDF 文件
@@ -56,7 +50,6 @@ Future<void> generatePdf(List<String> texts, String outputPath) async {
   // 保存 PDF 文件
   final outputFile = File(outputPath);
   await outputFile.writeAsBytes(await pdf.save());
-  print('PDF 文件已生成：$outputPath');
 }
 
 void main() async {
