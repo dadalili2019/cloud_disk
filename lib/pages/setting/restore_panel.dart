@@ -26,7 +26,7 @@ class _RestorePanelState extends State<RestorePanel> {
       type: FileType.custom,
       allowedExtensions: const ['zip'],
       allowMultiple: false,
-      dialogTitle: '选择 Personal Workbench Backup',
+      dialogTitle: '选择 Personal Workbench 备份文件',
     );
     final path = picked?.files.single.path;
     if (path == null || path.trim().isEmpty || !mounted) return;
@@ -56,7 +56,7 @@ class _RestorePanelState extends State<RestorePanel> {
                   '恢复会在下次启动时替换当前本地 Workbench 数据。执行前系统会自动创建 Safety Backup。',
                 ),
                 const SizedBox(height: 12),
-                Text('Backup：${file.path}'),
+                Text('备份文件：${file.path}'),
                 const SizedBox(height: 4),
                 Text('Schema：v${validation.schemaVersion}'),
                 if (validation.createdAt != null) ...[
@@ -89,7 +89,7 @@ class _RestorePanelState extends State<RestorePanel> {
       if (!mounted) return;
       setState(() {
         _success = true;
-        _status = '恢复已准备完成。Safety Backup：${result.safetyBackup.path}\n'
+        _status = '恢复已准备完成。安全备份：${result.safetyBackup.path}\n'
             '请完全关闭 Personal Workbench 后重新打开，恢复会在数据库启动前自动完成。';
       });
     } catch (error) {
@@ -120,7 +120,7 @@ class _RestorePanelState extends State<RestorePanel> {
                   ),
                   SizedBox(height: 3),
                   Text(
-                    '仅接受 Personal Workbench Backup ZIP；Portable Export 不能用于恢复。',
+                    '仅接受 Personal Workbench 备份 ZIP；可移植导出文件不能用于恢复。',
                     style: TextStyle(fontSize: 9.5),
                   ),
                 ],
