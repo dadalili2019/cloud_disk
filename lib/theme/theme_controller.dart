@@ -50,7 +50,7 @@ class ThemeController extends ChangeNotifier {
   ThemeMode get mode => _mode;
   AccentColor get accent => _accent;
   String? get fontFamily => _fontFamily;
-  String get effectiveFontFamily => _fontFamily ?? 'Segoe UI Variable';
+  String get effectiveFontFamily => _fontFamily ?? 'Segoe UI';
   String get presetId => _presetId;
   ThemePalette get palette => palettes[_presetId] ?? palettes['comfort_dark']!;
 
@@ -105,6 +105,14 @@ class ThemeController extends ChangeNotifier {
       await _save();
     }
 
+    final fontMigrated =
+        sp.getBool('theme.workbench_v1_4_font_v2_migrated') ?? false;
+    if (!fontMigrated) {
+      _fontFamily = 'Segoe UI';
+      await _save();
+      await sp.setBool('theme.workbench_v1_4_font_v2_migrated', true);
+    }
+
     notifyListeners();
   }
 
@@ -112,7 +120,7 @@ class ThemeController extends ChangeNotifier {
     _mode = ThemeMode.dark;
     _presetId = 'comfort_dark';
     _accent = _accentFromName(palette.accentName);
-    _fontFamily = null;
+    _fontFamily = 'Segoe UI';
     await _save();
     notifyListeners();
   }
