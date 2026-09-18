@@ -171,7 +171,7 @@ class _LoginPageState extends State<LoginPage>
                   'Personal Workbench',
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: primary,
                   ),
                 ),
@@ -226,7 +226,7 @@ class _LoginPageState extends State<LoginPage>
                       'Personal Workbench',
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: primary,
                       ),
                     ),
@@ -265,7 +265,7 @@ class _LoginPageState extends State<LoginPage>
                             _entering ? '正在进入…' : '进入工作台',
                             style: const TextStyle(
                               fontSize: 13,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
