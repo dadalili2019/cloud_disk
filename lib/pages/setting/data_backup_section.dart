@@ -113,7 +113,7 @@ class _DataBackupSectionState extends State<DataBackupSection> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(description, style: const TextStyle(fontSize: 11)),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -153,13 +153,11 @@ class _DataBackupSectionState extends State<DataBackupSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeading(title: '数据与备份'),
         _Group(
           title: '本地数据',
           children: [
             _Row(
               title: '本地数据目录',
-              subtitle: 'Personal Workbench 的数据库、Markdown、附件、备份和导出都位于该目录下。',
               control: SizedBox(
                 width: 390,
                 child: SelectableText(
@@ -171,18 +169,16 @@ class _DataBackupSectionState extends State<DataBackupSection> {
             ),
             _Row(
               title: '数据库',
-              subtitle: '当前 schema v6；备份时会先生成一致性 SQLite 快照。',
               control: _Badge(widget.runtime.paths.databasePath),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         _Group(
           title: '备份',
           children: [
             _Row(
               title: '自动备份',
-              subtitle: '应用启动时检查是否达到备份周期；不会依赖 Windows Task Scheduler。',
               control: SizedBox(
                 width: 230,
                 child: ComboBox<BackupFrequency>(
@@ -212,7 +208,6 @@ class _DataBackupSectionState extends State<DataBackupSection> {
             ),
             _Row(
               title: '自动备份保留数量',
-              subtitle: '仅清理自动备份；手动备份和安全备份不会自动删除。',
               control: SizedBox(
                 width: 230,
                 child: NumberBox<int>(
@@ -242,7 +237,6 @@ class _DataBackupSectionState extends State<DataBackupSection> {
             ),
             _Row(
               title: '立即备份',
-              subtitle: '包含 workbench.db 一致性快照、工作区 Markdown、知识、附件与非敏感设置。',
               control: FilledButton(
                 onPressed: _backupRunning || _exportRunning ? null : _createBackup,
                 child: Text(_backupRunning ? '备份中…' : '创建备份'),
@@ -250,13 +244,12 @@ class _DataBackupSectionState extends State<DataBackupSection> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         _Group(
           title: '导出',
           children: [
             _Row(
               title: '导出附件',
-              subtitle: '关闭后，可移植导出只包含结构化 JSON 与 Markdown。',
               control: ToggleSwitch(
                 checked: settings.includeAttachmentsInExport,
                 onChanged: (value) => _update(
@@ -266,12 +259,10 @@ class _DataBackupSectionState extends State<DataBackupSection> {
             ),
             const _Row(
               title: '导出位置',
-              subtitle: '点击“导出”后，通过 Windows“另存为”窗口选择保存目录和文件名。',
               control: _Badge('每次导出时选择'),
             ),
             _Row(
               title: '导出全部数据',
-              subtitle: '生成可移植 ZIP：业务数据 JSON + 笔记 / 知识 Markdown；该文件不用于恢复。',
               control: Button(
                 onPressed: _backupRunning || _exportRunning ? null : _exportAll,
                 child: Text(_exportRunning ? '导出中…' : '导出'),
@@ -279,7 +270,7 @@ class _DataBackupSectionState extends State<DataBackupSection> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         _Group(
           title: '恢复',
           children: [
@@ -290,7 +281,7 @@ class _DataBackupSectionState extends State<DataBackupSection> {
           ],
         ),
         if (_error != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           InfoBar(
             title: const Text('数据操作失败'),
             content: Text(_error!),
@@ -299,7 +290,7 @@ class _DataBackupSectionState extends State<DataBackupSection> {
           ),
         ],
         if (_success != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           InfoBar(
             title: const Text('数据操作完成'),
             content: SelectableText(_success!),
@@ -309,7 +300,7 @@ class _DataBackupSectionState extends State<DataBackupSection> {
         ],
         const SizedBox(height: 4),
         Text(
-          '备份和导出不包含 API Key、会话 Key 或其他敏感信息。',
+          '备份与导出不包含 API Key。',
           style: TextStyle(
             fontSize: 9.5,
             color: FluentTheme.of(context).typography.body?.color?.withValues(alpha: 0.5),
@@ -358,7 +349,7 @@ class _Group extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(13, 11, 13, 10),
+            padding: const EdgeInsets.fromLTRB(16, 13, 16, 12),
             child: Text(
               title.toUpperCase(),
               style: TextStyle(
@@ -392,7 +383,7 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     final textColor = FluentTheme.of(context).typography.body?.color;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final label = Column(
