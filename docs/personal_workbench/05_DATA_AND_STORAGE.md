@@ -1,0 +1,195 @@
+# Personal Workbench 数据与存储
+
+## 1. 数据根目录
+
+运行时使用 path_provider 获取 Application Support Directory，然后创建：
+
+~~~text
+PersonalWorkbench/
+├─ data/
+│  └─ workbench.db
+├─ workspaces/
+│  └─ <workspace-slug>/
+│     ├─ notes/
+│     └─ attachments/
+├─ knowledge/
+├─ attachments/
+├─ backups/
+└─ exports/
+~~~
+
+## 2. 数据库
+
+当前：
+
+~~~text
+schemaVersion = 6
+~~~
+
+核心表：
+
+- workspaces
+- tasks
+- notes
+- entity_links
+- activity_events
+- issues
+- resources
+- decisions
+- focus_sessions
+- knowledge
+- ai_threads
+- ai_messages
+- developer_projects
+- developer_commands
+- developer_snippets
+
+FTS5 Virtual Table：
+
+- search_index
+
+## 3. Workspace
+
+workspace 状态：
+
+- active
+- archived
+
+Archive 为逻辑归档，不直接删除数据。
+
+## 4. Task
+
+一个 Workspace 只允许一个 Current Task。
+
+数据库通过部分唯一索引约束：
+
+~~~text
+workspace_id + is_current
+where is_current = 1 and archived_at is null
+~~~
+
+## 5. Markdown
+
+### Note
+
+SQLite 保存：
+
+- id
+- workspace_id
+- title
+- file_path
+- pinned
+- timestamps
+
+正文保存在：
+
+~~~text
+workspaces/<slug>/notes/*.md
+~~~
+
+### Knowledge
+
+正文保存在：
+
+~~~text
+knowledge/*.md
+~~~
+
+## 6. Entity Links
+
+统一关系表用于保存：
+
+- Note → Task
+- Knowledge → Source
+- Knowledge → Task
+- 其他跨实体关系
+
+常用 relation_type：
+
+- linked_to
+- derived_from
+- applies_to
+
+## 7. Activity Events
+
+记录重要动作，用于：
+
+- Home Recent Activity
+- Workspace Overview
+- Continue Context
+
+## 8. Search Index
+
+search_index 是派生数据。
+
+字段包含：
+
+- entity_type
+- entity_id
+- workspace_id
+- title
+- body
+
+原则：
+
+> Search Index 可以清空并从业务数据重建，因此不属于唯一数据源。
+
+## 9. Settings
+
+Workbench 非敏感设置使用 SharedPreferences：
+
+- General
+- Notes
+- AI non-secret settings
+- Backup
+
+Appearance 由 ThemeController 独立持久化。
+
+Session API Key 不写入：
+
+- SQLite
+- SharedPreferences
+- Backup
+- Export
+
+## 10. Backup
+
+Backup 应覆盖：
+
+- SQLite 一致性快照
+- Notes Markdown
+- Knowledge Markdown
+- Attachments
+- 非敏感 Settings
+- Manifest
+
+类型：
+
+- manual
+- auto
+- safety
+
+## 11. Export
+
+Export 是 Portable Data，不等价于 Backup。
+
+它面向用户读取或迁移，不承诺可以 Restore。
+
+## 12. Restore
+
+Pending Restore 存放在：
+
+~~~text
+PersonalWorkbench/.pending_restore/
+~~~
+
+只有在下一次 Runtime 初始化、数据库打开之前应用。
+
+## 13. 数据一致性原则
+
+- Markdown 写入使用 atomic strategy。
+- SQLite 使用 WAL。
+- foreign_keys = ON。
+- busy_timeout = 5000。
+- Restore 不在 DB 已打开时直接覆盖。
+- Search Index 允许重建。
