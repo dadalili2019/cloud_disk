@@ -39,7 +39,7 @@ Widget listViewWidget(
             },
             child: Container(
               decoration: BoxDecoration(
-                color: state.isHovering
+                color: state.contains(WidgetState.hovered)
                     ? const Color.fromRGBO(245, 245, 246, 1)
                     : Colors.white,
               ),
