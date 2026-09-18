@@ -251,6 +251,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
     }
 
     final theme = FluentTheme.of(context);
+    final palette = ThemeScope.of(context).palette;
     final textColor = theme.typography.body?.color;
 
     return CallbackShortcuts(
@@ -277,11 +278,9 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
               Container(
                 width: 250,
                 decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: theme.inactiveColor.withOpacity(0.14),
-                  ),
+                  color: palette.cardBackground,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: palette.cardBorder),
                 ),
                 child: Column(
                   children: [
@@ -304,7 +303,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                     ),
                     Container(
                       height: 1,
-                      color: theme.inactiveColor.withOpacity(0.10),
+                      color: palette.cardBorder.withValues(alpha: 0.9),
                     ),
                     Expanded(
                       child: _notes.isEmpty
@@ -338,7 +337,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                     color: theme.cardColor,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: theme.inactiveColor.withOpacity(0.14),
+                      color: theme.inactiveColor.withValues(alpha: 0.14),
                     ),
                   ),
                   child: _selected == null
@@ -380,7 +379,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                                                   FluentIcons.page,
                                                   size: 10,
                                                   color:
-                                                      textColor?.withOpacity(0.42),
+                                                      textColor?.withValues(alpha: 0.42),
                                                 ),
                                                 const SizedBox(width: 5),
                                                 Text(
@@ -390,7 +389,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                                                   style: TextStyle(
                                                     fontSize: 9.5,
                                                     color: textColor
-                                                        ?.withOpacity(0.46),
+                                                        ?.withValues(alpha: 0.46),
                                                   ),
                                                 ),
                                               ],
@@ -403,7 +402,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                                                     FluentIcons.link,
                                                     size: 10,
                                                     color: textColor
-                                                        ?.withOpacity(0.42),
+                                                        ?.withValues(alpha: 0.42),
                                                   ),
                                                   const SizedBox(width: 5),
                                                   Text(
@@ -411,7 +410,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                                                     style: TextStyle(
                                                       fontSize: 9.5,
                                                       color: textColor
-                                                          ?.withOpacity(0.50),
+                                                          ?.withValues(alpha: 0.50),
                                                     ),
                                                   ),
                                                 ],
@@ -526,11 +525,11 @@ class _NoteListItem extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
             decoration: BoxDecoration(
-              color: selected ? accent.withOpacity(0.08) : Colors.transparent,
+              color: selected ? accent.withValues(alpha: 0.08) : Colors.transparent,
               borderRadius: BorderRadius.circular(7),
               border: Border.all(
                 color: selected
-                    ? accent.withOpacity(0.18)
+                    ? accent.withValues(alpha: 0.18)
                     : Colors.transparent,
               ),
             ),
@@ -566,7 +565,7 @@ class _NoteListItem extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 9.5,
-                          color: textColor?.withOpacity(0.44),
+                          color: textColor?.withValues(alpha: 0.44),
                         ),
                       ),
                     ],
@@ -616,14 +615,14 @@ class _SaveState extends StatelessWidget {
             Icon(
               dirty ? FluentIcons.edit : FluentIcons.check_mark,
               size: 10,
-              color: textColor?.withOpacity(0.46),
+              color: textColor?.withValues(alpha: 0.46),
             ),
           const SizedBox(width: 5),
           Text(
             label,
             style: TextStyle(
               fontSize: 10,
-              color: textColor?.withOpacity(0.48),
+              color: textColor?.withValues(alpha: 0.48),
             ),
           ),
         ],
