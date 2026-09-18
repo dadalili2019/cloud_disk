@@ -193,49 +193,77 @@ class _WorkbenchKnowledgePageState extends State<WorkbenchKnowledgePage> {
     final searching = _searchController.text.trim().isNotEmpty;
 
     return WorkbenchPage(
-      title: '知识与搜索',
-      subtitle: '把工作过程沉淀为可复用知识，并统一搜索任务、笔记、问题、资源、决策与开发上下文。',
-      actions: [
-        Button(
-          onPressed: _distillFromWorkspace,
-          child: const Text('从工作区沉淀'),
-        ),
-        Button(
-          onPressed: _rebuilding ? null : () => _load(rebuildIndex: true),
-          child: Text(_rebuilding ? '正在重建…' : '重建索引'),
-        ),
-        FilledButton(
-          onPressed: () => _openEditor(),
-          child: const Text('新建知识'),
-        ),
-      ],
+      title: '知识',
       children: [
-        SizedBox(
-          height: 42,
-          child: TextBox(
-            controller: _searchController,
-            placeholder: '搜索知识、任务、笔记、问题、资源、决策、项目、命令、代码片段…',
-            prefix: const Padding(
-              padding: EdgeInsets.only(left: 11),
-              child: Icon(FluentIcons.search, size: 16),
-            ),
-          suffix: _searchController.text.isEmpty
-              ? null
-              : IconButton(
-                  icon: const Icon(FluentIcons.clear, size: 13),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() => _results = const []);
-                  },
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final searchBox = SizedBox(
+              height: 40,
+              child: TextBox(
+                controller: _searchController,
+                placeholder: '搜索知识、任务、笔记、问题、资源…',
+                prefix: const Padding(
+                  padding: EdgeInsets.only(left: 11),
+                  child: Icon(FluentIcons.search, size: 15),
                 ),
-            onChanged: (value) {
-              setState(() {});
-              _onSearchChanged(value);
-            },
-          ),
+                suffix: _searchController.text.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(FluentIcons.clear, size: 13),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _results = const []);
+                        },
+                      ),
+                onChanged: (value) {
+                  setState(() {});
+                  _onSearchChanged(value);
+                },
+              ),
+            );
+
+            final actions = Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.end,
+              children: [
+                Button(
+                  onPressed: _distillFromWorkspace,
+                  child: const Text('沉淀'),
+                ),
+                Button(
+                  onPressed: _rebuilding ? null : () => _load(rebuildIndex: true),
+                  child: Text(_rebuilding ? '重建中…' : '重建索引'),
+                ),
+                FilledButton(
+                  onPressed: () => _openEditor(),
+                  child: const Text('新建'),
+                ),
+              ],
+            );
+
+            if (constraints.maxWidth < 760) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  searchBox,
+                  const SizedBox(height: 14),
+                  Align(alignment: Alignment.centerRight, child: actions),
+                ],
+              );
+            }
+
+            return Row(
+              children: [
+                Expanded(child: searchBox),
+                const SizedBox(width: 12),
+                actions,
+              ],
+            );
+          },
         ),
         if (_error != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           InfoBar(
             title: const Text('操作失败'),
             content: Text('$_error'),
@@ -243,7 +271,7 @@ class _WorkbenchKnowledgePageState extends State<WorkbenchKnowledgePage> {
             isLong: true,
           ),
         ],
-        const SizedBox(height: 22),
+        const SizedBox(height: 20),
         if (_loading)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 70),
@@ -283,22 +311,24 @@ class _WorkbenchKnowledgePageState extends State<WorkbenchKnowledgePage> {
             ),
             const SizedBox(height: 18),
           ],
-          WorkbenchSectionHeader(
-            title: '知识库',
-            trailing: Text(
-              '${_knowledge.length} 条',
-              style: TextStyle(
-                fontSize: 11,
-                color: theme.typography.body?.color?.withValues(alpha: 0.50),
+          if (_categories.isEmpty) ...[
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${_knowledge.length} 条',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  color: theme.typography.body?.color?.withValues(alpha: 0.50),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 10),
+            const SizedBox(height: 10),
+          ],
           if (_knowledge.isEmpty)
             WorkbenchEmptyState(
               title: '还没有沉淀知识',
-              description: '把可复用的经验、原则、步骤和检查清单沉淀在这里。',
-              actionLabel: '新建知识',
+              description: '',
+              actionLabel: '新建',
               onAction: () => _openEditor(),
             )
           else
@@ -309,7 +339,7 @@ class _WorkbenchKnowledgePageState extends State<WorkbenchKnowledgePage> {
                     : constraints.maxWidth >= 620
                         ? 2
                         : 1;
-                const gap = 12.0;
+                const gap = 16.0;
                 final width =
                     (constraints.maxWidth - gap * (columns - 1)) / columns;
                 return Wrap(
@@ -346,7 +376,7 @@ class _KnowledgeCard extends StatelessWidget {
     final theme = FluentTheme.of(context);
     return WorkbenchCard(
       onTap: onTap,
-      minHeight: 148,
+      minHeight: 156,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -365,7 +395,7 @@ class _KnowledgeCard extends StatelessWidget {
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           if (item.summary.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 9),
             Text(
               item.summary,
               maxLines: 3,
@@ -412,14 +442,14 @@ class _SearchResults extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        WorkbenchSectionHeader(title: '搜索结果 · ${results.length}'),
+        WorkbenchSectionHeader(title: '搜索结果  ${results.length}'),
         const SizedBox(height: 10),
         ...results.map(
           (result) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 12),
             child: WorkbenchCard(
               onTap: () => onOpen(result),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
