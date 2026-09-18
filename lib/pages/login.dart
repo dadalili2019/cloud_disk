@@ -111,8 +111,9 @@ class _LoginPageState extends State<LoginPage>
 
     if (Platform.isWindows) {
       appWindow.minSize = const Size(860, 640);
-      appWindow.size = const Size(1280, 800);
+      // 先设置对齐，再让尺寸调整按新尺寸居中，避免异步调整期间读取旧尺寸。
       appWindow.alignment = Alignment.center;
+      appWindow.size = const Size(1280, 800);
       await Future<void>.delayed(const Duration(milliseconds: 120));
     }
 
