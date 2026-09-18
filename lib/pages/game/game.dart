@@ -264,60 +264,72 @@ class _GamePageState extends State<GamePage> {
         autofocus: true,
         onKeyEvent: _onKey,
         child: ScaffoldPage(
-          header: PageHeader(
-            title: const Text('贪吃蛇'),
-            commandBar: Row(
+          content: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
+            child: Column(
               children: [
-                Button(child: const Text('开始'), onPressed: _start),
-                const SizedBox(width: 8),
-                Button(child: const Text('暂停'), onPressed: _pause),
-                const SizedBox(width: 8),
-                Button(child: Text(musicOn ? '音乐：开' : '音乐：关'), onPressed: _toggleMusic),
-                const SizedBox(width: 8),
-                Button(
-                  child: const Text('重置'),
-                  onPressed: () {
-                    final wasPlaying = isPlaying;
-                    _pause();
-                    _reset();
-                    if (wasPlaying) _start();
-                    _focusNode.requestFocus();
-                  },
+                Row(
+                  children: [
+                    Text(
+                      '得分 $score',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    Button(
+                      child: Text(isPlaying ? '暂停' : '开始'),
+                      onPressed: isPlaying ? _pause : _start,
+                    ),
+                    const SizedBox(width: 8),
+                    Button(
+                      child: Text(musicOn ? '音乐开' : '音乐关'),
+                      onPressed: _toggleMusic,
+                    ),
+                    const SizedBox(width: 8),
+                    Button(
+                      child: const Text('重置'),
+                      onPressed: () {
+                        final wasPlaying = isPlaying;
+                        _pause();
+                        _reset();
+                        if (wasPlaying) _start();
+                        _focusNode.requestFocus();
+                      },
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          content: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('得分：$score', style: const TextStyle(fontSize: 18)),
-              const SizedBox(height: 10),
-              Center(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF6F8FB),
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: const [BoxShadow(blurRadius: 10, spreadRadius: -6, offset: Offset(0, 6))],
-                  ),
-                  child: GestureDetector(
-                    onTap: () => _focusNode.requestFocus(),
-                    child: SizedBox(
-                      width: columns * cellSize.toDouble(),
-                      height: rows * cellSize.toDouble(),
-                      child: CustomPaint(
-                        painter: _Painter(
-                          snake: snake,
-                          food: food,
-                          cell: cellSize.toDouble(),
-                          rows: rows,
-                          columns: columns,
+                const SizedBox(height: 18),
+                Expanded(
+                  child: Center(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF303133),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF3D4042)),
+                      ),
+                      child: GestureDetector(
+                        onTap: () => _focusNode.requestFocus(),
+                        child: SizedBox(
+                          width: columns * cellSize.toDouble(),
+                          height: rows * cellSize.toDouble(),
+                          child: CustomPaint(
+                            painter: _Painter(
+                              snake: snake,
+                              food: food,
+                              cell: cellSize.toDouble(),
+                              rows: rows,
+                              columns: columns,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -342,7 +354,7 @@ class _Painter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final grid = Paint()..color = const Color(0xFFE9EEF6)..strokeWidth = 1;
+    final grid = Paint()..color = const Color(0xFF3D4042)..strokeWidth = 1;
     for (int i = 1; i < columns; i++) {
       final x = i * cell;
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), grid);
