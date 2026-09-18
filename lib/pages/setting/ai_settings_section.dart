@@ -281,12 +281,12 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               _GroupTitle('Connection', palette: palette),
               _Divider(palette),
               _Row(
-                title: 'Base URL',
+                title: '服务地址',
                 subtitle: _mode == AIProviderMode.deepseek
                     ? 'DeepSeek 默认使用 https://api.deepseek.com。'
                     : _customProvider
-                        ? 'OpenAI-compatible API 根地址。'
-                        : '当前模式由 Provider 自己管理。',
+                        ? 'OpenAI 兼容接口的根地址。'
+                        : '当前模式由 AI Provider 自己管理。',
                 control: SizedBox(
                   width: 360,
                   child: TextBox(
@@ -300,7 +300,7 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               ),
               _Divider(palette),
               _Row(
-                title: 'Model',
+                title: '模型',
                 control: SizedBox(
                   width: 360,
                   child: TextBox(
@@ -314,8 +314,8 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               ),
               _Divider(palette),
               _Row(
-                title: 'Chat Path',
-                subtitle: '留空时按 Provider 使用默认路径。',
+                title: '请求路径',
+                subtitle: '留空时按当前 Provider 使用默认路径。',
                 control: SizedBox(
                   width: 360,
                   child: TextBox(
@@ -329,7 +329,7 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               ),
               _Divider(palette),
               _Row(
-                title: 'Timeout',
+                title: '超时时间',
                 subtitle: '允许范围 5–600 秒。',
                 control: SizedBox(
                   width: 160,
@@ -346,7 +346,7 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               _Divider(palette),
               _Row(
                 title: 'API Key',
-                subtitle: '仅保存在当前 App 会话内存；不会写入 SQLite、普通偏好、Backup 或 Export。',
+                subtitle: '仅保存在当前应用会话内存；不会写入 SQLite、普通偏好、备份或导出文件。',
                 control: SizedBox(
                   width: 360,
                   child: Row(
@@ -426,7 +426,7 @@ class _AISettingsSectionState extends State<AISettingsSection> {
                             : '未填写 Session Key 时，可回退使用环境变量中的 API Key。',
                 style: TextStyle(
                   fontSize: 9.5,
-                  color: textColor?.withOpacity(0.52),
+                  color: textColor?.withValues(alpha: 0.52),
                 ),
               ),
             ),
@@ -469,7 +469,7 @@ class _Row extends StatelessWidget {
                     subtitle!,
                     style: TextStyle(
                       fontSize: 9.5,
-                      color: textColor?.withOpacity(0.48),
+                      color: textColor?.withValues(alpha: 0.48),
                     ),
                   ),
                 ],
@@ -501,7 +501,7 @@ class _GroupTitle extends StatelessWidget {
           fontSize: 9.5,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.7,
-          color: textColor?.withOpacity(0.48),
+          color: textColor?.withValues(alpha: 0.48),
         ),
       ),
     );
