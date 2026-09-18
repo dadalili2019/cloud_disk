@@ -116,8 +116,8 @@ class _TodoPageState extends State<TodoPage> {
                           width: double.infinity, // 铺满整行
                           child: Button(
                             style: ButtonStyle(
-                              padding: ButtonState.all(const EdgeInsets.symmetric(horizontal: 10)),
-                              shape: ButtonState.all(
+                              padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 10)),
+                              shape: WidgetStateProperty.all(
                                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               ),
                             ),
