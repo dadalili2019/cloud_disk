@@ -108,7 +108,7 @@ class _WorkspaceNavigation extends StatelessWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final horizontal = constraints.maxWidth >= 1180 ? 34.0 : 28.0;
+          final horizontal = constraints.maxWidth >= 1180 ? 40.0 : 32.0;
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontal),
             child: Center(
@@ -253,7 +253,7 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
               builder: (context, constraints) {
                 final horizontal = constraints.maxWidth >= 1180 ? 34.0 : 28.0;
                 return ListView(
-                  padding: EdgeInsets.fromLTRB(horizontal, 18, horizontal, 32),
+                  padding: EdgeInsets.fromLTRB(horizontal, 22, horizontal, 36),
                   children: [
                     Center(
                       child: ConstrainedBox(
@@ -265,7 +265,7 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
                               workspaceId: workspaceId,
                               task: overview.currentTask,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 18),
                             _OverviewGrid(
                               currentTask: overview.currentTask,
                               blockers: overview.currentBlockers,
@@ -273,7 +273,7 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
                               resources: overview.linkedResources,
                               decisions: overview.linkedDecisions,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 18),
                             _Panel(
                               title: '最近动态',
                               emptyText: '暂无动态',
@@ -461,13 +461,13 @@ class _OverviewGrid extends StatelessWidget {
             children: [
               for (var i = 0; i < panels.length; i++) ...[
                 panels[i],
-                if (i != panels.length - 1) const SizedBox(height: 16),
+                if (i != panels.length - 1) const SizedBox(height: 18),
               ],
             ],
           );
         }
 
-        const gap = 16.0;
+        const gap = 18.0;
         final width = (constraints.maxWidth - gap) / 2;
         return Wrap(
           spacing: gap,
@@ -511,7 +511,7 @@ class _CurrentTaskCard extends StatelessWidget {
 
     return WorkbenchCard(
       onTap: () => context.go('/workspace/$workspaceId/tasks'),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -609,12 +609,12 @@ class _Panel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WorkbenchCard(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           WorkbenchSectionHeader(title: title),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           if (children.isEmpty)
             Text(
               emptyText,
@@ -630,7 +630,7 @@ class _Panel extends StatelessWidget {
           else
             ...children.map(
               (child) => Padding(
-                padding: const EdgeInsets.only(bottom: 11),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: child,
               ),
             ),
