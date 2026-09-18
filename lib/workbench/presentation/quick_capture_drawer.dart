@@ -49,9 +49,15 @@ class _QuickCaptureDrawerState extends State<QuickCaptureDrawer> {
       final runtime = await WorkbenchRuntime.instance;
       final items = await runtime.quickCaptureService.listTargetWorkspaces();
       if (!mounted) return;
+      final preferredId = _workspace?.id;
       setState(() {
         _workspaces = items;
-        _workspace ??= items.isEmpty ? null : items.first;
+        _workspace = items.isEmpty
+            ? null
+            : items.firstWhere(
+                (item) => item.id == preferredId,
+                orElse: () => items.first,
+              );
         _loading = false;
       });
     } catch (error) {
