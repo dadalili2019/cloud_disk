@@ -1,9 +1,6 @@
-import 'package:cloud_disk/utils/DBHelper.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:xml/xml.dart';
-import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 Future<void> extractWordContent(String wordFilePath, String outputPdfPath) async {
@@ -34,7 +31,7 @@ Future<void> extractWordContent(String wordFilePath, String outputPdfPath) async
   List<String> extractedTexts = [];
   var texts = document.findAllElements('w:t');
   for (var text in texts) {
-    extractedTexts.add(text.text);
+    extractedTexts.add(text.innerText);
   }
 
   // 打印提取的文本内容（仅供调试）
