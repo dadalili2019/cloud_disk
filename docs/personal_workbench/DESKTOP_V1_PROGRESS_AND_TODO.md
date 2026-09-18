@@ -40,7 +40,7 @@ Windows Desktop V1 的封版目标：
 | Phase 5 | AI Context / Global AI / AI History | ✅ 已封版 |
 | Phase 6 | Developer Context / Project / Command / Snippet | ✅ 已封版 |
 | Phase 7 | Settings / Backup / Export / Restore | 🟡 功能实现基本完成，待最终验收 |
-| Desktop V1 UI Final Pass | 全应用 UI 统一收口 | 🟡 UI.1–UI.5 已完成，UI.6 进行中 |
+| Desktop V1 UI Final Pass | 全应用 UI 统一收口 | ✅ UI.1–UI.6 已完成 |
 | Windows Final Acceptance | Restore / Regression / Analyze | 🔴 未完成 |
 | Desktop V1 Baseline | 最终封版 | 🔴 未完成 |
 | Phase 8 | Mobile Adaptation | ⏳ 未开始 |
@@ -204,8 +204,8 @@ Windows Desktop V1 封版后单独进入，预计关注 Responsive Navigation、
 当前正式进入：
 
 ```text
-Desktop V1 UI Final Pass
-UI.6 Windows Resize / Long Text / Empty / Loading / Error Review
+Phase 7 Final Acceptance
+P7.7 Windows Final Acceptance
 ```
 
 工作内容：
@@ -260,6 +260,15 @@ UI.5 Settings Final Polish
 - 主导航高亮修正
 - Windows 本机截图验收通过
 
+UI.6 Windows Resize / Long Text / Empty / Loading / Error Review
+- Windows 窄窗口响应式切换通过
+- AI Drawer 窄窗口布局通过
+- 长路径换行与长标题截断加固
+- Empty State 窄窗口布局加固
+- Data & Backup 设置行响应式加固
+- 未发现异常横向滚动 / 控件挤压
+- Windows 本机截图验收通过
+
 基础 UI 能力
 - WorkbenchPage / WorkbenchSectionPage 响应式水平留白
 - WorkbenchPageHeader 窄窗口 actions 堆叠
@@ -270,13 +279,14 @@ UI.5 Settings Final Polish
 当前下一步：
 
 ```text
-UI.6 Windows Resize / Long Text / Empty / Loading / Error Review
-1. 1366 / 1280 / 窄窗口布局检查
-2. 长标题 / 长路径 / 长摘要截断与换行
-3. Empty / Loading / Error 状态统一
-4. Dialog / Drawer / Form 窄窗口溢出检查
-5. Scrollbar / 双滚动区域检查
-6. Windows 本机截图验收 UI.6
+P7.7 Windows Final Acceptance
+1. Settings 重启持久化
+2. Manual Backup / Export / Restore 完整闭环
+3. Restore 后 Search Index 恢复
+4. AI Preview / Provider 设置回归
+5. Phase 1–6 Smoke Regression
+6. flutter analyze：确认无 Phase 7 新增 compile error
+7. 完成验收记录并准备 P7.8 Baseline Seal
 ```
 
 ## 9. 状态维护规则
