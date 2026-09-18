@@ -67,18 +67,6 @@ class _WorkbenchHomePageState extends State<WorkbenchHomePage> {
 
             return WorkbenchPage(
               title: '首页',
-              actions: [
-                Button(
-                  onPressed: () =>
-                      setState(() => _quickCaptureOpen = true),
-                  child: const Text('快速记录'),
-                ),
-                if (primary != null)
-                  FilledButton(
-                    onPressed: () => setState(() => _resumeOpen = true),
-                    child: const Text('继续'),
-                  ),
-              ],
               children: [
                 if (data.workspaces.isEmpty)
                   WorkbenchEmptyState(
@@ -100,6 +88,9 @@ class _WorkbenchHomePageState extends State<WorkbenchHomePage> {
                     onOpenTask: () => context.go(
                       '/workspace/${primary.workspace.id}/tasks',
                     ),
+                    onQuickCapture: () =>
+                        setState(() => _quickCaptureOpen = true),
+                    onContinue: () => setState(() => _resumeOpen = true),
                   ),
                 const SizedBox(height: 14),
                 LayoutBuilder(
@@ -183,10 +174,14 @@ class _CurrentFocusCard extends StatelessWidget {
   const _CurrentFocusCard({
     required this.item,
     required this.onOpenTask,
+    required this.onQuickCapture,
+    required this.onContinue,
   });
 
   final ContinueItem item;
   final VoidCallback onOpenTask;
+  final VoidCallback onQuickCapture;
+  final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -210,7 +205,7 @@ class _CurrentFocusCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Text(
@@ -222,9 +217,23 @@ class _CurrentFocusCard extends StatelessWidget {
                   ),
                 ),
               ),
-              WorkbenchTag(
-                label: _statusLabel(task.status),
-                selected: true,
+              Wrap(
+                spacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Button(
+                    onPressed: onQuickCapture,
+                    child: const Text('快速记录'),
+                  ),
+                  FilledButton(
+                    onPressed: onContinue,
+                    child: const Text('继续'),
+                  ),
+                  WorkbenchTag(
+                    label: _statusLabel(task.status),
+                    selected: true,
+                  ),
+                ],
               ),
             ],
           ),
