@@ -42,11 +42,11 @@ class ResumeContextDrawer extends StatelessWidget {
         ? activity.first.summary
         : task.description.trim().isNotEmpty
             ? task.description.trim()
-            : '暂无最近上下文。';
+            : '暂无';
     final secondary = theme.typography.body?.color?.withValues(alpha: 0.56);
 
     return Container(
-      width: 620,
+      width: 560,
       decoration: BoxDecoration(
         color: palette.appBackground,
         border: Border(left: BorderSide(color: palette.cardBorder)),
@@ -61,7 +61,7 @@ class ResumeContextDrawer extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            height: 58,
+            height: 54,
             padding: const EdgeInsets.symmetric(horizontal: 18),
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: palette.cardBorder)),
@@ -71,7 +71,7 @@ class ResumeContextDrawer extends StatelessWidget {
                 const Expanded(
                   child: Text(
                     '继续工作',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                 ),
                 IconButton(
@@ -99,8 +99,8 @@ class ResumeContextDrawer extends StatelessWidget {
                           Text(
                             task.title,
                             style: const TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -116,7 +116,7 @@ class ResumeContextDrawer extends StatelessWidget {
                 WorkbenchInfoBlock(
                   label: '下一步',
                   value: task.nextStep.trim().isEmpty
-                      ? '暂未设置下一步。'
+                      ? '暂无'
                       : task.nextStep.trim(),
                   emphasized: true,
                 ),
@@ -161,7 +161,7 @@ class ResumeContextDrawer extends StatelessWidget {
                   _ContextRow(
                     icon: FluentIcons.warning,
                     title: blockers.first.title,
-                    subtitle: '问题 · 正在排查',
+                    subtitle: '问题',
                   ),
                 if (item.context.resources.isNotEmpty)
                   _ContextRow(
@@ -193,7 +193,7 @@ class ResumeContextDrawer extends StatelessWidget {
                     onClose();
                     context.go(target);
                   },
-                  child: const Text('开始继续'),
+                  child: const Text('继续'),
                 ),
               ],
             ),
