@@ -212,11 +212,11 @@ class _WorkbenchIssuePageState extends State<WorkbenchIssuePage> {
 
           final issues = snapshot.data ?? const <IssueModel>[];
           if (issues.isEmpty) {
-            return Center(
-              child: FilledButton(
-                onPressed: _createIssue,
-                child: const Text('新建第一个问题'),
-              ),
+            return WorkbenchEmptyState(
+              title: '当前没有问题',
+              description: '把阻塞、影响、假设和下一步调查记录在这里。',
+              actionLabel: '新建问题',
+              onAction: _createIssue,
             );
           }
 
@@ -265,7 +265,7 @@ class _WorkbenchIssuePageState extends State<WorkbenchIssuePage> {
                           '关联任务 · $linkedTaskText',
                           style: TextStyle(
                             fontSize: 10.5,
-                            color: theme.typography.body?.color?.withOpacity(0.52),
+                            color: theme.typography.body?.color?.withValues(alpha: 0.52),
                           ),
                         ),
                         if (issue.impact.isNotEmpty) ...[
@@ -422,13 +422,13 @@ class _IssueEditDrawerState extends State<_IssueEditDrawer> {
         decoration: BoxDecoration(
           color: theme.scaffoldBackgroundColor,
           border: Border(
-            left: BorderSide(color: theme.inactiveColor.withOpacity(0.16)),
+            left: BorderSide(color: theme.inactiveColor.withValues(alpha: 0.16)),
           ),
           boxShadow: [
             BoxShadow(
               blurRadius: 18,
               spreadRadius: 1,
-              color: Colors.black.withOpacity(0.10),
+              color: Colors.black.withValues(alpha: 0.10),
             ),
           ],
         ),
@@ -452,7 +452,7 @@ class _IssueEditDrawerState extends State<_IssueEditDrawer> {
                   ],
                 ),
               ),
-              Container(height: 1, color: theme.inactiveColor.withOpacity(0.12)),
+              Container(height: 1, color: theme.inactiveColor.withValues(alpha: 0.12)),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(22, 20, 22, 24),
@@ -533,7 +533,7 @@ class _IssueEditDrawerState extends State<_IssueEditDrawer> {
                           '暂未关联任务',
                           style: TextStyle(
                             fontSize: 12,
-                            color: theme.typography.body?.color?.withOpacity(0.55),
+                            color: theme.typography.body?.color?.withValues(alpha: 0.55),
                           ),
                         );
                       },
@@ -563,7 +563,7 @@ class _IssueEditDrawerState extends State<_IssueEditDrawer> {
                 padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
                 decoration: BoxDecoration(
                   border: Border(
-                    top: BorderSide(color: theme.inactiveColor.withOpacity(0.12)),
+                    top: BorderSide(color: theme.inactiveColor.withValues(alpha: 0.12)),
                   ),
                 ),
                 child: Row(
@@ -609,7 +609,7 @@ class _IssueBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: FluentTheme.of(context).inactiveColor.withOpacity(0.10),
+        color: FluentTheme.of(context).inactiveColor.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(text, style: const TextStyle(fontSize: 10)),
