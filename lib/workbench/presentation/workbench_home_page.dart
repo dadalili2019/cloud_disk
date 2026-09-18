@@ -233,7 +233,7 @@ class _CurrentFocusCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 21,
                         height: 1.2,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 5),
