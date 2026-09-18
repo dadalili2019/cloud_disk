@@ -17,9 +17,9 @@ class WorkbenchPage extends StatelessWidget {
     this.subtitle,
     this.actions = const [],
     this.maxWidth = 1180,
-    this.topPadding = 20,
+    this.topPadding = 12,
     this.bottomPadding = 48,
-    this.headerGap = 14,
+    this.headerGap = 8,
   });
 
   final String title;
@@ -85,9 +85,9 @@ class WorkbenchSectionPage extends StatelessWidget {
     this.subtitle,
     this.actions = const [],
     this.maxWidth = 1180,
-    this.topPadding = 20,
+    this.topPadding = 12,
     this.bottomPadding = 24,
-    this.headerGap = 16,
+    this.headerGap = 8,
   });
 
   final String title;
@@ -171,9 +171,12 @@ class WorkbenchPageHeader extends StatelessWidget {
     return Semantics(
       header: true,
       label: title,
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: actionBlock,
+      child: SizedBox(
+        height: 32,
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: actionBlock,
+        ),
       ),
     );
   }
