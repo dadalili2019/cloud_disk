@@ -663,7 +663,7 @@ class _AppearanceSection extends StatelessWidget {
                             .map(
                               (name) => ComboBoxItem<String>(
                                 value: name,
-                                child: Text(name),
+                                child: Text(_accentLabel(name)),
                               ),
                             )
                             .toList(growable: false),
@@ -954,4 +954,25 @@ IconData _sectionIcon(_SettingsSection section) {
     _SettingsSection.data => FluentIcons.database,
     _SettingsSection.shortcuts => FluentIcons.keyboard_classic,
   };
+}
+
+String _accentLabel(String value) {
+  switch (value.toLowerCase()) {
+    case 'green':
+      return '绿色';
+    case 'blue':
+      return '蓝色';
+    case 'purple':
+      return '紫色';
+    case 'orange':
+      return '橙色';
+    case 'red':
+      return '红色';
+    case 'teal':
+      return '青绿色';
+    case 'pink':
+      return '粉色';
+    default:
+      return value;
+  }
 }
