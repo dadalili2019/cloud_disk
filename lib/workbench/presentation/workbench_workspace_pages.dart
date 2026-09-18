@@ -750,7 +750,7 @@ class _TaskCard extends StatelessWidget {
                 color: FluentTheme.of(context)
                     .accentColor
                     .normal
-                    .withOpacity(0.10),
+                    .withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
