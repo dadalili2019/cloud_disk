@@ -349,6 +349,62 @@ class WorkbenchInfoBlock extends StatelessWidget {
   }
 }
 
+class WorkbenchEmptyState extends StatelessWidget {
+  const WorkbenchEmptyState({
+    super.key,
+    required this.title,
+    required this.description,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  final String title;
+  final String description;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FluentTheme.of(context);
+    return WorkbenchCard(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    height: 1.4,
+                    color: theme.typography.body?.color?.withValues(alpha: 0.52),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          FilledButton(
+            onPressed: onAction,
+            child: Text(actionLabel),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class WorkbenchTag extends StatelessWidget {
   const WorkbenchTag({
     super.key,
