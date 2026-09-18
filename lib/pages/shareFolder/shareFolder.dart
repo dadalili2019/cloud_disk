@@ -566,9 +566,9 @@ class _ShareFolderState extends State<ShareFolder> {
                   size: 16,
                 ),
                 style: ButtonStyle(
-                    backgroundColor: ButtonState.all(Colors.blue),
-                    foregroundColor: ButtonState.all(Colors.white),
-                    shape: ButtonState.all(RoundedRectangleBorder(
+                    backgroundColor: WidgetStateProperty.all(Colors.blue),
+                    foregroundColor: WidgetStateProperty.all(Colors.white),
+                    shape: WidgetStateProperty.all(RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15)))),
                 onPressed: null),
           ),
