@@ -187,10 +187,10 @@ class _FilePageState extends State<FilePage> {
               onPressed: () {}, //必须配置 配置以后才可以监听到state状态
               builder: (context, state) {
                 // print(state);
-                // print(state.isHovering);
+                // print(state.contains(WidgetState.hovered));
                 return Container(
                   decoration: BoxDecoration(
-                      color: state.isHovering
+                      color: state.contains(WidgetState.hovered)
                           ? const Color.fromRGBO(245, 245, 246, 1)
                           : Colors.white),
                   padding: const EdgeInsets.all(6.0),
@@ -326,9 +326,9 @@ class _FilePageState extends State<FilePage> {
                   size: 16,
                 ),
                 style: ButtonStyle(
-                    backgroundColor: ButtonState.all(Colors.blue),
-                    foregroundColor: ButtonState.all(Colors.white),
-                    shape: ButtonState.all(RoundedRectangleBorder(
+                    backgroundColor: WidgetStateProperty.all(Colors.blue),
+                    foregroundColor: WidgetStateProperty.all(Colors.white),
+                    shape: WidgetStateProperty.all(RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15)))),
                 onPressed: null),
           ),
@@ -474,7 +474,7 @@ class _FilePageState extends State<FilePage> {
             builder: (context, state) {
               return Container(
                 decoration: BoxDecoration(
-                  color: state.isHovering
+                  color: state.contains(WidgetState.hovered)
                       ? const Color.fromRGBO(245, 245, 246, 1)
                       : Colors.white,
                 ),
