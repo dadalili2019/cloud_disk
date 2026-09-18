@@ -17,9 +17,9 @@ class WorkbenchPage extends StatelessWidget {
     this.subtitle,
     this.actions = const [],
     this.maxWidth = 1180,
-    this.topPadding = 24,
+    this.topPadding = 20,
     this.bottomPadding = 48,
-    this.headerGap = 20,
+    this.headerGap = 14,
   });
 
   final String title;
@@ -157,34 +157,16 @@ class WorkbenchPageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FluentTheme.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final stackActions = actions.isNotEmpty && constraints.maxWidth < 560;
-        final titleBlock = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: compact ? 20 : 26,
-                height: 1.14,
-                fontWeight: FontWeight.w600,
-                letterSpacing: compact ? 0 : -0.1,
-              ),
-            ),
-            if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
-              SizedBox(height: compact ? 4 : 6),
-              Text(
-                subtitle!,
-                style: TextStyle(
-                  fontSize: compact ? 10.5 : 11.5,
-                  height: 1.45,
-                  color: theme.typography.body?.color?.withValues(alpha: 0.74),
-                ),
-              ),
-            ],
-          ],
+        final titleBlock = Text(
+          title,
+          style: TextStyle(
+            fontSize: compact ? 19 : 24,
+            height: 1.12,
+            fontWeight: FontWeight.w600,
+          ),
         );
 
         final actionBlock = Wrap(
@@ -316,10 +298,12 @@ class WorkbenchInfoBlock extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 13),
       decoration: BoxDecoration(
-        color: emphasized ? palette.softAccent : palette.surfaceMuted,
+        color: palette.surfaceMuted,
         borderRadius: BorderRadius.circular(9),
         border: Border.all(
-          color: palette.cardBorder.withValues(alpha: 0.78),
+          color: emphasized
+              ? accent.withValues(alpha: 0.38)
+              : palette.cardBorder.withValues(alpha: 0.78),
         ),
       ),
       child: Column(
