@@ -155,7 +155,7 @@ class _DataBackupSectionState extends State<DataBackupSection> {
       children: [
         const _SectionHeading(title: '数据与备份'),
         _Group(
-          title: 'Local Data',
+          title: '本地数据',
           children: [
             _Row(
               title: '本地数据目录',
@@ -171,14 +171,14 @@ class _DataBackupSectionState extends State<DataBackupSection> {
             ),
             _Row(
               title: '数据库',
-              subtitle: '当前 schema v6；Backup 会先生成一致性 SQLite 快照。',
+              subtitle: '当前 schema v6；备份时会先生成一致性 SQLite 快照。',
               control: _Badge(widget.runtime.paths.databasePath),
             ),
           ],
         ),
         const SizedBox(height: 12),
         _Group(
-          title: 'Backup',
+          title: '备份',
           children: [
             _Row(
               title: '自动备份',
@@ -212,7 +212,7 @@ class _DataBackupSectionState extends State<DataBackupSection> {
             ),
             _Row(
               title: '自动备份保留数量',
-              subtitle: '仅清理 Auto Backup；Manual / Safety Backup 不会自动删除。',
+              subtitle: '仅清理自动备份；手动备份和安全备份不会自动删除。',
               control: SizedBox(
                 width: 230,
                 child: NumberBox<int>(
@@ -242,7 +242,7 @@ class _DataBackupSectionState extends State<DataBackupSection> {
             ),
             _Row(
               title: '立即备份',
-              subtitle: '包含 workbench.db 一致性快照、Workspace Markdown、Knowledge、Attachments 与非敏感设置。',
+              subtitle: '包含 workbench.db 一致性快照、工作区 Markdown、知识、附件与非敏感设置。',
               control: FilledButton(
                 onPressed: _backupRunning || _exportRunning ? null : _createBackup,
                 child: Text(_backupRunning ? '备份中…' : '创建备份'),
@@ -252,11 +252,11 @@ class _DataBackupSectionState extends State<DataBackupSection> {
         ),
         const SizedBox(height: 12),
         _Group(
-          title: 'Export',
+          title: '导出',
           children: [
             _Row(
               title: '导出附件',
-              subtitle: '关闭后 Portable Export 只导出结构化 JSON 与 Markdown。',
+              subtitle: '关闭后，可移植导出只包含结构化 JSON 与 Markdown。',
               control: ToggleSwitch(
                 checked: settings.includeAttachmentsInExport,
                 onChanged: (value) => _update(
@@ -271,7 +271,7 @@ class _DataBackupSectionState extends State<DataBackupSection> {
             ),
             _Row(
               title: '导出全部数据',
-              subtitle: '生成 Portable ZIP：业务表 JSON + Notes / Knowledge Markdown；Export 不用于 Restore。',
+              subtitle: '生成可移植 ZIP：业务数据 JSON + 笔记 / 知识 Markdown；该文件不用于恢复。',
               control: Button(
                 onPressed: _backupRunning || _exportRunning ? null : _exportAll,
                 child: Text(_exportRunning ? '导出中…' : '导出'),
@@ -281,7 +281,7 @@ class _DataBackupSectionState extends State<DataBackupSection> {
         ),
         const SizedBox(height: 12),
         _Group(
-          title: 'Restore',
+          title: '恢复',
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
@@ -309,10 +309,10 @@ class _DataBackupSectionState extends State<DataBackupSection> {
         ],
         const SizedBox(height: 4),
         Text(
-          'Backup / Export 不包含 API Key、Session Key 或其他 Secret。',
+          '备份和导出不包含 API Key、会话 Key 或其他敏感信息。',
           style: TextStyle(
             fontSize: 9.5,
-            color: FluentTheme.of(context).typography.body?.color?.withOpacity(0.5),
+            color: FluentTheme.of(context).typography.body?.color?.withValues(alpha: 0.5),
           ),
         ),
       ],
@@ -350,7 +350,7 @@ class _Group extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: palette.cardBackground,
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: palette.cardBorder),
       ),
       clipBehavior: Clip.antiAlias,
@@ -365,7 +365,7 @@ class _Group extends StatelessWidget {
                 fontSize: 9.5,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.7,
-                color: textColor?.withOpacity(0.48),
+                color: textColor?.withValues(alpha: 0.48),
               ),
             ),
           ),
@@ -414,7 +414,7 @@ class _Row extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 9.5,
                       height: 1.35,
-                      color: textColor?.withOpacity(0.48),
+                      color: textColor?.withValues(alpha: 0.48),
                     ),
                   ),
                 ],
