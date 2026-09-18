@@ -164,11 +164,11 @@ class _WorkbenchTaskListPageState extends State<WorkbenchTaskListPage> {
 
           final tasks = snapshot.data ?? const <TaskModel>[];
           if (tasks.isEmpty) {
-            return Center(
-              child: FilledButton(
-                onPressed: _createTask,
-                child: const Text('新建第一个任务'),
-              ),
+            return WorkbenchEmptyState(
+              title: '还没有任务',
+              description: '先创建一个任务，明确当前要做什么以及下一步。',
+              actionLabel: '新建任务',
+              onAction: _createTask,
             );
           }
 
@@ -234,7 +234,7 @@ class _TaskTile extends StatelessWidget {
               decoration: BoxDecoration(
                 color: task.isCurrent
                     ? accent
-                    : theme.inactiveColor.withOpacity(0.45),
+                    : theme.inactiveColor.withValues(alpha: 0.45),
                 shape: BoxShape.circle,
               ),
             ),
@@ -271,7 +271,7 @@ class _TaskTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 11.5,
-                      color: theme.typography.body?.color?.withOpacity(0.62),
+                      color: theme.typography.body?.color?.withValues(alpha: 0.62),
                     ),
                   ),
                 ],
@@ -280,16 +280,9 @@ class _TaskTile extends StatelessWidget {
           ),
           const SizedBox(width: 14),
           if (task.isCurrent)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                '当前任务',
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: accent,
-                ),
-              ),
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: WorkbenchTag(label: '当前任务', selected: true),
             )
           else
             Button(
@@ -403,13 +396,13 @@ class _TaskEditDrawerState extends State<_TaskEditDrawer> {
         decoration: BoxDecoration(
           color: theme.scaffoldBackgroundColor,
           border: Border(
-            left: BorderSide(color: theme.inactiveColor.withOpacity(0.16)),
+            left: BorderSide(color: theme.inactiveColor.withValues(alpha: 0.16)),
           ),
           boxShadow: [
             BoxShadow(
               blurRadius: 18,
               spreadRadius: 1,
-              color: Colors.black.withOpacity(0.10),
+              color: Colors.black.withValues(alpha: 0.10),
             ),
           ],
         ),
@@ -438,7 +431,7 @@ class _TaskEditDrawerState extends State<_TaskEditDrawer> {
               ),
               Container(
                 height: 1,
-                color: theme.inactiveColor.withOpacity(0.12),
+                color: theme.inactiveColor.withValues(alpha: 0.12),
               ),
               Expanded(
                 child: ListView(
@@ -479,7 +472,7 @@ class _TaskEditDrawerState extends State<_TaskEditDrawer> {
                           '${_progress.round()}%',
                           style: TextStyle(
                             fontSize: 12,
-                            color: theme.typography.body?.color?.withOpacity(0.62),
+                            color: theme.typography.body?.color?.withValues(alpha: 0.62),
                           ),
                         ),
                       ],
@@ -511,7 +504,7 @@ class _TaskEditDrawerState extends State<_TaskEditDrawer> {
                           vertical: 10,
                         ),
                         decoration: BoxDecoration(
-                          color: theme.accentColor.normal.withOpacity(0.07),
+                          color: theme.accentColor.normal.withValues(alpha: 0.07),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Row(
@@ -549,7 +542,7 @@ class _TaskEditDrawerState extends State<_TaskEditDrawer> {
                 decoration: BoxDecoration(
                   border: Border(
                     top: BorderSide(
-                      color: theme.inactiveColor.withOpacity(0.12),
+                      color: theme.inactiveColor.withValues(alpha: 0.12),
                     ),
                   ),
                 ),
