@@ -180,7 +180,7 @@ class WorkbenchPageHeader extends StatelessWidget {
                 style: TextStyle(
                   fontSize: compact ? 10.5 : 11.5,
                   height: 1.45,
-                  color: theme.typography.body?.color?.withValues(alpha: 0.56),
+                  color: theme.typography.body?.color?.withValues(alpha: 0.74),
                 ),
               ),
             ],
@@ -333,7 +333,7 @@ class WorkbenchInfoBlock extends StatelessWidget {
               letterSpacing: 0.55,
               color: emphasized
                   ? accent
-                  : theme.typography.body?.color?.withValues(alpha: 0.46),
+                  : theme.typography.body?.color?.withValues(alpha: 0.66),
             ),
           ),
           const SizedBox(height: 6),
@@ -386,7 +386,7 @@ class WorkbenchEmptyState extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10.5,
                   height: 1.4,
-                  color: theme.typography.body?.color?.withValues(alpha: 0.52),
+                  color: theme.typography.body?.color?.withValues(alpha: 0.70),
                 ),
               ),
             ],
@@ -454,7 +454,7 @@ class WorkbenchTag extends StatelessWidget {
           fontSize: 10.5,
           color: selected
               ? theme.accentColor.normal
-              : theme.typography.body?.color?.withValues(alpha: 0.68),
+              : theme.typography.body?.color?.withValues(alpha: 0.82),
         ),
       ),
     );
