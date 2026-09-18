@@ -29,6 +29,7 @@ import '../pages/subscribe.dart';
 import '../pages/todo.dart';
 import '../workbench/presentation/workbench_decision_page.dart';
 import '../workbench/presentation/workbench_developer_page.dart';
+import '../workbench/presentation/workbench_developer_landing_page.dart';
 import '../workbench/presentation/workbench_home_page.dart';
 import '../workbench/presentation/workbench_issue_page.dart';
 import '../workbench/presentation/workbench_knowledge_page.dart';
@@ -36,6 +37,8 @@ import '../workbench/presentation/workbench_notes_editor_page.dart';
 import '../workbench/presentation/workbench_phase2_pages.dart';
 import '../workbench/presentation/workbench_resource_page.dart';
 import '../workbench/presentation/workbench_task_list_page.dart';
+import '../workbench/presentation/workbench_time_page.dart';
+import '../workbench/presentation/workbench_tools_page.dart';
 import '../workbench/presentation/workbench_workspace_list_v2_page.dart';
 
 class DeferredWidget extends StatelessWidget {
@@ -65,6 +68,9 @@ final router = GoRouter(
         GoRoute(name: 'home', path: '/home', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchHomePage())),
         GoRoute(name: 'workbenchWorkspace', path: '/workspace', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchWorkspaceListPageV2())),
         GoRoute(name: 'workbenchKnowledge', path: '/knowledge', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchKnowledgePage())),
+        GoRoute(name: 'workbenchTime', path: '/time', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchTimePage())),
+        GoRoute(name: 'workbenchDeveloperLanding', path: '/developer', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchDeveloperLandingPage())),
+        GoRoute(name: 'workbenchTools', path: '/tools', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchToolsPage())),
         GoRoute(
           name: 'workbenchOverview', path: '/workspace/:workspaceId/overview',
           pageBuilder: (context, state) {
