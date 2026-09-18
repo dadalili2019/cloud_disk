@@ -549,14 +549,14 @@ class _KnowledgeEditorDialogState extends State<_KnowledgeEditorDialog> {
   Widget build(BuildContext context) {
     return ContentDialog(
       title: Text(widget.existing == null ? '新建知识' : '编辑知识'),
-      constraints: const BoxConstraints(maxWidth: 700, maxHeight: 760),
+      constraints: const BoxConstraints(maxWidth: 680, maxHeight: 740),
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.sources.isNotEmpty) ...[
               const Text(
-                'Source Context',
+                '来源上下文',
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 7),
@@ -585,26 +585,26 @@ class _KnowledgeEditorDialogState extends State<_KnowledgeEditorDialog> {
               placeholder: '例如 Engineering / AI / Workflow',
             ),
             const SizedBox(height: 12),
-            const Text('Summary', style: TextStyle(fontSize: 11)),
+            const Text('摘要', style: TextStyle(fontSize: 11)),
             const SizedBox(height: 5),
             TextBox(
               controller: _summary,
               minLines: 2,
               maxLines: 4,
-              placeholder: '这条知识说明了什么？',
+              placeholder: '用一句话概括这条知识。',
             ),
             const SizedBox(height: 12),
-            const Text('Use When', style: TextStyle(fontSize: 11)),
+            const Text('适用场景', style: TextStyle(fontSize: 11)),
             const SizedBox(height: 5),
             TextBox(
               controller: _useWhen,
               minLines: 2,
               maxLines: 4,
-              placeholder: '什么情况下值得复用它？',
+              placeholder: '什么情况下适合复用这条知识？',
             ),
             const SizedBox(height: 12),
             const Text(
-              'Reusable Pattern / Markdown',
+              '可复用内容 / Markdown',
               style: TextStyle(fontSize: 11),
             ),
             const SizedBox(height: 5),
