@@ -490,7 +490,6 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
   Widget build(BuildContext context) {
     return WorkbenchSectionPage(
       title: '开发',
-      subtitle: '集中维护项目位置、常用命令、代码片段和开发资源。',
       actions: [
         Button(onPressed: _refresh, child: const Text('刷新')),
       ],
@@ -508,7 +507,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
             padding: const EdgeInsets.fromLTRB(0, 0, 6, 12),
             children: [
               _projectsSection(data),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               _commandsSection(data),
               const SizedBox(height: 16),
               _snippetsSection(data),
@@ -534,7 +533,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
         ),
         const SizedBox(height: 10),
         if (data.projects.isEmpty)
-          _emptyCard('还没有开发项目，先记录项目目录、仓库和技术栈。')
+          _emptyCard('暂无项目')
         else
           ...data.projects.map(
             (project) => Padding(
@@ -621,7 +620,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
         ),
         const SizedBox(height: 10),
         if (data.commands.isEmpty)
-          _emptyCard('暂无常用命令。这里适合保存启动、构建、测试、数据库和 Docker 命令。')
+          _emptyCard('暂无常用命令')
         else
           ...data.commands.map(
             (command) => Padding(
@@ -716,7 +715,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
         ),
         const SizedBox(height: 10),
         if (data.snippets.isEmpty)
-          _emptyCard('暂无代码片段。可以保存 SQL、Dart、Shell 等重复使用的片段。')
+          _emptyCard('暂无代码片段')
         else
           ...data.snippets.map(
             (snippet) => Padding(
@@ -790,7 +789,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
         const WorkbenchSectionHeader(title: '开发资源'),
         const SizedBox(height: 10),
         if (resources.isEmpty)
-          _emptyCard('暂无开发资源。可在“资源”页维护 Repository、文档、服务地址等。')
+          _emptyCard('暂无开发资源')
         else
           Wrap(
             spacing: 8,
