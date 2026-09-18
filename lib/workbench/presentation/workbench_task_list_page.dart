@@ -346,17 +346,6 @@ class _TaskEditDrawerState extends State<_TaskEditDrawer> {
     }
   }
 
-  String _statusText(String value) {
-    switch (value) {
-      case 'doing':
-        return '进行中';
-      case 'done':
-        return '已完成';
-      default:
-        return '待办';
-    }
-  }
-
   Future<void> _save() async {
     if (_saving) return;
     setState(() {
