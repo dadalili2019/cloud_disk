@@ -99,7 +99,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
                     TextBox(controller: techStack, placeholder: '技术栈，例如 Flutter · Dart · SQLite'),
                     const SizedBox(height: 10),
                     TextBox(controller: notes, placeholder: '说明（可选）', maxLines: 4),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 18),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Checkbox(
@@ -257,7 +257,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
                     ),
                     const SizedBox(height: 10),
                     TextBox(controller: notes, placeholder: '说明（可选）', maxLines: 3),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 18),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Checkbox(
@@ -392,7 +392,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
                     ),
                     const SizedBox(height: 10),
                     TextBox(controller: notes, placeholder: '说明（可选）', maxLines: 3),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 18),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Checkbox(
@@ -507,11 +507,11 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
             padding: const EdgeInsets.fromLTRB(0, 0, 6, 12),
             children: [
               _projectsSection(data),
-              const SizedBox(height: 12),
+              const SizedBox(height: 18),
               _commandsSection(data),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               _snippetsSection(data),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               _resourcesSection(data.devResources),
             ],
           );
