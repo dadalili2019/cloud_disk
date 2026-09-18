@@ -1,6 +1,10 @@
 # Personal Workbench — Windows Desktop V1 Progress & Todo
 
 > 本文是 Personal Workbench Windows Desktop V1 的总进度与剩余工作基线。后续开发、验收与封版都按本文节奏推进，避免继续零散追加功能。
+>
+> Canonical UI Reference: `personal_workbench_full_v1_4_global_ai.html`
+> Settings Detail Reference: `personal_workbench_full_v1_3_settings.html`
+> 如原型之间存在冲突，以 `v1_4_global_ai` 为准。
 
 ## 1. 产品目标
 
