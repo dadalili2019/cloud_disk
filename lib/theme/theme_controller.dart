@@ -90,16 +90,21 @@ class ThemeController extends ChangeNotifier {
     _accent = _accentFromName(sp.getString('theme.accent') ?? 'lime');
     _fontFamily = sp.getString('theme.font');
     _presetId = sp.getString('theme.preset') ?? 'comfort_dark';
-    if (_presetId == 'default') {
+
+    final migrated = sp.getBool('theme.workbench_v1_4_migrated') ?? false;
+    if (!migrated) {
       _presetId = 'comfort_dark';
       _mode = ThemeMode.dark;
       _accent = _limeAccent;
       await _save();
+      await sp.setBool('theme.workbench_v1_4_migrated', true);
     } else if (!palettes.containsKey(_presetId)) {
       _presetId = 'comfort_dark';
       _mode = ThemeMode.dark;
       _accent = _limeAccent;
+      await _save();
     }
+
     notifyListeners();
   }
 
