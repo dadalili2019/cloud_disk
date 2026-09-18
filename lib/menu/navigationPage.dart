@@ -20,7 +20,6 @@ class NavigationPage extends StatefulWidget {
 }
 
 class _NavigationPageState extends State<NavigationPage> {
-  int topIndex = 0;
   bool _aiOpen = false;
   bool _contextLoading = true;
   ContinueItem? _currentWork;
@@ -127,10 +126,26 @@ class _NavigationPageState extends State<NavigationPage> {
     router.go('/workspace/${current.workspace.id}/overview');
   }
 
+  int? _selectedIndexForLocation(String location) {
+    if (location == '/' || location.startsWith('/home')) return 0;
+    if (location.startsWith('/workspace')) return 1;
+    if (location.startsWith('/knowledge')) return 2;
+    if (location.startsWith('/todo')) return 4;
+    if (location.startsWith('/speedtestpage')) return 5;
+    if (location.startsWith('/jsonformat')) return 6;
+    if (location.startsWith('/comparison')) return 7;
+    if (location.startsWith('/imagetools')) return 9;
+    if (location.startsWith('/ragknowledge')) return 11;
+    if (location.startsWith('/game')) return 12;
+    if (location.startsWith('/setting')) return 14;
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final palette = ThemeScope.of(context).palette;
     final accent = FluentTheme.of(context).accentColor.normal;
+    final selectedIndex = _selectedIndexForLocation(router.location);
     final tileColor = WidgetStateProperty.resolveWith<Color?>((states) {
       if (states.contains(WidgetState.pressed)) return palette.navItemSelected;
       if (states.contains(WidgetState.hovered)) return palette.navItemHover;
@@ -285,12 +300,13 @@ class _NavigationPageState extends State<NavigationPage> {
                   pane: NavigationPane(
                     size: const NavigationPaneSize(openWidth: 224),
                     displayMode: PaneDisplayMode.expanded,
-                    indicator: const StickyNavigationIndicator(
-                      color: Color(0xFF8CCBA4),
+                    toggleable: false,
+                    toggleButton: null,
+                    indicator: StickyNavigationIndicator(
+                      color: accent,
                       indicatorSize: 2,
                     ),
-                    selected: topIndex,
-                    onChanged: (index) => setState(() => topIndex = index),
+                    selected: selectedIndex,
                     items: items,
                   ),
                 ),
