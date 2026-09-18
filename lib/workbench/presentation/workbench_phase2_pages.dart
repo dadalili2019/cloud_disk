@@ -103,7 +103,7 @@ class _WorkspaceNavigation extends StatelessWidget {
       decoration: BoxDecoration(
         color: palette.appBackground,
         border: Border(
-          bottom: BorderSide(color: palette.cardBorder.withOpacity(0.68)),
+          bottom: BorderSide(color: palette.cardBorder.withValues(alpha: 0.68)),
         ),
       ),
       child: LayoutBuilder(
@@ -204,7 +204,7 @@ class _WorkspaceTab extends StatelessWidget {
               color: selected ? palette.navItemSelected : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               border: selected
-                  ? Border.all(color: palette.cardBorder.withOpacity(0.86))
+                  ? Border.all(color: palette.cardBorder.withValues(alpha: 0.86))
                   : null,
             ),
             child: Text(
@@ -214,7 +214,7 @@ class _WorkspaceTab extends StatelessWidget {
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                 color: selected
                     ? theme.accentColor.normal
-                    : theme.typography.body?.color?.withOpacity(0.68),
+                    : theme.typography.body?.color?.withValues(alpha: 0.68),
               ),
             ),
           ),
@@ -443,7 +443,7 @@ class _OverviewGrid extends StatelessWidget {
                               .typography
                               .body
                               ?.color
-                              ?.withOpacity(0.58),
+                              ?.withValues(alpha: 0.58),
                         ),
                       ),
                     ),
@@ -580,7 +580,7 @@ class _BlockerPanel extends StatelessWidget {
                                 .typography
                                 .body
                                 ?.color
-                                ?.withOpacity(0.55),
+                                ?.withValues(alpha: 0.55),
                           ),
                         ),
                       ],
@@ -624,7 +624,7 @@ class _Panel extends StatelessWidget {
                     .typography
                     .body
                     ?.color
-                    ?.withOpacity(0.45),
+                    ?.withValues(alpha: 0.45),
               ),
             )
           else
