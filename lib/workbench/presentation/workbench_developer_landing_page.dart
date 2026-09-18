@@ -84,7 +84,7 @@ class _WorkbenchDeveloperLandingPageState
               padding: const EdgeInsets.all(18),
               child: Row(
                 children: [
-                  const Icon(FluentIcons.code, size: 20),
+                  const Icon(FluentIcons.link, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
