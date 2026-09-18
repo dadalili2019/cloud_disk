@@ -40,7 +40,7 @@ Windows Desktop V1 的封版目标：
 | Phase 5 | AI Context / Global AI / AI History | ✅ 已封版 |
 | Phase 6 | Developer Context / Project / Command / Snippet | ✅ 已封版 |
 | Phase 7 | Settings / Backup / Export / Restore | 🟡 功能实现基本完成，待最终验收 |
-| Desktop V1 UI Final Pass | 全应用 UI 统一收口 | 🟡 UI.1 / UI.2 已完成，UI.3 进行中 |
+| Desktop V1 UI Final Pass | 全应用 UI 统一收口 | 🟡 UI.1 / UI.2 / UI.3 已完成，UI.4 进行中 |
 | Windows Final Acceptance | Restore / Regression / Analyze | 🔴 未完成 |
 | Desktop V1 Baseline | 最终封版 | 🔴 未完成 |
 | Phase 8 | Mobile Adaptation | ⏳ 未开始 |
@@ -81,7 +81,7 @@ Restore Validation / Pending Restore / Restart Apply / Search Rebuild
 ```text
 UI.1 Global Shell + Home
 UI.2 Workspace
-UI.3 Knowledge + Search
+UI.4 AI
 UI.4 AI
 UI.5 Settings Final Polish
 UI.6 Windows Resize / Long Text / Empty / Loading / Error Review
@@ -237,6 +237,13 @@ UI.2 Workspace
 - Developer Context 统一
 - Windows 本机截图验收通过
 
+UI.3 Knowledge + Search
+- Knowledge / Search 单页结构统一
+- 主搜索入口收口
+- 知识卡片 / 分类 / 空状态统一
+- Knowledge Editor 中文化
+- Windows 本机验收通过
+
 基础 UI 能力
 - WorkbenchPage / WorkbenchSectionPage 响应式水平留白
 - WorkbenchPageHeader 窄窗口 actions 堆叠
@@ -247,13 +254,13 @@ UI.2 Workspace
 当前下一步：
 
 ```text
-UI.3 Knowledge + Search
-1. Knowledge 列表 / 编辑区统一
-2. Search 输入区与结果层级统一
-3. Search 类型 / Workspace 过滤器统一
-4. Empty / Loading / No Result 状态统一
-5. 长文本 / 搜索结果摘要 / 高亮检查
-6. Windows 本机截图验收 UI.3
+UI.4 AI
+1. Global AI Drawer 外壳统一
+2. Scope / Anchor Controls 统一
+3. Context Preview / Manage 统一
+4. Message / Thinking / Failure 状态统一
+5. Composer / History / Add Context 统一
+6. Windows 本机截图验收 UI.4
 ```
 
 ## 9. 状态维护规则
