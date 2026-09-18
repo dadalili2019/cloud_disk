@@ -210,13 +210,15 @@ class _WorkbenchKnowledgePageState extends State<WorkbenchKnowledgePage> {
         ),
       ],
       children: [
-        TextBox(
-          controller: _searchController,
-          placeholder: '搜索知识、任务、笔记、问题、资源、决策、项目、命令、代码片段…',
-          prefix: const Padding(
-            padding: EdgeInsets.only(left: 10),
-            child: Icon(FluentIcons.search, size: 15),
-          ),
+        SizedBox(
+          height: 42,
+          child: TextBox(
+            controller: _searchController,
+            placeholder: '搜索知识、任务、笔记、问题、资源、决策、项目、命令、代码片段…',
+            prefix: const Padding(
+              padding: EdgeInsets.only(left: 11),
+              child: Icon(FluentIcons.search, size: 16),
+            ),
           suffix: _searchController.text.isEmpty
               ? null
               : IconButton(
@@ -226,10 +228,11 @@ class _WorkbenchKnowledgePageState extends State<WorkbenchKnowledgePage> {
                     setState(() => _results = const []);
                   },
                 ),
-          onChanged: (value) {
-            setState(() {});
-            _onSearchChanged(value);
-          },
+            onChanged: (value) {
+              setState(() {});
+              _onSearchChanged(value);
+            },
+          ),
         ),
         if (_error != null) ...[
           const SizedBox(height: 12),
@@ -281,18 +284,23 @@ class _WorkbenchKnowledgePageState extends State<WorkbenchKnowledgePage> {
             const SizedBox(height: 18),
           ],
           WorkbenchSectionHeader(
-            title: 'Knowledge Library',
+            title: '知识库',
             trailing: Text(
               '${_knowledge.length} 条',
               style: TextStyle(
                 fontSize: 11,
-                color: theme.typography.body?.color?.withOpacity(0.50),
+                color: theme.typography.body?.color?.withValues(alpha: 0.50),
               ),
             ),
           ),
           const SizedBox(height: 10),
           if (_knowledge.isEmpty)
-            _EmptyKnowledge(onCreate: () => _openEditor())
+            WorkbenchEmptyState(
+              title: '还没有沉淀知识',
+              description: '把可复用的经验、原则、步骤和检查清单沉淀在这里。',
+              actionLabel: '新建知识',
+              onAction: () => _openEditor(),
+            )
           else
             LayoutBuilder(
               builder: (context, constraints) {
@@ -338,7 +346,7 @@ class _KnowledgeCard extends StatelessWidget {
     final theme = FluentTheme.of(context);
     return WorkbenchCard(
       onTap: onTap,
-      minHeight: 154,
+      minHeight: 148,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -365,7 +373,7 @@ class _KnowledgeCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 height: 1.45,
-                color: theme.typography.body?.color?.withOpacity(0.65),
+                color: theme.typography.body?.color?.withValues(alpha: 0.65),
               ),
             ),
           ],
@@ -390,9 +398,15 @@ class _SearchResults extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
     if (results.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 56),
-        child: Center(child: Text('没有找到“$query”相关内容')),
+      return WorkbenchCard(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+        child: Text(
+          '没有找到“$query”相关内容',
+          style: TextStyle(
+            fontSize: 11.5,
+            color: theme.typography.body?.color?.withValues(alpha: 0.56),
+          ),
+        ),
       );
     }
     return Column(
@@ -405,7 +419,7 @@ class _SearchResults extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 8),
             child: WorkbenchCard(
               onTap: () => onOpen(result),
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -431,7 +445,7 @@ class _SearchResults extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 11,
                               height: 1.45,
-                              color: theme.typography.body?.color?.withOpacity(0.60),
+                              color: theme.typography.body?.color?.withValues(alpha: 0.60),
                             ),
                           ),
                         ],
@@ -446,27 +460,6 @@ class _SearchResults extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _EmptyKnowledge extends StatelessWidget {
-  const _EmptyKnowledge({required this.onCreate});
-
-  final VoidCallback onCreate;
-
-  @override
-  Widget build(BuildContext context) {
-    return WorkbenchCard(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 26),
-      child: Row(
-        children: [
-          const Expanded(
-            child: Text('还没有沉淀知识。先创建第一条可复用经验。'),
-          ),
-          FilledButton(onPressed: onCreate, child: const Text('新建知识')),
-        ],
-      ),
     );
   }
 }
