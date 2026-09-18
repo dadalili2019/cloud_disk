@@ -255,7 +255,7 @@ class _Topbar extends StatelessWidget {
     final theme = FluentTheme.of(context);
     final accent = theme.accentColor.normal;
     final primary = theme.typography.body?.color ?? const Color(0xFFE5E8EB);
-    final secondary = primary.withValues(alpha: 0.58);
+    final secondary = primary.withValues(alpha: 0.76);
 
     return Container(
       height: 54,
@@ -438,7 +438,7 @@ class _TopbarButton extends StatelessWidget {
         height: 32,
         child: Row(
           children: [
-            Icon(icon, size: 13, color: color.withValues(alpha: 0.68)),
+            Icon(icon, size: 13, color: color.withValues(alpha: 0.80)),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -452,7 +452,7 @@ class _TopbarButton extends StatelessWidget {
               Icon(
                 trailing,
                 size: 9,
-                color: color.withValues(alpha: 0.52),
+                color: color.withValues(alpha: 0.68),
               ),
           ],
         ),
@@ -481,7 +481,7 @@ class _IconTopbarButton extends StatelessWidget {
     final foreground = active
         ? theme.accentColor.normal
         : (theme.typography.body?.color ?? const Color(0xFFE5E8EB))
-            .withValues(alpha: 0.70);
+            .withValues(alpha: 0.82);
 
     return Semantics(
       button: true,
@@ -613,7 +613,7 @@ class _SidebarSectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = (FluentTheme.of(context).typography.body?.color ??
             const Color(0xFFE5E8EB))
-        .withValues(alpha: 0.38);
+        .withValues(alpha: 0.58);
     return Container(
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.fromLTRB(10, 12, 10, 6),
@@ -657,7 +657,7 @@ class _NavItemState extends State<_NavItem> {
     final theme = FluentTheme.of(context);
     final primary = theme.typography.body?.color ?? const Color(0xFFE5E8EB);
     final foreground =
-        widget.active ? primary : primary.withValues(alpha: 0.62);
+        widget.active ? primary : primary.withValues(alpha: 0.82);
 
     final background = widget.active
         ? palette.navItemSelected
