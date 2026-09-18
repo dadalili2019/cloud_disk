@@ -115,8 +115,21 @@ class _SettingPageState extends State<SettingPage> {
                         Center(
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 1120),
-                            child: compact
-                                ? Column(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const Text(
+                                  '设置',
+                                  style: TextStyle(
+                                    fontSize: 26,
+                                    height: 1.12,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                                const SizedBox(height: 18),
+                                if (compact)
+                                  Column(
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
                                       _CompactNavigation(
@@ -127,7 +140,8 @@ class _SettingPageState extends State<SettingPage> {
                                       _sectionContent(),
                                     ],
                                   )
-                                : Row(
+                                else
+                                  Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       SizedBox(
@@ -141,6 +155,8 @@ class _SettingPageState extends State<SettingPage> {
                                       Expanded(child: _sectionContent()),
                                     ],
                                   ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
