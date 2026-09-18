@@ -108,26 +108,26 @@ class _SettingPageState extends State<SettingPage> {
                 : LayoutBuilder(
                   builder: (context, constraints) {
                     final compact = constraints.maxWidth < 760;
+                    final horizontal = constraints.maxWidth >= 1280
+                        ? 40.0
+                        : constraints.maxWidth >= 960
+                            ? 32.0
+                            : 24.0;
                     return ListView(
                       controller: _scrollController,
-                      padding: const EdgeInsets.fromLTRB(28, 22, 28, 32),
+                      padding: EdgeInsets.fromLTRB(
+                        horizontal,
+                        18,
+                        horizontal,
+                        36,
+                      ),
                       children: [
                         Center(
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 1120),
+                            constraints: const BoxConstraints(maxWidth: 1180),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const Text(
-                                  '设置',
-                                  style: TextStyle(
-                                    fontSize: 26,
-                                    height: 1.12,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: -0.3,
-                                  ),
-                                ),
-                                const SizedBox(height: 18),
                                 if (compact)
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -136,7 +136,7 @@ class _SettingPageState extends State<SettingPage> {
                                         section: _section,
                                         onChanged: _setSection,
                                       ),
-                                      const SizedBox(height: 12),
+                                      const SizedBox(height: 16),
                                       _sectionContent(),
                                     ],
                                   )
@@ -145,13 +145,13 @@ class _SettingPageState extends State<SettingPage> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       SizedBox(
-                                        width: 184,
+                                        width: 168,
                                         child: _SettingsNavigation(
                                           section: _section,
                                           onChanged: _setSection,
                                         ),
                                       ),
-                                      const SizedBox(width: 18),
+                                      const SizedBox(width: 24),
                                       Expanded(child: _sectionContent()),
                                     ],
                                   ),
@@ -230,13 +230,11 @@ class _GeneralSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeading(title: '常规'),
         _SettingsGroup(
           title: '常规',
           children: [
             _SettingRow(
               title: '默认工作区',
-              subtitle: '启动到工作台时优先进入该工作区。',
               control: SizedBox(
                 width: 250,
                 child: ComboBox<String>(
@@ -298,7 +296,6 @@ class _GeneralSection extends StatelessWidget {
             ),
             _SettingRow(
               title: '快速记录关联当前任务',
-              subtitle: '保存为笔记时自动关联目标工作区的 Current Task。',
               control: ToggleSwitch(
                 checked: settings.quickCaptureToCurrentTask,
                 onChanged: (value) => onChanged(
@@ -308,7 +305,6 @@ class _GeneralSection extends StatelessWidget {
             ),
             _SettingRow(
               title: '恢复上次工作上下文',
-              subtitle: '下次进入应用时优先回到最近使用的 Workbench 页面。',
               control: ToggleSwitch(
                 checked: settings.restoreLastActiveContext,
                 onChanged: (value) => onChanged(
@@ -339,13 +335,11 @@ class _NotesSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeading(title: '笔记'),
         _SettingsGroup(
           title: 'Markdown 笔记',
           children: [
             const _SettingRow(
               title: '存储格式',
-              subtitle: 'Workbench 笔记正文保持为可移植 Markdown 文件。',
               control: _ValueBadge('.md'),
             ),
             _SettingRow(
@@ -379,7 +373,6 @@ class _NotesSection extends StatelessWidget {
             ),
             _SettingRow(
               title: '自动保存',
-              subtitle: '关闭后通过笔记页“保存”按钮或 Ctrl + S 保存。',
               control: ToggleSwitch(
                 checked: settings.autoSave,
                 onChanged: (value) =>
@@ -388,7 +381,6 @@ class _NotesSection extends StatelessWidget {
             ),
             _SettingRow(
               title: '笔记目录',
-              subtitle: 'V1 仅显示实际存储位置，不允许任意迁移根目录。',
               control: SizedBox(
                 width: 320,
                 child: SelectableText(
@@ -431,17 +423,14 @@ class _ShortcutsSection extends StatelessWidget {
             ),
             _SettingRow(
               title: '全局搜索',
-              subtitle: '当前通过顶部搜索入口打开。',
               control: _ValueBadge('未绑定'),
             ),
             _SettingRow(
               title: '快速记录',
-              subtitle: '当前通过首页的快速记录入口打开。',
               control: _ValueBadge('未绑定'),
             ),
             _SettingRow(
               title: '打开 AI',
-              subtitle: '当前通过顶部 AI 助手入口打开。',
               control: _ValueBadge('未绑定'),
             ),
           ],
@@ -462,28 +451,19 @@ class _SettingsNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = ThemeScope.of(context).palette;
-    return Container(
-      padding: const EdgeInsets.all(7),
-      decoration: BoxDecoration(
-        color: palette.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: palette.cardBorder),
-      ),
-      child: Column(
-        children: _SettingsSection.values
-            .map(
-              (item) => Padding(
-                padding: const EdgeInsets.only(bottom: 3),
-                child: _SettingsNavigationItem(
-                  item: item,
-                  selected: item == section,
-                  onTap: () => onChanged(item),
-                ),
+    return Column(
+      children: _SettingsSection.values
+          .map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: _SettingsNavigationItem(
+                item: item,
+                selected: item == section,
+                onTap: () => onChanged(item),
               ),
-            )
-            .toList(growable: false),
-      ),
+            ),
+          )
+          .toList(growable: false),
     );
   }
 }
@@ -606,7 +586,6 @@ class _AppearanceSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionHeading(title: '外观'),
         _SettingsGroup(
           title: '主题',
           children: [
@@ -798,7 +777,7 @@ class _SettingsGroup extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(13, 11, 13, 10),
+            padding: const EdgeInsets.fromLTRB(16, 13, 16, 12),
             child: Text(
               title.toUpperCase(),
               style: TextStyle(
@@ -846,7 +825,7 @@ class _SettingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
