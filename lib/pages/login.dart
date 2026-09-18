@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -108,6 +109,10 @@ class _LoginPageState extends State<LoginPage>
     }
 
     if (!mounted) return;
+    if (Platform.isWindows) {
+      appWindow.size = const Size(1280, 800);
+      appWindow.alignment = Alignment.center;
+    }
     context.go(target);
   }
 
