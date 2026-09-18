@@ -146,20 +146,20 @@ class ThemeController extends ChangeNotifier {
       id: 'comfort_dark',
       label: 'Comfort Dark',
       accentName: 'lime',
-      appBackground: Color(0xFF202224),
-      navBackground: Color(0xFF1E2022),
-      cardBackground: Color(0xFF26292B),
-      surfaceMuted: Color(0xFF2D3133),
-      softAccent: Color(0xFF303630),
-      successSoft: Color(0xFF2C362C),
-      dangerSoft: Color(0xFF382D2F),
-      cardBorder: Color(0xFF35393C),
-      navBorder: Color(0xFF313538),
-      navItemHover: Color(0xFF292C2F),
-      navItemSelected: Color(0xFF303438),
-      appBarBackground: Color(0xFF1E2022),
-      appBarBorder: Color(0xFF313538),
-      shadow: Color(0xFF111312),
+      appBackground: Color(0xFF2B2B2B),
+      navBackground: Color(0xFF292A2B),
+      cardBackground: Color(0xFF303133),
+      surfaceMuted: Color(0xFF353638),
+      softAccent: Color(0xFF343A33),
+      successSoft: Color(0xFF313A31),
+      dangerSoft: Color(0xFF3A3031),
+      cardBorder: Color(0xFF3D4042),
+      navBorder: Color(0xFF36393B),
+      navItemHover: Color(0xFF323436),
+      navItemSelected: Color(0xFF3A3D3F),
+      appBarBackground: Color(0xFF3C3F41),
+      appBarBorder: Color(0xFF45484A),
+      shadow: Color(0xFF151515),
     ),
     'default': const ThemePalette(
       id: 'default',
@@ -241,11 +241,11 @@ class ThemeController extends ChangeNotifier {
 
   static final AccentColor _limeAccent =
       AccentColor.swatch(const <String, Color>{
-    'normal': Color(0xFF7D9B69),
-    'lighter': Color(0xFF9EB48C),
-    'light': Color(0xFF8DA779),
-    'dark': Color(0xFF678254),
-    'darker': Color(0xFF526943),
+    'normal': Color(0xFF6A8759),
+    'lighter': Color(0xFF8FA47F),
+    'light': Color(0xFF7D986C),
+    'dark': Color(0xFF587149),
+    'darker': Color(0xFF475C3B),
   });
 
   static final AccentColor _pinkAccent =
@@ -272,13 +272,13 @@ class ThemeController extends ChangeNotifier {
   FluentThemeData buildTheme(Brightness b) {
     final isDark = b == Brightness.dark;
     final primaryText = isDark
-        ? const Color(0xFFB2BAB2)
+        ? const Color(0xFFA9B7C6)
         : const Color(0xFF333A35);
     final secondaryText = isDark
-        ? const Color(0xFF8D958E)
+        ? const Color(0xFF87919B)
         : const Color(0xFF667068);
     final tertiaryText = isDark
-        ? const Color(0xFF6F7871)
+        ? const Color(0xFF6D757D)
         : const Color(0xFF858E87);
 
     return FluentThemeData(
@@ -294,13 +294,13 @@ class ThemeController extends ChangeNotifier {
               textFillColorPrimary: primaryText,
               textFillColorSecondary: secondaryText,
               textFillColorTertiary: tertiaryText,
-              textFillColorDisabled: const Color(0xFF5E6660),
-              textOnAccentFillColorPrimary: const Color(0xFF182017),
-              textOnAccentFillColorSecondary: const Color(0xFF283126),
-              controlStrongFillColorDefault: const Color(0xFF838B84),
-              controlStrongStrokeColorDefault: const Color(0xFF838B84),
-              focusStrokeColorOuter: const Color(0xFF7D9B69),
-              dividerStrokeColorDefault: const Color(0xFF35393C),
+              textFillColorDisabled: const Color(0xFF5F666D),
+              textOnAccentFillColorPrimary: const Color(0xFF161A15),
+              textOnAccentFillColorSecondary: const Color(0xFF252B23),
+              controlStrongFillColorDefault: const Color(0xFF7C858E),
+              controlStrongStrokeColorDefault: const Color(0xFF7C858E),
+              focusStrokeColorOuter: const Color(0xFF6A8759),
+              dividerStrokeColorDefault: const Color(0xFF3D4042),
             )
           : ResourceDictionary.light(),
       scaffoldBackgroundColor: palette.appBackground,
