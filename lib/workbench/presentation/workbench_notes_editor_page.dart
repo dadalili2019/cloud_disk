@@ -264,14 +264,13 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
         autofocus: true,
         child: WorkbenchSectionPage(
           title: '笔记',
-          subtitle: '用 Markdown 记录过程信息，并与当前任务建立上下文关联。',
           actions: [
             FilledButton(
               onPressed: _createNote,
               child: const Text('新建笔记'),
             ),
           ],
-          headerGap: 14,
+          headerGap: 8,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -363,7 +362,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                                         Text(
                                           _selected!.title,
                                           style: const TextStyle(
-                                            fontSize: 17,
+                                            fontSize: 16,
                                             fontWeight: FontWeight.w700,
                                           ),
                                         ),
@@ -406,7 +405,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
                                                   ),
                                                   const SizedBox(width: 5),
                                                   Text(
-                                                    '关联任务 · ${_linkedTasks.map((task) => task.title).join('、')}',
+                                                    _linkedTasks.map((task) => task.title).join('、'),
                                                     style: TextStyle(
                                                       fontSize: 9.5,
                                                       color: textColor
