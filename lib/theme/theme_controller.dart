@@ -50,7 +50,7 @@ class ThemeController extends ChangeNotifier {
   ThemeMode get mode => _mode;
   AccentColor get accent => _accent;
   String? get fontFamily => _fontFamily;
-  String get effectiveFontFamily => _fontFamily ?? 'Segoe UI';
+  String get effectiveFontFamily => _fontFamily ?? 'Microsoft YaHei UI';
   String get presetId => _presetId;
   ThemePalette get palette => palettes[_presetId] ?? palettes['comfort_dark']!;
 
@@ -106,11 +106,11 @@ class ThemeController extends ChangeNotifier {
     }
 
     final fontMigrated =
-        sp.getBool('theme.workbench_v1_4_font_v2_migrated') ?? false;
+        sp.getBool('theme.workbench_v1_4_font_v3_migrated') ?? false;
     if (!fontMigrated) {
-      _fontFamily = 'Segoe UI';
+      _fontFamily = 'Microsoft YaHei UI';
       await _save();
-      await sp.setBool('theme.workbench_v1_4_font_v2_migrated', true);
+      await sp.setBool('theme.workbench_v1_4_font_v3_migrated', true);
     }
 
     notifyListeners();
@@ -120,7 +120,7 @@ class ThemeController extends ChangeNotifier {
     _mode = ThemeMode.dark;
     _presetId = 'comfort_dark';
     _accent = _accentFromName(palette.accentName);
-    _fontFamily = 'Segoe UI';
+    _fontFamily = 'Microsoft YaHei UI';
     await _save();
     notifyListeners();
   }
@@ -280,13 +280,13 @@ class ThemeController extends ChangeNotifier {
   FluentThemeData buildTheme(Brightness b) {
     final isDark = b == Brightness.dark;
     final primaryText = isDark
-        ? const Color(0xFFA9B7C6)
+        ? const Color(0xFFC2C9D0)
         : const Color(0xFF333A35);
     final secondaryText = isDark
-        ? const Color(0xFF87919B)
+        ? const Color(0xFF9DA6AF)
         : const Color(0xFF667068);
     final tertiaryText = isDark
-        ? const Color(0xFF6D757D)
+        ? const Color(0xFF7D8790)
         : const Color(0xFF858E87);
 
     return FluentThemeData(
@@ -302,11 +302,11 @@ class ThemeController extends ChangeNotifier {
               textFillColorPrimary: primaryText,
               textFillColorSecondary: secondaryText,
               textFillColorTertiary: tertiaryText,
-              textFillColorDisabled: const Color(0xFF5F666D),
+              textFillColorDisabled: const Color(0xFF697178),
               textOnAccentFillColorPrimary: const Color(0xFF161A15),
               textOnAccentFillColorSecondary: const Color(0xFF252B23),
-              controlStrongFillColorDefault: const Color(0xFF7C858E),
-              controlStrongStrokeColorDefault: const Color(0xFF7C858E),
+              controlStrongFillColorDefault: const Color(0xFF9098A0),
+              controlStrongStrokeColorDefault: const Color(0xFF9098A0),
               focusStrokeColorOuter: const Color(0xFF6A8759),
               dividerStrokeColorDefault: const Color(0xFF3D4042),
             )
