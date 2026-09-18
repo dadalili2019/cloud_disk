@@ -283,7 +283,7 @@ class _GeneralSection extends StatelessWidget {
                     ),
                     ComboBoxItem(
                       value: WorkbenchStartupPage.knowledge,
-                      child: Text('知识与搜索'),
+                      child: Text('知识'),
                     ),
                   ],
                   onChanged: (value) {
@@ -405,7 +405,6 @@ class _ShortcutsSection extends StatelessWidget {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SectionHeading(title: '快捷键'),
         _SettingsGroup(
           title: '快捷键',
           children: [
@@ -694,63 +693,16 @@ class _AppearanceSection extends StatelessWidget {
                 ),
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        _SettingsGroup(
-          title: '预览',
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(13),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Personal Workbench',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _SwatchBox(label: '页面', color: palette.appBackground),
-                      _SwatchBox(label: '导航', color: palette.navBackground),
-                      _SwatchBox(label: '卡片', color: palette.cardBackground),
-                      _SwatchBox(label: '边框', color: palette.cardBorder),
-                    ],
-                  ),
-                ],
+            _SettingRow(
+              title: '恢复默认',
+              control: Button(
+                onPressed: themeCtrl.reset,
+                child: const Text('恢复'),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: HyperlinkButton(
-            onPressed: themeCtrl.reset,
-            child: const Text('恢复默认外观'),
-          ),
-        ),
       ],
-    );
-  }
-}
-
-class _SectionHeading extends StatelessWidget {
-  const _SectionHeading({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(2, 2, 2, 12),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-      ),
     );
   }
 }
@@ -881,34 +833,6 @@ class _ValueBadge extends StatelessWidget {
   }
 }
 
-class _SwatchBox extends StatelessWidget {
-  const _SwatchBox({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = ThemeScope.of(context).palette;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 18,
-          height: 18,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: palette.cardBorder),
-          ),
-        ),
-        const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 10.5)),
-      ],
-    );
-  }
-}
-
 class _SettingsPageDefaults {
   static const systemFont = '__system__';
 }
@@ -951,6 +875,8 @@ String _accentLabel(String value) {
       return '青绿色';
     case 'pink':
       return '粉色';
+    case 'lime':
+      return '柔和绿';
     default:
       return value;
   }
