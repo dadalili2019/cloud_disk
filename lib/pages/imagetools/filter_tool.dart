@@ -177,13 +177,12 @@ class _FilterToolPageState extends State<FilterToolPage> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldPage(
-      header: const PageHeader(title: Text('滤镜增强')),
       content: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
         children: [
           _card(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('1. 选择图片', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              const Text('1. 选择图片', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
               Row(children: [
                 FilledButton(onPressed: _running ? null : _pickImages, child: const Text('选择图片')),
@@ -211,7 +210,7 @@ class _FilterToolPageState extends State<FilterToolPage> {
           ),
           _card(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('2. 参数', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              const Text('2. 参数', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               const Text('亮度'),
               Slider(value: _brightness, min: -1, max: 1, divisions: 20, label: _brightness.toStringAsFixed(2), onChanged: _running ? null : (v) { setState(() => _brightness = v); _refreshPreview(); }),
@@ -223,7 +222,7 @@ class _FilterToolPageState extends State<FilterToolPage> {
           ),
           _card(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('3. 导出', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              const Text('3. 导出', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Row(children: [
                 const Text('格式：'),
