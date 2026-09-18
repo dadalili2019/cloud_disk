@@ -158,13 +158,12 @@ class _CollageToolPageState extends State<CollageToolPage> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldPage(
-      header: const PageHeader(title: Text('拼图九宫格')),
       content: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
         children: [
           _card(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('1. 选择图片', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              const Text('1. 选择图片', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
               Row(children: [
                 FilledButton(onPressed: _running ? null : _pickImages, child: const Text('选择图片')),
@@ -175,7 +174,7 @@ class _CollageToolPageState extends State<CollageToolPage> {
           ),
           _card(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('2. 布局参数', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              const Text('2. 布局参数', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
               Row(children: [
                 const Text('列数：'),
@@ -235,7 +234,7 @@ class _CollageToolPageState extends State<CollageToolPage> {
           ),
           _card(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('3. 生成', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              const Text('3. 生成', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
               FilledButton(onPressed: (_pickedFiles.isEmpty || _running) ? null : _generate, child: Text(_running ? '生成中...' : '生成拼图')),
               const SizedBox(height: 10),
