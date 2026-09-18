@@ -345,7 +345,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                                 decoration: BoxDecoration(
                                   color: palette.cardBackground,
                                   border: Border.all(color: palette.cardBorder),
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Row(
                                   children: [
@@ -441,7 +441,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                   decoration: BoxDecoration(
                     color: palette.cardBackground,
                     border: Border.all(color: palette.cardBorder),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
@@ -707,7 +707,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     final theme = FluentTheme.of(context);
     final palette = ThemeScope.of(context).palette;
     final screenWidth = MediaQuery.of(context).size.width;
-    final drawerWidth = (screenWidth * 0.42).clamp(460.0, 520.0).toDouble();
+    final drawerWidth = (screenWidth * 0.40).clamp(450.0, 510.0).toDouble();
 
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
@@ -724,7 +724,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
             BoxShadow(
               blurRadius: 18,
               offset: const Offset(-4, 0),
-              color: palette.shadow.withOpacity(0.08),
+              color: palette.shadow.withValues(alpha: 0.08),
             ),
           ],
         ),
@@ -753,10 +753,10 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   }
 
   Widget _header(FluentThemeData theme, ThemePalette palette) {
-    final providerName = _runtime?.aiProvider.name ?? 'Loading Provider';
+    final providerName = _runtime?.aiProvider.name ?? '正在加载';
     final isPreview = providerName.toLowerCase().contains('preview');
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 10, 13),
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 11),
       decoration: BoxDecoration(
         color: palette.appBarBackground,
         border: Border(bottom: BorderSide(color: palette.cardBorder)),
@@ -783,8 +783,12 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Workbench AI',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  'AI 助手',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.1,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -793,13 +797,13 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 9.5,
-                    color: theme.typography.body?.color?.withOpacity(0.55),
+                    color: theme.typography.body?.color?.withValues(alpha: 0.55),
                   ),
                 ),
               ],
             ),
           ),
-          _statusBadge(isPreview ? 'Preview' : _shortProviderName(providerName), palette),
+          _statusBadge(isPreview ? '预览' : _shortProviderName(providerName), palette),
           const SizedBox(width: 4),
           if (_threads.isNotEmpty)
             Tooltip(
@@ -830,7 +834,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
 
   Widget _scopeSection(FluentThemeData theme, ThemePalette palette) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
       decoration: BoxDecoration(
         color: palette.appBackground,
         border: Border(bottom: BorderSide(color: palette.cardBorder)),
@@ -841,7 +845,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
               color: palette.cardBackground,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: palette.cardBorder),
             ),
             child: Row(
@@ -963,7 +967,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       children: [
         if (_preview != null) _contextPreview(theme, palette, _preview!),
         if (_messages.isEmpty && _preview == null && !_sending)
-          _emptyState(theme),
+          _emptyState(theme, palette),
         ..._messages.map((message) => _messageBubble(theme, palette, message)),
         if (_pendingUserMessage != null)
           _pendingUserBubble(palette, _pendingUserMessage!),
@@ -974,21 +978,37 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     );
   }
 
-  Widget _emptyState(FluentThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 54),
+  Widget _emptyState(FluentThemeData theme, ThemePalette palette) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.fromLTRB(18, 26, 18, 24),
+      decoration: BoxDecoration(
+        color: palette.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: palette.cardBorder),
+      ),
       child: Column(
         children: [
           Icon(
             FluentIcons.chat_bot,
-            size: 27,
-            color: theme.typography.body?.color?.withOpacity(0.20),
+            size: 25,
+            color: theme.accentColor.normal.withValues(alpha: 0.72),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
+          const Text(
+            '开始对话',
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 5),
           Text(
             _emptyStateText(),
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 10.5,
+              height: 1.45,
+              color: theme.typography.body?.color?.withValues(alpha: 0.56),
+            ),
           ),
         ],
       ),
@@ -1013,7 +1033,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: palette.cardBackground,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: palette.cardBorder),
       ),
       child: Column(
@@ -1032,7 +1052,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                   '${preview.included.length} 项 · ${_formatCharacters(preview.totalCharacters)}',
                   style: TextStyle(
                     fontSize: 9.5,
-                    color: theme.typography.body?.color?.withOpacity(0.50),
+                    color: theme.typography.body?.color?.withValues(alpha: 0.50),
                   ),
                 ),
                 const Spacer(),
@@ -1195,7 +1215,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
         decoration: BoxDecoration(
           color: user ? palette.navItemSelected : palette.cardBackground,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: palette.cardBorder),
         ),
         child: user
@@ -1217,7 +1237,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
         decoration: BoxDecoration(
           color: palette.navItemSelected,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: palette.cardBorder),
         ),
         child: Text(message, style: const TextStyle(fontSize: 11.5, height: 1.45)),
@@ -1233,7 +1253,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
           color: palette.cardBackground,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: palette.cardBorder),
         ),
         child: Row(
@@ -1249,7 +1269,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
               '正在思考…',
               style: TextStyle(
                 fontSize: 10.5,
-                color: theme.typography.body?.color?.withOpacity(0.62),
+                color: theme.typography.body?.color?.withValues(alpha: 0.62),
               ),
             ),
           ],
@@ -1267,8 +1287,8 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: palette.cardBackground,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFD13438).withOpacity(0.35)),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFD13438).withValues(alpha: 0.35)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1283,7 +1303,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
               style: TextStyle(
                 fontSize: 10,
                 height: 1.4,
-                color: theme.typography.body?.color?.withOpacity(0.62),
+                color: theme.typography.body?.color?.withValues(alpha: 0.62),
               ),
             ),
             const SizedBox(height: 8),
@@ -1297,7 +1317,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
   Widget _composer(FluentThemeData theme, ThemePalette palette) {
     final contextCount = _preview?.included.length;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+      padding: const EdgeInsets.fromLTRB(14, 9, 14, 11),
       decoration: BoxDecoration(
         color: palette.appBarBackground,
         border: Border(top: BorderSide(color: palette.cardBorder)),
@@ -1316,7 +1336,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 9.5,
-                      color: theme.typography.body?.color?.withOpacity(0.50),
+                      color: theme.typography.body?.color?.withValues(alpha: 0.50),
                     ),
                   ),
                 ),
@@ -1325,7 +1345,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                     '$contextCount 条上下文',
                     style: TextStyle(
                       fontSize: 9.5,
-                      color: theme.typography.body?.color?.withOpacity(0.50),
+                      color: theme.typography.body?.color?.withValues(alpha: 0.50),
                     ),
                   ),
               ],
@@ -1343,9 +1363,12 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                 ),
               ),
               const SizedBox(width: 8),
-              FilledButton(
-                onPressed: _sending ? null : _send,
-                child: Text(_sending ? '处理中…' : '发送'),
+              SizedBox(
+                height: 38,
+                child: FilledButton(
+                  onPressed: _sending ? null : _send,
+                  child: Text(_sending ? '处理中…' : '发送'),
+                ),
               ),
             ],
           ),
@@ -1354,7 +1377,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
             'Ctrl + Enter 发送',
             style: TextStyle(
               fontSize: 8.5,
-              color: theme.typography.body?.color?.withOpacity(0.32),
+              color: theme.typography.body?.color?.withValues(alpha: 0.38),
             ),
           ),
         ],
