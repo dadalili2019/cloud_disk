@@ -7,6 +7,7 @@ import '../router/router.dart';
 import '../theme/theme_controller.dart';
 import '../widgets/windowButtons.dart';
 import '../workbench/application/continue_service.dart';
+import '../workbench/core/models.dart';
 import '../workbench/presentation/global_ai_drawer.dart';
 import '../workbench/workbench_runtime.dart';
 
@@ -61,236 +62,106 @@ class _NavigationPageState extends State<NavigationPage> {
     }
   }
 
-  Text _menuTitle(String text, {bool sub = false}) {
-    return Text(
-      text,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: TextStyle(
-        fontSize: sub ? 12.5 : 13.5,
-        fontWeight: sub ? FontWeight.w500 : FontWeight.w600,
-        letterSpacing: 0,
-        color: const Color(0xFF2F3437),
-      ),
-    );
+  void _go(String location) {
+    if (router.location != location) router.go(location);
   }
 
-  Widget _groupHeader(String text) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 14, 8, 5),
-      child: Opacity(
-        opacity: 0.52,
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 10.5,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.2,
-            color: Color(0xFF485058),
-          ),
-        ),
-      ),
-    );
-  }
-
-  PaneItem _item({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    required WidgetStateProperty<Color?> tileColor,
-    required WidgetStateProperty<Color?> selectedTileColor,
-    bool sub = false,
-  }) {
-    return PaneItem(
-      icon: Icon(icon, size: sub ? 14.5 : 16.5, color: const Color(0xFF3F464B)),
-      title: _menuTitle(title, sub: sub),
-      body: const SizedBox.shrink(),
-      onTap: onTap,
-      tileColor: tileColor,
-      selectedTileColor: selectedTileColor,
-    );
-  }
-
-  void _go(String location, String name) {
-    if (router.location != location) {
-      router.goNamed(name);
-    }
-  }
-
-  void _openCurrentWork() {
+  void _openWorkspace() {
     final current = _currentWork;
     if (current == null) {
-      router.go('/workspace');
+      _go('/workspace');
       return;
     }
-    router.go('/workspace/${current.workspace.id}/overview');
+    _go('/workspace/${current.workspace.id}/overview');
   }
 
-  int? _selectedIndexForLocation(String location) {
-    if (location == '/' || location.startsWith('/home')) return 0;
-    if (location.startsWith('/workspace')) return 1;
-    if (location.startsWith('/knowledge')) return 2;
-    if (location.startsWith('/todo')) return 3;
-    if (location.startsWith('/speedtestpage')) return 4;
-    if (location.startsWith('/jsonformat')) return 5;
-    if (location.startsWith('/comparison')) return 6;
-    if (location.startsWith('/imagetools/convert')) return 8;
-    if (location.startsWith('/imagetools/watermark')) return 9;
-    if (location.startsWith('/imagetools/crop')) return 10;
-    if (location.startsWith('/imagetools/filter')) return 11;
-    if (location.startsWith('/imagetools/collage')) return 12;
-    if (location.startsWith('/imagetools/dedupe')) return 13;
-    if (location.startsWith('/ragknowledge')) return 14;
-    if (location.startsWith('/game')) return 15;
-    if (location.startsWith('/setting')) return 16;
-    return null;
+  Future<void> _switchWorkspace() async {
+    try {
+      final runtime = await WorkbenchRuntime.instance;
+      final workspaces = await runtime.workspaceService.listActive();
+      if (!mounted) return;
+
+      if (workspaces.isEmpty) {
+        _go('/workspace');
+        return;
+      }
+
+      final selected = await showDialog<WorkspaceModel>(
+        context: context,
+        builder: (dialogContext) => ContentDialog(
+          title: const Text('切换工作区'),
+          content: SizedBox(
+            width: 360,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 360),
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final workspace in workspaces)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Button(
+                        onPressed: () =>
+                            Navigator.pop(dialogContext, workspace),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(workspace.name),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            Button(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('取消'),
+            ),
+            Button(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _go('/workspace');
+              },
+              child: const Text('管理工作区'),
+            ),
+          ],
+        ),
+      );
+
+      if (selected != null && mounted) {
+        _go('/workspace/${selected.id}/overview');
+      }
+    } catch (_) {
+      if (mounted) _go('/workspace');
+    }
+  }
+
+  bool _isActive(_NavTarget target, String location) {
+    return switch (target) {
+      _NavTarget.home => location == '/' || location.startsWith('/home'),
+      _NavTarget.workspace =>
+        location.startsWith('/workspace') && !location.endsWith('/developer'),
+      _NavTarget.time => location.startsWith('/time'),
+      _NavTarget.knowledge => location.startsWith('/knowledge'),
+      _NavTarget.developer =>
+        location.startsWith('/developer') || location.endsWith('/developer'),
+      _NavTarget.tools =>
+        location.startsWith('/tools') ||
+            location.startsWith('/todo') ||
+            location.startsWith('/speedtestpage') ||
+            location.startsWith('/jsonformat') ||
+            location.startsWith('/comparison') ||
+            location.startsWith('/imagetools') ||
+            location.startsWith('/ragknowledge') ||
+            location.startsWith('/game'),
+      _NavTarget.settings => location.startsWith('/setting'),
+    };
   }
 
   @override
   Widget build(BuildContext context) {
     final palette = ThemeScope.of(context).palette;
-    final accent = FluentTheme.of(context).accentColor.normal;
-    final selectedIndex = _selectedIndexForLocation(router.location);
-    final tileColor = WidgetStateProperty.resolveWith<Color?>((states) {
-      if (states.contains(WidgetState.pressed)) return palette.navItemSelected;
-      if (states.contains(WidgetState.hovered)) return palette.navItemHover;
-      return Colors.transparent;
-    });
-    final selectedTileColor = WidgetStateProperty.all<Color?>(palette.navItemSelected);
-
-    final items = <NavigationPaneItem>[
-      _item(
-        icon: FluentIcons.home,
-        title: '首页',
-        tileColor: tileColor,
-        selectedTileColor: selectedTileColor,
-        onTap: () => _go('/home', 'home'),
-      ),
-      _item(
-        icon: FluentIcons.open_folder_horizontal,
-        title: '工作台',
-        tileColor: tileColor,
-        selectedTileColor: selectedTileColor,
-        onTap: () => _go('/workspace', 'workbenchWorkspace'),
-      ),
-      _item(
-        icon: FluentIcons.library,
-        title: '知识与搜索',
-        tileColor: tileColor,
-        selectedTileColor: selectedTileColor,
-        onTap: () => _go('/knowledge', 'workbenchKnowledge'),
-      ),
-      PaneItemHeader(header: _groupHeader('工具')),
-      _item(
-        icon: FluentIcons.to_do_logo_inverse,
-        title: '待办清单',
-        tileColor: tileColor,
-        selectedTileColor: selectedTileColor,
-        onTap: () => _go('/todo', 'todo'),
-      ),
-      _item(
-        icon: FluentIcons.my_network,
-        title: '网络测速',
-        tileColor: tileColor,
-        selectedTileColor: selectedTileColor,
-        onTap: () => _go('/speedtestpage', 'speedtestpage'),
-      ),
-      _item(
-        icon: FluentIcons.format_painter,
-        title: 'JSON格式化',
-        tileColor: tileColor,
-        selectedTileColor: selectedTileColor,
-        onTap: () => _go('/jsonformat', 'jsonformat'),
-      ),
-      _item(
-        icon: FluentIcons.branch_compare,
-        title: '文字比对',
-        tileColor: tileColor,
-        selectedTileColor: selectedTileColor,
-        onTap: () => _go('/comparison', 'comparison'),
-      ),
-      PaneItemHeader(header: _groupHeader('图片工作台')),
-      PaneItemExpander(
-        icon: const Icon(FluentIcons.photo_collection, size: 16.5),
-        title: _menuTitle('图片工具'),
-        body: const SizedBox.shrink(),
-        tileColor: tileColor,
-        selectedTileColor: selectedTileColor,
-        items: [
-          _item(
-            icon: FluentIcons.switch_widget,
-            title: '批量转换',
-            tileColor: tileColor,
-            selectedTileColor: selectedTileColor,
-            sub: true,
-            onTap: () => _go('/imagetools/convert', 'imageConvert'),
-          ),
-          _item(
-            icon: FluentIcons.text_box,
-            title: '水印工具',
-            tileColor: tileColor,
-            selectedTileColor: selectedTileColor,
-            sub: true,
-            onTap: () => _go('/imagetools/watermark', 'imageWatermark'),
-          ),
-          _item(
-            icon: FluentIcons.crop,
-            title: '裁剪与尺寸',
-            tileColor: tileColor,
-            selectedTileColor: selectedTileColor,
-            sub: true,
-            onTap: () => _go('/imagetools/crop', 'imageCrop'),
-          ),
-          _item(
-            icon: FluentIcons.color,
-            title: '滤镜增强',
-            tileColor: tileColor,
-            selectedTileColor: selectedTileColor,
-            sub: true,
-            onTap: () => _go('/imagetools/filter', 'imageFilter'),
-          ),
-          _item(
-            icon: FluentIcons.grid_view_medium,
-            title: '拼图九宫格',
-            tileColor: tileColor,
-            selectedTileColor: selectedTileColor,
-            sub: true,
-            onTap: () => _go('/imagetools/collage', 'imageCollage'),
-          ),
-          _item(
-            icon: FluentIcons.search_and_apps,
-            title: '去重与清理',
-            tileColor: tileColor,
-            selectedTileColor: selectedTileColor,
-            sub: true,
-            onTap: () => _go('/imagetools/dedupe', 'imageDedupe'),
-          ),
-        ],
-      ),
-      PaneItemHeader(header: _groupHeader('其他')),
-      _item(
-        icon: FluentIcons.chat_bot,
-        title: 'RAG 知识库',
-        tileColor: tileColor,
-        selectedTileColor: selectedTileColor,
-        onTap: () => _go('/ragknowledge', 'ragknowledge'),
-      ),
-      _item(
-        icon: FluentIcons.game,
-        title: 'GAME',
-        tileColor: tileColor,
-        selectedTileColor: selectedTileColor,
-        onTap: () => _go('/game', 'game'),
-      ),
-      PaneItemSeparator(),
-      _item(
-        icon: FluentIcons.settings,
-        title: '设置',
-        tileColor: tileColor,
-        selectedTileColor: selectedTileColor,
-        onTap: () => _go('/setting', 'setting'),
-      ),
-    ];
 
     return Stack(
       children: [
@@ -298,22 +169,37 @@ class _NavigationPageState extends State<NavigationPage> {
           color: palette.appBackground,
           child: Column(
             children: [
-              _buildTopbar(palette, accent),
+              _Topbar(
+                currentWork: _currentWork,
+                contextLoading: _contextLoading,
+                aiOpen: _aiOpen,
+                onWorkspacePressed: _switchWorkspace,
+                onSearchPressed: () => _go('/knowledge'),
+                onAiPressed: () => setState(() => _aiOpen = !_aiOpen),
+                onSettingsPressed: () => _go('/setting'),
+              ),
               Expanded(
-                child: NavigationView(
-                  paneBodyBuilder: (item, child) => widget.child,
-                  pane: NavigationPane(
-                    size: const NavigationPaneSize(openWidth: 224),
-                    displayMode: PaneDisplayMode.expanded,
-                    toggleable: false,
-                    toggleButton: null,
-                    indicator: StickyNavigationIndicator(
-                      color: accent,
-                      indicatorSize: 2,
-                    ),
-                    selected: selectedIndex,
-                    items: items,
-                  ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxWidth < 1000;
+                    return Row(
+                      children: [
+                        _Sidebar(
+                          compact: compact,
+                          location: router.location,
+                          isActive: _isActive,
+                          onHome: () => _go('/home'),
+                          onWorkspace: _openWorkspace,
+                          onTime: () => _go('/time'),
+                          onKnowledge: () => _go('/knowledge'),
+                          onDeveloper: () => _go('/developer'),
+                          onTools: () => _go('/tools'),
+                          onSettings: () => _go('/setting'),
+                        ),
+                        Expanded(child: widget.child),
+                      ],
+                    );
+                  },
                 ),
               ),
             ],
@@ -321,7 +207,7 @@ class _NavigationPageState extends State<NavigationPage> {
         ),
         if (_aiOpen)
           Positioned(
-            top: 52,
+            top: 54,
             right: 0,
             bottom: 0,
             child: GlobalAiDrawer(
@@ -332,60 +218,92 @@ class _NavigationPageState extends State<NavigationPage> {
       ],
     );
   }
+}
 
-  Widget _buildTopbar(ThemePalette palette, Color accent) {
+enum _NavTarget {
+  home,
+  workspace,
+  time,
+  knowledge,
+  developer,
+  tools,
+  settings,
+}
+
+class _Topbar extends StatelessWidget {
+  const _Topbar({
+    required this.currentWork,
+    required this.contextLoading,
+    required this.aiOpen,
+    required this.onWorkspacePressed,
+    required this.onSearchPressed,
+    required this.onAiPressed,
+    required this.onSettingsPressed,
+  });
+
+  final ContinueItem? currentWork;
+  final bool contextLoading;
+  final bool aiOpen;
+  final VoidCallback onWorkspacePressed;
+  final VoidCallback onSearchPressed;
+  final VoidCallback onAiPressed;
+  final VoidCallback onSettingsPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    final theme = FluentTheme.of(context);
+    final accent = theme.accentColor.normal;
+    final primary = theme.typography.body?.color ?? const Color(0xFFE5E8EB);
+    final secondary = primary.withValues(alpha: 0.58);
+
     return Container(
-      height: 52,
+      height: 54,
       decoration: BoxDecoration(
         color: palette.appBarBackground,
         border: Border(
-          bottom: BorderSide(
-            color: palette.appBarBorder.withValues(alpha: 0.62),
-            width: 0.8,
-          ),
+          bottom: BorderSide(color: palette.appBarBorder, width: 0.8),
         ),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final showCurrentContext = constraints.maxWidth >= 900;
-          final showFullSearch = constraints.maxWidth >= 1280;
-          final showCompactSearch = !showFullSearch && constraints.maxWidth >= 760;
+          final showWorkspace = constraints.maxWidth >= 820;
+          final showSearch = constraints.maxWidth >= 1040;
           return Row(
             children: [
               SizedBox(
                 width: 224,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 14, right: 12),
+                  padding: const EdgeInsets.only(left: 16, right: 12),
                   child: Row(
                     children: [
                       Container(
-                        width: 28,
-                        height: 28,
+                        width: 26,
+                        height: 26,
+                        alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: palette.successSoft,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: accent.withValues(alpha: 0.16),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Icon(
-                          FluentIcons.cloud,
-                          size: 15,
                           color: accent,
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        child: const Text(
+                          'PW',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF151711),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 9),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          '个人工作台',
+                          'Personal Workbench',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            letterSpacing: 0,
-                            color: Color(0xFF202124),
+                            color: primary,
                           ),
                         ),
                       ),
@@ -393,38 +311,40 @@ class _NavigationPageState extends State<NavigationPage> {
                   ),
                 ),
               ),
-              if (showCurrentContext) ...[
-                const SizedBox(width: 12),
-                _currentContextEntry(palette, accent),
-              ],
-              if (showFullSearch || showCompactSearch) ...[
+              if (showWorkspace) ...[
                 const SizedBox(width: 10),
-                _globalSearchEntry(
-                  palette,
-                  compact: showCompactSearch,
+                _TopbarButton(
+                  width: 180,
+                  icon: FluentIcons.open_folder_horizontal,
+                  label: contextLoading
+                      ? '加载工作区…'
+                      : currentWork?.workspace.name ?? '选择工作区',
+                  trailing: FluentIcons.chevron_down,
+                  onPressed: onWorkspacePressed,
+                ),
+              ],
+              if (showSearch) ...[
+                const SizedBox(width: 10),
+                _SearchEntry(
+                  secondary: secondary,
+                  onPressed: onSearchPressed,
                 ),
               ],
               const SizedBox(width: 10),
               Expanded(
-                child: WindowTitleBarBox(
-                  child: MoveWindow(),
-                ),
+                child: WindowTitleBarBox(child: MoveWindow()),
               ),
-              _topAction(
-                palette: palette,
+              _IconTopbarButton(
                 icon: FluentIcons.chat_bot,
-                tooltip: 'AI 助手',
-                active: _aiOpen,
-                accent: accent,
-                onPressed: () => setState(() => _aiOpen = !_aiOpen),
+                tooltip: 'AI',
+                active: aiOpen,
+                onPressed: onAiPressed,
               ),
               const SizedBox(width: 4),
-              _topAction(
-                palette: palette,
+              _IconTopbarButton(
                 icon: FluentIcons.settings,
                 tooltip: '设置',
-                accent: accent,
-                onPressed: () => router.go('/setting'),
+                onPressed: onSettingsPressed,
               ),
               const SizedBox(width: 6),
               if (Platform.isWindows)
@@ -435,160 +355,134 @@ class _NavigationPageState extends State<NavigationPage> {
       ),
     );
   }
+}
 
-  Widget _currentContextEntry(ThemePalette palette, Color accent) {
-    final current = _currentWork;
-    final title = _contextLoading
-        ? '加载当前工作…'
-        : current == null
-            ? '暂无当前任务'
-            : '${current.workspace.name} · ${current.context.task.title}';
-    final subtitle = current == null || _contextLoading
-        ? 'Current Context'
-        : current.context.task.nextStep.trim().isEmpty
-            ? 'Current Task'
-            : '下一步 · ${current.context.task.nextStep}';
+class _SearchEntry extends StatelessWidget {
+  const _SearchEntry({
+    required this.secondary,
+    required this.onPressed,
+  });
 
-    return Tooltip(
-      message: current == null ? '打开工作台' : '返回当前工作区',
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: _openCurrentWork,
-          child: Container(
-            width: 230,
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: palette.surfaceMuted,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: palette.cardBorder.withValues(alpha: 0.88)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 22,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    color: palette.cardBackground,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Icon(
-                    FluentIcons.bulleted_list_text,
-                    size: 12,
-                    color: accent,
-                  ),
+  final Color secondary;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          width: 360,
+          height: 34,
+          padding: const EdgeInsets.symmetric(horizontal: 11),
+          decoration: BoxDecoration(
+            color: palette.cardBackground,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: palette.cardBorder),
+          ),
+          child: Row(
+            children: [
+              Icon(FluentIcons.search, size: 13, color: secondary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '搜索任务、笔记、问题、知识…',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 10.5, color: secondary),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2F3437),
-                        ),
-                      ),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 8.5,
-                          color: Color(0xFF7A8084),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(
-                  FluentIcons.chevron_right,
-                  size: 9,
-                  color: Color(0xFF8A9094),
-                ),
-              ],
-            ),
+              ),
+              Text(
+                'Ctrl K',
+                style: TextStyle(fontSize: 9.5, color: secondary),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _globalSearchEntry(
-    ThemePalette palette, {
-    required bool compact,
-  }) {
-    return Tooltip(
-      message: '搜索工作上下文',
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => router.go('/knowledge'),
-          child: Container(
-            width: compact ? 104 : 230,
-            height: 34,
-            padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 11),
-            decoration: BoxDecoration(
-              color: palette.cardBackground.withValues(alpha: 0.72),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: palette.cardBorder.withValues(alpha: 0.95)),
+class _TopbarButton extends StatelessWidget {
+  const _TopbarButton({
+    required this.width,
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.trailing,
+  });
+
+  final double width;
+  final IconData icon;
+  final String label;
+  final IconData? trailing;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    final theme = FluentTheme.of(context);
+    final color = theme.typography.body?.color ?? const Color(0xFFE5E8EB);
+    return Button(
+      onPressed: onPressed,
+      style: ButtonStyle(
+        padding: WidgetStateProperty.all(
+          const EdgeInsets.symmetric(horizontal: 10),
+        ),
+      ),
+      child: SizedBox(
+        width: width,
+        height: 32,
+        child: Row(
+          children: [
+            Icon(icon, size: 13, color: color.withValues(alpha: 0.68)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 10.5, color: color),
+              ),
             ),
-            child: Row(
-              mainAxisAlignment: compact
-                  ? MainAxisAlignment.center
-                  : MainAxisAlignment.start,
-              children: [
-                const Icon(
-                  FluentIcons.search,
-                  size: 13,
-                  color: Color(0xFF73797D),
-                ),
-                const SizedBox(width: 8),
-                if (compact)
-                  const Text(
-                    '搜索',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      color: Color(0xFF777D81),
-                    ),
-                  )
-                else
-                  const Expanded(
-                    child: Text(
-                      '搜索工作上下文…',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        color: Color(0xFF777D81),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
+            if (trailing != null)
+              Icon(
+                trailing,
+                size: 9,
+                color: color.withValues(alpha: 0.52),
+              ),
+          ],
         ),
       ),
     );
   }
+}
 
-  Widget _topAction({
-    required ThemePalette palette,
-    required IconData icon,
-    required String tooltip,
-    required Color accent,
-    required VoidCallback onPressed,
-    bool active = false,
-  }) {
+class _IconTopbarButton extends StatelessWidget {
+  const _IconTopbarButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    this.active = false,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    final theme = FluentTheme.of(context);
+    final foreground = active
+        ? theme.accentColor.normal
+        : (theme.typography.body?.color ?? const Color(0xFFE5E8EB))
+            .withValues(alpha: 0.70);
+
     return Tooltip(
       message: tooltip,
       child: Container(
@@ -597,20 +491,224 @@ class _NavigationPageState extends State<NavigationPage> {
         decoration: BoxDecoration(
           color: active ? palette.surfaceMuted : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
-          border: active
-              ? Border.all(color: palette.cardBorder.withValues(alpha: 0.88))
-              : null,
+          border: active ? Border.all(color: palette.cardBorder) : null,
         ),
         child: IconButton(
-          icon: Icon(
-            icon,
-            size: 15,
-            color: active ? accent : const Color(0xFF3F464B),
-          ),
+          icon: Icon(icon, size: 15, color: foreground),
           onPressed: onPressed,
         ),
       ),
     );
+  }
+}
+
+class _Sidebar extends StatelessWidget {
+  const _Sidebar({
+    required this.compact,
+    required this.location,
+    required this.isActive,
+    required this.onHome,
+    required this.onWorkspace,
+    required this.onTime,
+    required this.onKnowledge,
+    required this.onDeveloper,
+    required this.onTools,
+    required this.onSettings,
+  });
+
+  final bool compact;
+  final String location;
+  final bool Function(_NavTarget, String) isActive;
+  final VoidCallback onHome;
+  final VoidCallback onWorkspace;
+  final VoidCallback onTime;
+  final VoidCallback onKnowledge;
+  final VoidCallback onDeveloper;
+  final VoidCallback onTools;
+  final VoidCallback onSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    return Container(
+      width: compact ? 76 : 224,
+      decoration: BoxDecoration(
+        color: palette.navBackground,
+        border: Border(
+          right: BorderSide(color: palette.navBorder, width: 0.8),
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(compact ? 10 : 12, 14, compact ? 10 : 12, 12),
+        child: Column(
+          children: [
+            _NavItem(
+              compact: compact,
+              icon: FluentIcons.home,
+              label: '首页',
+              active: isActive(_NavTarget.home, location),
+              onPressed: onHome,
+            ),
+            _NavItem(
+              compact: compact,
+              icon: FluentIcons.open_folder_horizontal,
+              label: '工作区',
+              active: isActive(_NavTarget.workspace, location),
+              onPressed: onWorkspace,
+            ),
+            _NavItem(
+              compact: compact,
+              icon: FluentIcons.clock,
+              label: '时间',
+              active: isActive(_NavTarget.time, location),
+              onPressed: onTime,
+            ),
+            if (!compact) const _SidebarSectionLabel('工作台'),
+            if (compact) const SizedBox(height: 14),
+            _NavItem(
+              compact: compact,
+              icon: FluentIcons.library,
+              label: '知识',
+              active: isActive(_NavTarget.knowledge, location),
+              onPressed: onKnowledge,
+            ),
+            _NavItem(
+              compact: compact,
+              icon: FluentIcons.code,
+              label: '开发者',
+              active: isActive(_NavTarget.developer, location),
+              onPressed: onDeveloper,
+            ),
+            _NavItem(
+              compact: compact,
+              icon: FluentIcons.toolbox,
+              label: '工具',
+              active: isActive(_NavTarget.tools, location),
+              onPressed: onTools,
+            ),
+            const Spacer(),
+            Container(height: 1, color: palette.navBorder),
+            const SizedBox(height: 8),
+            _NavItem(
+              compact: compact,
+              icon: FluentIcons.settings,
+              label: '设置',
+              active: isActive(_NavTarget.settings, location),
+              onPressed: onSettings,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarSectionLabel extends StatelessWidget {
+  const _SidebarSectionLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = (FluentTheme.of(context).typography.body?.color ??
+            const Color(0xFFE5E8EB))
+        .withValues(alpha: 0.38);
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.fromLTRB(10, 16, 10, 7),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  const _NavItem({
+    required this.compact,
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.onPressed,
+  });
+
+  final bool compact;
+  final IconData icon;
+  final String label;
+  final bool active;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    final theme = FluentTheme.of(context);
+    final primary = theme.typography.body?.color ?? const Color(0xFFE5E8EB);
+    final foreground =
+        active ? primary : primary.withValues(alpha: 0.62);
+
+    final child = MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          height: 38,
+          margin: const EdgeInsets.only(bottom: 4),
+          padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 10),
+          decoration: BoxDecoration(
+            color: active ? palette.navItemSelected : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Stack(
+            children: [
+              if (active)
+                Positioned(
+                  left: 0,
+                  top: 8,
+                  bottom: 8,
+                  child: Container(
+                    width: 2,
+                    decoration: BoxDecoration(
+                      color: theme.accentColor.normal,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              Row(
+                mainAxisAlignment:
+                    compact ? MainAxisAlignment.center : MainAxisAlignment.start,
+                children: [
+                  Icon(icon, size: 16, color: foreground),
+                  if (!compact) ...[
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight:
+                              active ? FontWeight.w600 : FontWeight.w500,
+                          color: foreground,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (!compact) return child;
+    return Tooltip(message: label, child: child);
   }
 }
 
