@@ -55,12 +55,14 @@ class WorkbenchPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        WorkbenchPageHeader(
-                          title: title,
-                          subtitle: subtitle,
-                          actions: actions,
-                        ),
-                        SizedBox(height: headerGap),
+                        if (actions.isNotEmpty) ...[
+                          WorkbenchPageHeader(
+                            title: title,
+                            subtitle: subtitle,
+                            actions: actions,
+                          ),
+                          SizedBox(height: headerGap),
+                        ],
                         ...children,
                       ],
                     ),
@@ -121,13 +123,15 @@ class WorkbenchSectionPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      WorkbenchPageHeader(
-                        title: title,
-                        subtitle: subtitle,
-                        actions: actions,
-                        compact: true,
-                      ),
-                      SizedBox(height: headerGap),
+                      if (actions.isNotEmpty) ...[
+                        WorkbenchPageHeader(
+                          title: title,
+                          subtitle: subtitle,
+                          actions: actions,
+                          compact: true,
+                        ),
+                        SizedBox(height: headerGap),
+                      ],
                       Expanded(child: child),
                     ],
                   ),
@@ -157,50 +161,20 @@ class WorkbenchPageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final stackActions = actions.isNotEmpty && constraints.maxWidth < 560;
-        final titleBlock = Text(
-          title,
-          style: TextStyle(
-            fontSize: compact ? 19 : 24,
-            height: 1.12,
-            fontWeight: FontWeight.w600,
-          ),
-        );
+    final actionBlock = Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      alignment: WrapAlignment.end,
+      children: actions,
+    );
 
-        final actionBlock = Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          alignment: WrapAlignment.end,
-          children: actions,
-        );
-
-        if (stackActions) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              titleBlock,
-              const SizedBox(height: 12),
-              Align(alignment: Alignment.centerLeft, child: actionBlock),
-            ],
-          );
-        }
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: titleBlock),
-            if (actions.isNotEmpty) ...[
-              const SizedBox(width: 18),
-              Padding(
-                padding: const EdgeInsets.only(top: 1),
-                child: actionBlock,
-              ),
-            ],
-          ],
-        );
-      },
+    return Semantics(
+      header: true,
+      label: title,
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: actionBlock,
+      ),
     );
   }
 }
