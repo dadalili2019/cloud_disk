@@ -45,8 +45,9 @@ Future<void> _initWorkbenchRouteTracking() async {
 Future<void> _initDesktopStuff() async {
   doWhenWindowReady(() {
     final win = appWindow;
+    const minimumSize = Size(760, 520);
     const initialSize = Size(1000, 600);
-    win.minSize = initialSize;
+    win.minSize = minimumSize;
     win.size = initialSize;
     win.alignment = Alignment.center;
     win.title = 'cloud_disk';
