@@ -614,7 +614,7 @@ class _Panel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           WorkbenchSectionHeader(title: title),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           if (children.isEmpty)
             Text(
               emptyText,
