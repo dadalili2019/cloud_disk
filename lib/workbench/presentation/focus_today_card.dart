@@ -151,7 +151,7 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
             : DateTime.now().toUtc().difference(active.session.startedAt.toUtc());
 
         return WorkbenchCard(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -170,22 +170,23 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
                 ],
               ),
               const SizedBox(height: 12),
-              if (active != null)
-                _ActiveFocusBlock(
-                  title: '${active.workspace?.name ?? '工作区'} · ${active.task?.title ?? '任务'}',
-                  elapsed: _formatClock(elapsed),
-                  busy: _busy,
-                  onFinish: _finish,
-                )
-              else
-                _IdleFocusBlock(
-                  title: widget.primary == null
-                      ? '暂无可开始专注的当前任务'
-                      : '${widget.primary!.workspace.name} · ${widget.primary!.context.task.title}',
-                  enabled: widget.primary != null && !_busy,
-                  onStart: _start,
-                ),
-              const SizedBox(height: 14),
+              _FocusSurface(
+                child: active != null
+                    ? _ActiveFocusBlock(
+                        title: '${active.workspace?.name ?? '工作区'} · ${active.task?.title ?? '任务'}',
+                        elapsed: _formatClock(elapsed),
+                        busy: _busy,
+                        onFinish: _finish,
+                      )
+                    : _IdleFocusBlock(
+                        title: widget.primary == null
+                            ? '暂无可开始专注的当前任务'
+                            : '${widget.primary!.workspace.name} · ${widget.primary!.context.task.title}',
+                        enabled: widget.primary != null && !_busy,
+                        onStart: _start,
+                      ),
+              ),
+              const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -196,7 +197,7 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
                 ],
               ),
               if (focus.sessions.isNotEmpty) ...[
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
                 const WorkbenchSectionHeader(title: '今日时间线'),
                 const SizedBox(height: 8),
                 ...focus.sessions.take(4).map(
@@ -218,6 +219,29 @@ class _FocusTodayCardState extends State<FocusTodayCard> {
           ),
         );
       },
+    );
+  }
+}
+
+class _FocusSurface extends StatelessWidget {
+  const _FocusSurface({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: palette.surfaceMuted,
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(
+          color: palette.cardBorder.withValues(alpha: 0.82),
+        ),
+      ),
+      child: child,
     );
   }
 }
@@ -252,7 +276,12 @@ class _ActiveFocusBlock extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               elapsed,
-              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontSize: 24,
+                height: 1.1,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.35,
+              ),
             ),
           ],
         );
@@ -306,7 +335,7 @@ class _IdleFocusBlock extends StatelessWidget {
           style: TextStyle(
             fontSize: 12.5,
             height: 1.4,
-            color: theme.typography.body?.color?.withOpacity(0.72),
+            color: theme.typography.body?.color?.withValues(alpha: 0.72),
           ),
         );
         final button = FilledButton(
@@ -344,18 +373,21 @@ class _MetricPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
+    final palette = ThemeScope.of(context).palette;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: palette.cardBackground.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.inactiveColor.withOpacity(0.18)),
+        border: Border.all(
+          color: palette.cardBorder.withValues(alpha: 0.82),
+        ),
       ),
       child: Text(
         '$label  $value',
         style: TextStyle(
           fontSize: 10.5,
-          color: theme.typography.body?.color?.withOpacity(0.62),
+          color: theme.typography.body?.color?.withValues(alpha: 0.62),
         ),
       ),
     );
@@ -384,7 +416,7 @@ class _TimelineRow extends StatelessWidget {
             time,
             style: TextStyle(
               fontSize: 10.5,
-              color: theme.typography.body?.color?.withOpacity(0.48),
+              color: theme.typography.body?.color?.withValues(alpha: 0.48),
             ),
           ),
         ),
@@ -401,7 +433,7 @@ class _TimelineRow extends StatelessWidget {
           duration,
           style: TextStyle(
             fontSize: 10.5,
-            color: theme.typography.body?.color?.withOpacity(0.54),
+            color: theme.typography.body?.color?.withValues(alpha: 0.54),
           ),
         ),
       ],
