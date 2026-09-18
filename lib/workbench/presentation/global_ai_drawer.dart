@@ -300,18 +300,21 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
           return ContentDialog(
             title: const Text('添加上下文'),
             content: SizedBox(
-              width: 520,
-              height: 420,
+              width: 500,
+              height: 400,
               child: Column(
                 children: [
                   Row(
                     children: [
                       Expanded(
-                        child: TextBox(
-                          controller: controller,
-                          autofocus: true,
-                          placeholder: '搜索任务、笔记、问题、资源、决策、知识、项目、命令或代码片段',
-                          onSubmitted: (_) => runSearch(),
+                        child: SizedBox(
+                          height: 36,
+                          child: TextBox(
+                            controller: controller,
+                            autofocus: true,
+                            placeholder: '搜索任务、笔记、问题、资源、决策、知识、项目、命令或代码片段',
+                            onSubmitted: (_) => runSearch(),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -341,7 +344,10 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                               final alreadyIncluded = _manuallyIncluded
                                   .any((ref) => ref.key == key);
                               return Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
                                 decoration: BoxDecoration(
                                   color: palette.cardBackground,
                                   border: Border.all(color: palette.cardBorder),
@@ -366,7 +372,15 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                                               item.snippet,
                                               maxLines: 2,
                                               overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(fontSize: 10),
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                height: 1.35,
+                                                color: FluentTheme.of(context)
+                                                    .typography
+                                                    .body
+                                                    ?.color
+                                                    ?.withValues(alpha: 0.58),
+                                              ),
                                             ),
                                           ],
                                         ],
@@ -429,15 +443,18 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
         return ContentDialog(
           title: const Text('历史会话'),
           content: SizedBox(
-            width: 480,
-            height: 400,
+            width: 460,
+            height: 380,
             child: ListView.separated(
               itemCount: _threads.length,
               separatorBuilder: (_, __) => const SizedBox(height: 7),
               itemBuilder: (context, index) {
                 final item = _threads[index];
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: palette.cardBackground,
                     border: Border.all(color: palette.cardBorder),
@@ -461,7 +478,14 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                             const SizedBox(height: 3),
                             Text(
                               '${_scopeLabel(item.scope)} · ${_formatDateTime(item.updatedAt)}',
-                              style: const TextStyle(fontSize: 10),
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                color: FluentTheme.of(context)
+                                    .typography
+                                    .body
+                                    ?.color
+                                    ?.withValues(alpha: 0.52),
+                              ),
                             ),
                           ],
                         ),
@@ -1056,8 +1080,10 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
                   ),
                 ),
                 const Spacer(),
-                Button(
-                  onPressed: () => setState(() => _contextExpanded = !_contextExpanded),
+                HyperlinkButton(
+                  onPressed: () => setState(
+                    () => _contextExpanded = !_contextExpanded,
+                  ),
                   child: Text(_contextExpanded ? '收起' : '管理'),
                 ),
               ],
@@ -1373,12 +1399,24 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            'Ctrl + Enter 发送',
-            style: TextStyle(
-              fontSize: 8.5,
-              color: theme.typography.body?.color?.withValues(alpha: 0.38),
-            ),
+          Row(
+            children: [
+              Text(
+                'Ctrl + Enter 发送',
+                style: TextStyle(
+                  fontSize: 8.5,
+                  color: theme.typography.body?.color?.withValues(alpha: 0.38),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                'Esc 关闭',
+                style: TextStyle(
+                  fontSize: 8.5,
+                  color: theme.typography.body?.color?.withValues(alpha: 0.32),
+                ),
+              ),
+            ],
           ),
         ],
       ),
