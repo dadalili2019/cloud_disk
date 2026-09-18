@@ -368,38 +368,54 @@ class WorkbenchEmptyState extends StatelessWidget {
     final theme = FluentTheme.of(context);
     return WorkbenchCard(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                  ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final copy = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    height: 1.4,
-                    color: theme.typography.body?.color?.withValues(alpha: 0.52),
-                  ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  height: 1.4,
+                  color: theme.typography.body?.color?.withValues(alpha: 0.52),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          FilledButton(
+              ),
+            ],
+          );
+          final action = FilledButton(
             onPressed: onAction,
             child: Text(actionLabel),
-          ),
-        ],
+          );
+
+          if (constraints.maxWidth < 520) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                copy,
+                const SizedBox(height: 12),
+                Align(alignment: Alignment.centerLeft, child: action),
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(child: copy),
+              const SizedBox(width: 16),
+              action,
+            ],
+          );
+        },
       ),
     );
   }
