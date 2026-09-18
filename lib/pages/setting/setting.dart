@@ -420,12 +420,12 @@ class _ShortcutsSection extends StatelessWidget {
             ),
             _SettingRow(
               title: '快速记录',
-              subtitle: '当前通过首页的快速记录入口打开。'
+              subtitle: '当前通过首页的快速记录入口打开。',
               control: _ValueBadge('未绑定'),
             ),
             _SettingRow(
               title: '打开 AI',
-              subtitle: '当前通过顶部 AI 助手入口打开。'
+              subtitle: '当前通过顶部 AI 助手入口打开。',
               control: _ValueBadge('未绑定'),
             ),
           ],
