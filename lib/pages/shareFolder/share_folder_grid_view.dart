@@ -18,7 +18,7 @@ Widget gridViewWidget(List<Map<String, String>> _filesList) {
           builder: (context, state) {
             return Container(
               decoration: BoxDecoration(
-                color: state.isHovering
+                color: state.contains(WidgetState.hovered)
                     ? const Color.fromRGBO(245, 245, 246, 1)
                     : Colors.white,
               ),
