@@ -115,7 +115,7 @@ class _RestorePanelState extends State<RestorePanel> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
                   Text(
-                    '从 Backup 恢复',
+                    '从备份恢复',
                     style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 3),
