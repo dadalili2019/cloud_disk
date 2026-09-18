@@ -40,7 +40,7 @@ Windows Desktop V1 的封版目标：
 | Phase 5 | AI Context / Global AI / AI History | ✅ 已封版 |
 | Phase 6 | Developer Context / Project / Command / Snippet | ✅ 已封版 |
 | Phase 7 | Settings / Backup / Export / Restore | 🟡 功能实现基本完成，待最终验收 |
-| Desktop V1 UI Final Pass | 全应用 UI 统一收口 | 🔴 进行中 |
+| Desktop V1 UI Final Pass | 全应用 UI 统一收口 | 🟡 UI.1 已完成，UI.2 进行中 |
 | Windows Final Acceptance | Restore / Regression / Analyze | 🔴 未完成 |
 | Desktop V1 Baseline | 最终封版 | 🔴 未完成 |
 | Phase 8 | Mobile Adaptation | ⏳ 未开始 |
@@ -205,7 +205,7 @@ Windows Desktop V1 封版后单独进入，预计关注 Responsive Navigation、
 
 ```text
 Desktop V1 UI Final Pass
-UI.1 Global Shell + Home
+UI.2 Workspace
 ```
 
 工作内容：
@@ -221,20 +221,31 @@ UI.1 Global Shell + Home
 当前已确认完成：
 
 ```text
-WorkbenchPage / WorkbenchSectionPage 响应式水平留白调整
-WorkbenchPageHeader 窄窗口 actions 堆叠
-WorkbenchCard 统一 radius / background / border 能力
-WorkbenchInfoBlock 公共信息块
+UI.1 Global Shell + Home
+- Sidebar 路由高亮同步
+- Topbar / Current Context 收口
+- Home Current Task 主卡重排
+- Quick Capture 简化
+- Focus / Today 视觉统一
+- Windows 本机截图验收通过
+
+基础 UI 能力
+- WorkbenchPage / WorkbenchSectionPage 响应式水平留白
+- WorkbenchPageHeader 窄窗口 actions 堆叠
+- WorkbenchCard 统一 radius / background / border
+- WorkbenchInfoBlock 公共信息块
 ```
 
 当前下一步：
 
 ```text
-1. QuickCaptureCard 统一为 WorkbenchCard 风格
-2. Home Current Task 主卡重排
-3. FocusTodayCard 统一视觉
-4. 检查 Global Shell / Topbar / Sidebar 最终层级
-5. Windows 本机截图验收 UI.1
+UI.2 Workspace
+1. 工作区列表统一 WorkbenchPage / WorkbenchCard
+2. Workspace 顶部 Tabs 统一视觉
+3. Overview / Current Task 重排
+4. Task / Note / Issue / Resource / Decision 统一布局
+5. Developer Context 统一视觉
+6. Windows 本机截图验收 UI.2
 ```
 
 ## 9. 状态维护规则
