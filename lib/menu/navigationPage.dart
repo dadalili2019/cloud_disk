@@ -316,7 +316,7 @@ class _NavigationPageState extends State<NavigationPage> {
         ),
         if (_aiOpen)
           Positioned(
-            top: 54,
+            top: 52,
             right: 0,
             bottom: 0,
             child: GlobalAiDrawer(
@@ -330,12 +330,12 @@ class _NavigationPageState extends State<NavigationPage> {
 
   Widget _buildTopbar(ThemePalette palette, Color accent) {
     return Container(
-      height: 54,
+      height: 52,
       decoration: BoxDecoration(
         color: palette.appBarBackground,
         border: Border(
           bottom: BorderSide(
-            color: palette.appBarBorder.withOpacity(0.62),
+            color: palette.appBarBorder.withValues(alpha: 0.62),
             width: 0.8,
           ),
         ),
@@ -360,7 +360,7 @@ class _NavigationPageState extends State<NavigationPage> {
                           color: palette.successSoft,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: accent.withOpacity(0.16),
+                            color: accent.withValues(alpha: 0.16),
                             width: 0.8,
                           ),
                         ),
@@ -458,7 +458,7 @@ class _NavigationPageState extends State<NavigationPage> {
             decoration: BoxDecoration(
               color: palette.surfaceMuted,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: palette.cardBorder.withOpacity(0.88)),
+              border: Border.all(color: palette.cardBorder.withValues(alpha: 0.88)),
             ),
             child: Row(
               children: [
@@ -533,9 +533,9 @@ class _NavigationPageState extends State<NavigationPage> {
             height: 34,
             padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 11),
             decoration: BoxDecoration(
-              color: palette.cardBackground.withOpacity(0.72),
+              color: palette.cardBackground.withValues(alpha: 0.72),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: palette.cardBorder.withOpacity(0.95)),
+              border: Border.all(color: palette.cardBorder.withValues(alpha: 0.95)),
             ),
             child: Row(
               mainAxisAlignment: compact
@@ -593,7 +593,7 @@ class _NavigationPageState extends State<NavigationPage> {
           color: active ? palette.surfaceMuted : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: active
-              ? Border.all(color: palette.cardBorder.withOpacity(0.88))
+              ? Border.all(color: palette.cardBorder.withValues(alpha: 0.88))
               : null,
         ),
         child: IconButton(
