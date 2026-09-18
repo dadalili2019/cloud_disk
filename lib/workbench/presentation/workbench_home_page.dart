@@ -100,7 +100,6 @@ class _WorkbenchHomePageState extends State<WorkbenchHomePage> {
                     onOpenTask: () => context.go(
                       '/workspace/${primary.workspace.id}/tasks',
                     ),
-                    onContinue: () => setState(() => _resumeOpen = true),
                   ),
                 const SizedBox(height: 14),
                 LayoutBuilder(
@@ -184,12 +183,10 @@ class _CurrentFocusCard extends StatelessWidget {
   const _CurrentFocusCard({
     required this.item,
     required this.onOpenTask,
-    required this.onContinue,
   });
 
   final ContinueItem item;
   final VoidCallback onOpenTask;
-  final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -207,6 +204,7 @@ class _CurrentFocusCard extends StatelessWidget {
             : '暂无最近上下文。';
 
     return WorkbenchCard(
+      onTap: onOpenTask,
       padding: const EdgeInsets.fromLTRB(18, 15, 18, 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,18 +320,7 @@ class _CurrentFocusCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Button(onPressed: onOpenTask, child: const Text('打开任务')),
-              const SizedBox(width: 8),
-              FilledButton(
-                onPressed: onContinue,
-                child: const Text('继续工作'),
-              ),
-            ],
-          ),
+          const SizedBox(height: 2),
         ],
       ),
     );
