@@ -1,5 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart';
 
+import '../../theme/theme_controller.dart';
 import '../core/models.dart';
 import '../workbench_runtime.dart';
 import 'workbench_ui.dart';
