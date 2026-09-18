@@ -75,6 +75,15 @@ class _NavigationPageState extends State<NavigationPage> {
     _go('/workspace/${current.workspace.id}/overview');
   }
 
+  void _openDeveloper() {
+    final current = _currentWork;
+    if (current == null) {
+      _go('/workspace');
+      return;
+    }
+    _go('/workspace/${current.workspace.id}/developer');
+  }
+
   Future<void> _switchWorkspace() async {
     try {
       final runtime = await WorkbenchRuntime.instance;
@@ -192,7 +201,7 @@ class _NavigationPageState extends State<NavigationPage> {
                           onWorkspace: _openWorkspace,
                           onTime: () => _go('/time'),
                           onKnowledge: () => _go('/knowledge'),
-                          onDeveloper: () => _go('/developer'),
+                          onDeveloper: _openDeveloper,
                           onTools: () => _go('/tools'),
                           onSettings: () => _go('/setting'),
                         ),
