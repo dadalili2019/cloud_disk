@@ -164,11 +164,11 @@ class _WorkbenchResourcePageState extends State<WorkbenchResourcePage> {
           }
           final resources = snapshot.data ?? const <ResourceModel>[];
           if (resources.isEmpty) {
-            return Center(
-              child: FilledButton(
-                onPressed: _createResource,
-                child: const Text('新建第一个资源'),
-              ),
+            return WorkbenchEmptyState(
+              title: '还没有资源',
+              description: '集中保存仓库、文档、服务地址、本地路径和其他工作入口。',
+              actionLabel: '新建资源',
+              onAction: _createResource,
             );
           }
           return ListView.separated(
@@ -216,7 +216,7 @@ class _WorkbenchResourcePageState extends State<WorkbenchResourcePage> {
                           '关联任务 · $taskText',
                           style: TextStyle(
                             fontSize: 10.5,
-                            color: theme.typography.body?.color?.withOpacity(0.52),
+                            color: theme.typography.body?.color?.withValues(alpha: 0.52),
                           ),
                         ),
                         if (resource.uri.isNotEmpty) ...[
@@ -346,7 +346,7 @@ class _ResourceEditDrawerState extends State<_ResourceEditDrawer> {
                 IconButton(icon: const Icon(FluentIcons.chrome_close, size: 14), onPressed: widget.onCancel),
               ]),
             ),
-            Container(height: 1, color: theme.inactiveColor.withOpacity(0.12)),
+            Container(height: 1, color: theme.inactiveColor.withValues(alpha: 0.12)),
             Expanded(child: ListView(
               padding: const EdgeInsets.fromLTRB(22, 20, 22, 24),
               children: [
@@ -385,7 +385,7 @@ class _ResourceEditDrawerState extends State<_ResourceEditDrawer> {
             )),
             Container(
               padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
-              decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.inactiveColor.withOpacity(0.12)))),
+              decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.inactiveColor.withValues(alpha: 0.12)))),
               child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                 Button(onPressed: widget.onCancel, child: const Text('取消')), const SizedBox(width: 10),
                 FilledButton(onPressed: _saving ? null : _save, child: Text(_saving ? '保存中…' : '保存')),
@@ -402,7 +402,7 @@ class _Badge extends StatelessWidget {
   const _Badge(this.text); final String text;
   @override Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-    decoration: BoxDecoration(color: FluentTheme.of(context).inactiveColor.withOpacity(0.10), borderRadius: BorderRadius.circular(10)),
+    decoration: BoxDecoration(color: FluentTheme.of(context).inactiveColor.withValues(alpha: 0.10), borderRadius: BorderRadius.circular(10)),
     child: Text(text, style: const TextStyle(fontSize: 10)),
   );
 }
