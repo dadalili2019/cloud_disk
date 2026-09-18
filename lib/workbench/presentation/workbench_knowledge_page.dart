@@ -577,74 +577,176 @@ class _KnowledgeEditorDialogState extends State<_KnowledgeEditorDialog> {
 
   @override
   Widget build(BuildContext context) {
+    const fieldGap = 10.0;
+
+    Widget field({
+      required String label,
+      required Widget child,
+    }) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 5),
+          child,
+        ],
+      );
+    }
+
     return ContentDialog(
-      title: Text(widget.existing == null ? '新建知识' : '编辑知识'),
-      constraints: const BoxConstraints(maxWidth: 680, maxHeight: 740),
+      title: Text(
+        widget.existing == null ? '新建知识' : '编辑知识',
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      constraints: const BoxConstraints(
+        maxWidth: 640,
+        maxHeight: 620,
+      ),
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.sources.isNotEmpty) ...[
-              const Text(
-                '来源上下文',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 7),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                children: widget.sources
-                    .map(
-                      (source) => _SourceChip(
-                        type: source.entityType,
-                        title: source.title,
-                      ),
-                    )
-                    .toList(),
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    '来源',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      color: FluentTheme.of(context)
+                          .typography
+                          .body
+                          ?.color
+                          ?.withValues(alpha: 0.62),
+                    ),
+                  ),
+                  ...widget.sources.map(
+                    (source) => _SourceChip(
+                      type: source.entityType,
+                      title: source.title,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
             ],
-            const Text('标题', style: TextStyle(fontSize: 11)),
-            const SizedBox(height: 5),
-            TextBox(controller: _title, autofocus: true),
-            const SizedBox(height: 12),
-            const Text('分类', style: TextStyle(fontSize: 11)),
-            const SizedBox(height: 5),
-            TextBox(
-              controller: _category,
-              placeholder: '例如 Engineering / AI / Workflow',
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth < 520) {
+                  return Column(
+                    children: [
+                      field(
+                        label: '标题',
+                        child: TextBox(
+                          controller: _title,
+                          autofocus: true,
+                        ),
+                      ),
+                      const SizedBox(height: fieldGap),
+                      field(
+                        label: '分类',
+                        child: TextBox(
+                          controller: _category,
+                          placeholder: 'Engineering / AI / Workflow',
+                        ),
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: field(
+                        label: '标题',
+                        child: TextBox(
+                          controller: _title,
+                          autofocus: true,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: field(
+                        label: '分类',
+                        child: TextBox(
+                          controller: _category,
+                          placeholder: 'Engineering / AI / Workflow',
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: 12),
-            const Text('摘要', style: TextStyle(fontSize: 11)),
-            const SizedBox(height: 5),
-            TextBox(
-              controller: _summary,
-              minLines: 2,
-              maxLines: 4,
-              placeholder: '用一句话概括这条知识。',
+            const SizedBox(height: fieldGap),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final summary = field(
+                  label: '摘要',
+                  child: TextBox(
+                    controller: _summary,
+                    minLines: 2,
+                    maxLines: 3,
+                    placeholder: '一句话概括',
+                  ),
+                );
+                final useWhen = field(
+                  label: '适用场景',
+                  child: TextBox(
+                    controller: _useWhen,
+                    minLines: 2,
+                    maxLines: 3,
+                    placeholder: '适合在什么情况下复用',
+                  ),
+                );
+
+                if (constraints.maxWidth < 520) {
+                  return Column(
+                    children: [
+                      summary,
+                      const SizedBox(height: fieldGap),
+                      useWhen,
+                    ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: summary),
+                    const SizedBox(width: 12),
+                    Expanded(child: useWhen),
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: 12),
-            const Text('适用场景', style: TextStyle(fontSize: 11)),
-            const SizedBox(height: 5),
-            TextBox(
-              controller: _useWhen,
-              minLines: 2,
-              maxLines: 4,
-              placeholder: '什么情况下适合复用这条知识？',
+            const SizedBox(height: fieldGap),
+            field(
+              label: '内容',
+              child: TextBox(
+                controller: _markdown,
+                minLines: 6,
+                maxLines: 9,
+                placeholder: 'Markdown',
+              ),
             ),
-            const SizedBox(height: 12),
-            const Text(
-              '可复用内容 / Markdown',
-              style: TextStyle(fontSize: 11),
-            ),
-            const SizedBox(height: 5),
-            TextBox(
-              controller: _markdown,
-              minLines: 7,
-              maxLines: 14,
-              placeholder: '写下可复用的原则、步骤、检查清单或示例…',
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             ToggleSwitch(
               checked: _pinned,
               onChanged: (value) => setState(() => _pinned = value),
@@ -664,11 +766,26 @@ class _KnowledgeEditorDialogState extends State<_KnowledgeEditorDialog> {
         ),
       ),
       actions: [
-        Button(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            SizedBox(
+              width: 82,
+              child: Button(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('取消'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 82,
+              child: FilledButton(
+                onPressed: _save,
+                child: const Text('保存'),
+              ),
+            ),
+          ],
         ),
-        FilledButton(onPressed: _save, child: const Text('保存')),
       ],
     );
   }
