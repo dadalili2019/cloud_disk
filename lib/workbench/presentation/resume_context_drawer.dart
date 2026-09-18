@@ -152,7 +152,7 @@ class ResumeContextDrawer extends StatelessWidget {
                 const SizedBox(height: 8),
                 if (item.context.notes.isNotEmpty)
                   _ContextRow(
-                    icon: FluentIcons.edit_note,
+                    icon: FluentIcons.library,
                     title: item.context.notes.first.title,
                     subtitle: '笔记',
                   ),
