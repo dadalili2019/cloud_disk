@@ -186,13 +186,13 @@ class _KnowledgeDistillDialogState extends State<_KnowledgeDistillDialog> {
                                           padding: const EdgeInsets.all(10),
                                           decoration: BoxDecoration(
                                             color: selected
-                                                ? theme.accentColor.normal.withOpacity(0.08)
+                                                ? theme.accentColor.normal.withValues(alpha: 0.08)
                                                 : theme.cardColor,
                                             borderRadius: BorderRadius.circular(7),
                                             border: Border.all(
                                               color: selected
-                                                  ? theme.accentColor.normal.withOpacity(0.35)
-                                                  : theme.inactiveColor.withOpacity(0.14),
+                                                  ? theme.accentColor.normal.withValues(alpha: 0.35)
+                                                  : theme.inactiveColor.withValues(alpha: 0.14),
                                             ),
                                           ),
                                           child: Column(
@@ -223,7 +223,7 @@ class _KnowledgeDistillDialogState extends State<_KnowledgeDistillDialog> {
                                                   overflow: TextOverflow.ellipsis,
                                                   style: TextStyle(
                                                     fontSize: 10,
-                                                    color: theme.typography.body?.color?.withOpacity(0.56),
+                                                    color: theme.typography.body?.color?.withValues(alpha: 0.56),
                                                   ),
                                                 ),
                                               ],
@@ -238,7 +238,7 @@ class _KnowledgeDistillDialogState extends State<_KnowledgeDistillDialog> {
               ),
             ),
             const SizedBox(width: 18),
-            Container(width: 1, color: theme.inactiveColor.withOpacity(0.12)),
+            Container(width: 1, color: theme.inactiveColor.withValues(alpha: 0.12)),
             const SizedBox(width: 18),
             Expanded(
               child: _selected == null
@@ -316,7 +316,7 @@ class _SourceTypeBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: FluentTheme.of(context).inactiveColor.withOpacity(0.09),
+        color: FluentTheme.of(context).inactiveColor.withValues(alpha: 0.09),
         borderRadius: BorderRadius.circular(9),
       ),
       child: Text(_sourceLabel(type), style: const TextStyle(fontSize: 9)),
