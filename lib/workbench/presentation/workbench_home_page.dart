@@ -67,7 +67,6 @@ class _WorkbenchHomePageState extends State<WorkbenchHomePage> {
 
             return WorkbenchPage(
               title: '首页',
-              subtitle: primary?.workspace.name,
               actions: [
                 Button(
                   onPressed: () =>
@@ -208,7 +207,7 @@ class _CurrentFocusCard extends StatelessWidget {
             : '暂无最近上下文。';
 
     return WorkbenchCard(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      padding: const EdgeInsets.fromLTRB(18, 15, 18, 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -216,32 +215,13 @@ class _CurrentFocusCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '当前工作',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: secondary,
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      task.title,
-                      style: const TextStyle(
-                        fontSize: 21,
-                        height: 1.2,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      '工作区 · ${item.workspace.name}',
-                      style: TextStyle(fontSize: 10.5, color: secondary),
-                    ),
-                  ],
+                child: Text(
+                  task.title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    height: 1.2,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               WorkbenchTag(
@@ -250,7 +230,7 @@ class _CurrentFocusCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           LayoutBuilder(
             builder: (context, constraints) {
               if (blockers.isEmpty || constraints.maxWidth < 620) {
@@ -310,9 +290,9 @@ class _CurrentFocusCard extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           _ProgressLine(progress: task.progress),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(13, 11, 13, 12),
@@ -342,7 +322,7 @@ class _CurrentFocusCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
