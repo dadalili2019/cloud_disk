@@ -170,6 +170,8 @@ class _WorkbenchWorkspaceListPageState
                               children: [
                                 Text(
                                   workspace.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -179,6 +181,8 @@ class _WorkbenchWorkspaceListPageState
                                   const SizedBox(height: 3),
                                   Text(
                                     workspace.slug,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontSize: 10.5,
                                       color: FluentTheme.of(context)
