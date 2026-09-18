@@ -483,8 +483,9 @@ class _IconTopbarButton extends StatelessWidget {
         : (theme.typography.body?.color ?? const Color(0xFFE5E8EB))
             .withValues(alpha: 0.70);
 
-    return Tooltip(
-      message: tooltip,
+    return Semantics(
+      button: true,
+      label: tooltip,
       child: Container(
         width: 34,
         height: 34,
@@ -743,7 +744,11 @@ class _NavItemState extends State<_NavItem> {
     );
 
     if (!widget.compact) return child;
-    return Tooltip(message: widget.label, child: child);
+    return Semantics(
+      button: true,
+      label: widget.label,
+      child: child,
+    );
   }
 }
 
