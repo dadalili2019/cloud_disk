@@ -136,7 +136,7 @@ class _QuickCaptureDrawerState extends State<QuickCaptureDrawer> {
       child: Column(
         children: [
           Container(
-            height: 58,
+            height: 54,
             padding: const EdgeInsets.symmetric(horizontal: 18),
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: palette.cardBorder)),
@@ -146,7 +146,7 @@ class _QuickCaptureDrawerState extends State<QuickCaptureDrawer> {
                 const Expanded(
                   child: Text(
                     '快速记录',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                 ),
                 IconButton(
@@ -219,17 +219,7 @@ class _QuickCaptureDrawerState extends State<QuickCaptureDrawer> {
                         onChanged: (value) =>
                             setState(() => _workspace = value),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _type == QuickCaptureType.task
-                            ? '新建任务不会替换当前任务。'
-                            : '存在当前任务时，会自动关联当前上下文。',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          height: 1.4,
-                          color: secondary,
-                        ),
-                      ),
+
                       if (_error != null) ...[
                         const SizedBox(height: 14),
                         Text(
