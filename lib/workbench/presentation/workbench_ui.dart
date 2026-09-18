@@ -169,8 +169,8 @@ class WorkbenchPageHeader extends StatelessWidget {
               style: TextStyle(
                 fontSize: compact ? 20 : 26,
                 height: 1.14,
-                fontWeight: FontWeight.w700,
-                letterSpacing: compact ? -0.1 : -0.3,
+                fontWeight: FontWeight.w600,
+                letterSpacing: compact ? 0 : -0.1,
               ),
             ),
             if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
