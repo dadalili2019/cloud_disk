@@ -1,8 +1,10 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../theme/theme_controller.dart';
 import '../core/models.dart';
 import '../workbench_runtime.dart';
+import 'workbench_ui.dart';
 
 class WorkbenchWorkspaceListPage extends StatefulWidget {
   const WorkbenchWorkspaceListPage({super.key});
@@ -87,77 +89,120 @@ class _WorkbenchWorkspaceListPageState
 
   @override
   Widget build(BuildContext context) {
-    return ScaffoldPage(
-      header: PageHeader(
-        title: const Text('工作区'),
-        commandBar: FilledButton(
+    return WorkbenchPage(
+      title: '工作台',
+      subtitle: '按工作区组织任务、笔记和上下文。',
+      actions: [
+        FilledButton(
           onPressed: _createWorkspace,
           child: const Text('新建工作区'),
         ),
-      ),
-      content: FutureBuilder<List<WorkspaceModel>>(
-        future: _workspaces,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: ProgressRing());
-          }
-          if (snapshot.hasError) {
-            return _WorkbenchErrorState(error: snapshot.error!);
-          }
+      ],
+      children: [
+        FutureBuilder<List<WorkspaceModel>>(
+          future: _workspaces,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const SizedBox(
+                height: 220,
+                child: Center(child: ProgressRing()),
+              );
+            }
+            if (snapshot.hasError) {
+              return _WorkbenchErrorState(error: snapshot.error!);
+            }
 
-          final workspaces = snapshot.data ?? const <WorkspaceModel>[];
-          if (workspaces.isEmpty) {
-            return Center(
-              child: FilledButton(
-                onPressed: _createWorkspace,
-                child: const Text('创建第一个工作区'),
-              ),
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(0, 10, 0, 24),
-            itemCount: workspaces.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              final workspace = workspaces[index];
-              return _WorkbenchCard(
-                onTap: () => context.go(
-                  '/workspace/${workspace.id}/overview',
-                ),
+            final workspaces = snapshot.data ?? const <WorkspaceModel>[];
+            if (workspaces.isEmpty) {
+              return WorkbenchCard(
+                padding: const EdgeInsets.all(22),
                 child: Row(
                   children: [
-                    const Icon(FluentIcons.open_folder_horizontal, size: 18),
-                    const SizedBox(width: 12),
-                    Expanded(
+                    const Expanded(
                       child: Text(
-                        workspace.name,
-                        style: const TextStyle(
-                          fontSize: 15,
+                        '还没有工作区。',
+                        style: TextStyle(
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    Text(
-                      workspace.slug,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: FluentTheme.of(context)
-                            .typography
-                            .body
-                            ?.color
-                            ?.withOpacity(0.5),
-                      ),
+                    FilledButton(
+                      onPressed: _createWorkspace,
+                      child: const Text('创建第一个工作区'),
                     ),
-                    const SizedBox(width: 8),
-                    const Icon(FluentIcons.chevron_right, size: 12),
                   ],
                 ),
               );
-            },
-          );
-        },
-      ),
+            }
+
+            return Column(
+              children: [
+                for (final workspace in workspaces)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: WorkbenchCard(
+                      onTap: () => context.go(
+                        '/workspace/${workspace.id}/overview',
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: ThemeScope.of(context).palette.surfaceMuted,
+                              borderRadius: BorderRadius.circular(9),
+                            ),
+                            child: const Icon(
+                              FluentIcons.open_folder_horizontal,
+                              size: 16,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  workspace.name,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (workspace.slug.trim().isNotEmpty) ...[
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    workspace.slug,
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      color: FluentTheme.of(context)
+                                          .typography
+                                          .body
+                                          ?.color
+                                          ?.withValues(alpha: 0.48),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(FluentIcons.chevron_right, size: 11),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 }
@@ -176,15 +221,17 @@ class WorkbenchWorkspaceFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
     return Column(
       children: [
         Container(
-          height: 46,
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          height: 42,
+          padding: const EdgeInsets.symmetric(horizontal: 28),
           decoration: BoxDecoration(
+            color: palette.cardBackground.withValues(alpha: 0.56),
             border: Border(
               bottom: BorderSide(
-                color: FluentTheme.of(context).inactiveColor.withOpacity(0.14),
+                color: palette.navBorder.withValues(alpha: 0.92),
               ),
             ),
           ),
@@ -231,14 +278,14 @@ class _WorkspaceTab extends StatelessWidget {
     final textColor = FluentTheme.of(context).typography.body?.color;
 
     return Padding(
-      padding: const EdgeInsets.only(right: 22),
+      padding: const EdgeInsets.only(right: 20),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: Container(
-            height: 46,
+            height: 42,
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 3),
             decoration: BoxDecoration(
@@ -252,9 +299,9 @@ class _WorkspaceTab extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 12.5,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                color: selected ? accent : textColor?.withOpacity(0.72),
+                color: selected ? accent : textColor?.withValues(alpha: 0.72),
               ),
             ),
           ),
@@ -274,81 +321,115 @@ class WorkbenchOverviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = ThemeScope.of(context).palette;
     return ScaffoldPage(
       padding: EdgeInsets.zero,
-      content: FutureBuilder<WorkspaceOverviewModel>(
-        future: WorkbenchRuntime.instance.then(
-          (runtime) => runtime.overviewService.loadOverview(workspaceId),
-        ),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: ProgressRing());
-          }
-          if (snapshot.hasError) {
-            return _WorkbenchErrorState(error: snapshot.error!);
-          }
+      content: Container(
+        color: palette.appBackground,
+        child: FutureBuilder<WorkspaceOverviewModel>(
+          future: WorkbenchRuntime.instance.then(
+            (runtime) => runtime.overviewService.loadOverview(workspaceId),
+          ),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Center(child: ProgressRing());
+            }
+            if (snapshot.hasError) {
+              return _WorkbenchErrorState(error: snapshot.error!);
+            }
 
-          final overview = snapshot.data!;
-          final currentTask = overview.currentTask;
+            final overview = snapshot.data!;
+            final currentTask = overview.currentTask;
 
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(28, 24, 28, 32),
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      overview.workspace.name,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final horizontal = constraints.maxWidth < 720 ? 16.0 : 28.0;
+                final stackPanels = constraints.maxWidth < 820;
+
+                final panels = [
+                  _SectionPanel(
+                    title: '关联笔记',
+                    emptyText: '暂无关联笔记',
+                    children: overview.linkedNotes
+                        .map(
+                          (note) => _CompactRow(
+                            icon: FluentIcons.page,
+                            text: note.title,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  _SectionPanel(
+                    title: '最近动态',
+                    emptyText: '暂无动态',
+                    children: overview.recentActivity
+                        .map((activity) => _ActivityRow(activity: activity))
+                        .toList(),
+                  ),
+                ];
+
+                return ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontal,
+                    22,
+                    horizontal,
+                    32,
+                  ),
+                  children: [
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1180),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    overview.workspace.name,
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      height: 1.15,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Button(
+                                  onPressed: () => context.go('/workspace'),
+                                  child: const Text('切换工作区'),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            _CurrentTaskCard(
+                              workspaceId: workspaceId,
+                              task: currentTask,
+                            ),
+                            const SizedBox(height: 14),
+                            if (stackPanels) ...[
+                              panels[0],
+                              const SizedBox(height: 12),
+                              panels[1],
+                            ] else
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(child: panels[0]),
+                                  const SizedBox(width: 14),
+                                  Expanded(child: panels[1]),
+                                ],
+                              ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  Button(
-                    onPressed: () => context.go('/workspace'),
-                    child: const Text('切换工作区'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              _CurrentTaskCard(
-                workspaceId: workspaceId,
-                task: currentTask,
-              ),
-              const SizedBox(height: 14),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _SectionPanel(
-                      title: '关联笔记',
-                      emptyText: '暂无关联笔记',
-                      children: overview.linkedNotes
-                          .map(
-                            (note) => _CompactRow(
-                              icon: FluentIcons.page,
-                              text: note.title,
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: _SectionPanel(
-                      title: '最近动态',
-                      emptyText: '暂无动态',
-                      children: overview.recentActivity
-                          .map((activity) => _ActivityRow(activity: activity))
-                          .toList(),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          );
-        },
+                  ],
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
@@ -367,7 +448,7 @@ class _CurrentTaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentTask = task;
     if (currentTask == null) {
-      return _WorkbenchCard(
+      return WorkbenchCard(
         child: Row(
           children: [
             const Expanded(
@@ -385,7 +466,7 @@ class _CurrentTaskCard extends StatelessWidget {
       );
     }
 
-    return _WorkbenchCard(
+    return WorkbenchCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -405,7 +486,7 @@ class _CurrentTaskCard extends StatelessWidget {
                   color: FluentTheme.of(context)
                       .accentColor
                       .normal
-                      .withOpacity(0.10),
+                      .withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -428,27 +509,11 @@ class _CurrentTaskCard extends StatelessWidget {
             ),
           ),
           if (currentTask.nextStep.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(
-                  width: 70,
-                  child: Text(
-                    '下一步',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    currentTask.nextStep,
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 14),
+            WorkbenchInfoBlock(
+              label: 'Next Step',
+              value: currentTask.nextStep,
+              emphasized: true,
             ),
           ],
         ],
