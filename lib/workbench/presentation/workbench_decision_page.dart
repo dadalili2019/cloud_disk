@@ -139,11 +139,11 @@ class _WorkbenchDecisionPageState extends State<WorkbenchDecisionPage> {
           }
           final decisions = snapshot.data ?? const <DecisionModel>[];
           if (decisions.isEmpty) {
-            return Center(
-              child: FilledButton(
-                onPressed: _createDecision,
-                child: const Text('新建第一个决策'),
-              ),
+            return WorkbenchEmptyState(
+              title: '还没有决策记录',
+              description: '把已经确定的选择、原因以及重新评估条件沉淀下来。',
+              actionLabel: '新建决策',
+              onAction: _createDecision,
             );
           }
           return ListView.separated(
@@ -186,7 +186,7 @@ class _WorkbenchDecisionPageState extends State<WorkbenchDecisionPage> {
                           '关联任务 · $taskText',
                           style: TextStyle(
                             fontSize: 10.5,
-                            color: theme.typography.body?.color?.withOpacity(0.52),
+                            color: theme.typography.body?.color?.withValues(alpha: 0.52),
                           ),
                         ),
                         if (decision.decisionText.isNotEmpty) ...[
@@ -339,7 +339,7 @@ class _DecisionEditDrawerState extends State<_DecisionEditDrawer> {
                 ),
               ]),
             ),
-            Container(height: 1, color: theme.inactiveColor.withOpacity(0.12)),
+            Container(height: 1, color: theme.inactiveColor.withValues(alpha: 0.12)),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(22, 20, 22, 24),
@@ -415,7 +415,7 @@ class _DecisionEditDrawerState extends State<_DecisionEditDrawer> {
               padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: theme.inactiveColor.withOpacity(0.12)),
+                  top: BorderSide(color: theme.inactiveColor.withValues(alpha: 0.12)),
                 ),
               ),
               child: Row(
@@ -445,7 +445,7 @@ class _Badge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: FluentTheme.of(context).inactiveColor.withOpacity(0.10),
+          color: FluentTheme.of(context).inactiveColor.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Text(text, style: const TextStyle(fontSize: 10)),
