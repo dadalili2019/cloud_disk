@@ -270,6 +270,12 @@ class WorkbenchRuntime {
       workspaces: workspaceService,
       tasks: taskService,
       notes: noteService,
+      issues: IssueService(
+        issues: issueRepository,
+        tasks: taskRepository,
+        links: entityLinkRepository,
+        activities: activityRepository,
+      ),
       settings: settingsService,
     );
     final focusSessionService = FocusSessionService(

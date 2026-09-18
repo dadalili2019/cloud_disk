@@ -1,4 +1,5 @@
 import '../core/models.dart';
+import 'issue_service.dart';
 import 'workbench_services.dart';
 import 'workbench_settings_service.dart';
 
@@ -7,12 +8,14 @@ class QuickCaptureService {
     required this.workspaces,
     required this.tasks,
     required this.notes,
+    required this.issues,
     required this.settings,
   });
 
   final WorkspaceService workspaces;
   final TaskService tasks;
   final NoteService notes;
+  final IssueService issues;
   final WorkbenchSettingsService settings;
 
   Future<List<WorkspaceModel>> listTargetWorkspaces() => workspaces.listActive();
@@ -50,10 +53,24 @@ class QuickCaptureService {
       description: content,
     );
 
-    if (await tasks.getCurrent(workspaceId) == null) {
-      await tasks.setCurrent(workspaceId, task.id);
-    }
     return task;
+  }
+
+  Future<IssueModel> saveAsIssue({
+    required String workspaceId,
+    required String text,
+  }) async {
+    final content = text.trim();
+    if (content.isEmpty) {
+      throw ArgumentError.value(text, 'text', '快速记录内容不能为空。');
+    }
+
+    return issues.create(
+      workspaceId: workspaceId,
+      title: _titleFrom(content, maxLength: 80),
+      impact: content,
+      linkToCurrentTask: true,
+    );
   }
 
   String _titleFrom(String text, {int maxLength = 36}) {

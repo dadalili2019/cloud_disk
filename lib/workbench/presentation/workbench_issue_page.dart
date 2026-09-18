@@ -193,7 +193,6 @@ class _WorkbenchIssuePageState extends State<WorkbenchIssuePage> {
     final theme = FluentTheme.of(context);
     return WorkbenchSectionPage(
       title: '问题',
-      subtitle: '记录阻塞、假设、影响与下一步调查。',
       actions: [
         FilledButton(
           onPressed: _createIssue,
@@ -214,7 +213,7 @@ class _WorkbenchIssuePageState extends State<WorkbenchIssuePage> {
           if (issues.isEmpty) {
             return WorkbenchEmptyState(
               title: '当前没有问题',
-              description: '把阻塞、影响、假设和下一步调查记录在这里。',
+              description: '',
               actionLabel: '新建问题',
               onAction: _createIssue,
             );
@@ -223,7 +222,7 @@ class _WorkbenchIssuePageState extends State<WorkbenchIssuePage> {
           return ListView.separated(
             padding: const EdgeInsets.only(bottom: 8),
             itemCount: issues.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final issue = issues[index];
               return FutureBuilder<List<TaskModel>>(
@@ -232,9 +231,7 @@ class _WorkbenchIssuePageState extends State<WorkbenchIssuePage> {
                 ),
                 builder: (context, linkSnapshot) {
                   final linkedTasks = linkSnapshot.data ?? const <TaskModel>[];
-                  final linkedTaskText = linkedTasks.isEmpty
-                      ? '未关联任务'
-                      : linkedTasks.map((task) => task.title).join('、');
+                  final linkedTaskText = linkedTasks.map((task) => task.title).join('、');
 
                   return WorkbenchCard(
                     onTap: () => _editIssue(issue),
@@ -254,20 +251,22 @@ class _WorkbenchIssuePageState extends State<WorkbenchIssuePage> {
                               ),
                             ),
                             WorkbenchTag(
-                              label: '严重程度 · ${_severityText(issue.severity)}',
+                              label: _severityText(issue.severity),
                             ),
                             const SizedBox(width: 6),
                             WorkbenchTag(label: _statusText(issue.status)),
                           ],
                         ),
-                        const SizedBox(height: 9),
-                        Text(
-                          '关联任务 · $linkedTaskText',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            color: theme.typography.body?.color?.withValues(alpha: 0.52),
+                        if (linkedTaskText.isNotEmpty) ...[
+                          const SizedBox(height: 7),
+                          Text(
+                            linkedTaskText,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: theme.typography.body?.color?.withValues(alpha: 0.52),
+                            ),
                           ),
-                        ),
+                        ],
                         if (issue.impact.isNotEmpty) ...[
                           const SizedBox(height: 9),
                           Text('影响 · ${issue.impact}',

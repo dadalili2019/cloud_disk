@@ -42,17 +42,17 @@ class ThemePalette {
 }
 
 class ThemeController extends ChangeNotifier {
-  ThemeMode _mode = ThemeMode.light;
-  AccentColor _accent = Colors.teal.toAccentColor();
+  ThemeMode _mode = ThemeMode.dark;
+  AccentColor _accent = _limeAccent;
   String? _fontFamily;
-  String _presetId = 'default';
+  String _presetId = 'comfort_dark';
 
   ThemeMode get mode => _mode;
   AccentColor get accent => _accent;
   String? get fontFamily => _fontFamily;
   String get effectiveFontFamily => _fontFamily ?? 'Microsoft YaHei UI';
   String get presetId => _presetId;
-  ThemePalette get palette => palettes[_presetId] ?? palettes['default']!;
+  ThemePalette get palette => palettes[_presetId] ?? palettes['comfort_dark']!;
 
   set mode(ThemeMode v) {
     _mode = v;
@@ -83,24 +83,44 @@ class ThemeController extends ChangeNotifier {
 
   Future<void> load() async {
     final sp = await SharedPreferences.getInstance();
-    final modeIndex = sp.getInt('theme.mode') ?? ThemeMode.light.index;
+    final modeIndex = sp.getInt('theme.mode') ?? ThemeMode.dark.index;
     final safeModeIndex =
         modeIndex.clamp(0, ThemeMode.values.length - 1).toInt();
     _mode = ThemeMode.values[safeModeIndex];
-    _accent = _accentFromName(sp.getString('theme.accent') ?? 'teal');
+    _accent = _accentFromName(sp.getString('theme.accent') ?? 'lime');
     _fontFamily = sp.getString('theme.font');
-    _presetId = sp.getString('theme.preset') ?? 'default';
-    if (!palettes.containsKey(_presetId)) {
-      _presetId = 'default';
+    _presetId = sp.getString('theme.preset') ?? 'comfort_dark';
+
+    final migrated = sp.getBool('theme.workbench_v1_4_migrated') ?? false;
+    if (!migrated) {
+      _presetId = 'comfort_dark';
+      _mode = ThemeMode.dark;
+      _accent = _limeAccent;
+      await _save();
+      await sp.setBool('theme.workbench_v1_4_migrated', true);
+    } else if (!palettes.containsKey(_presetId)) {
+      _presetId = 'comfort_dark';
+      _mode = ThemeMode.dark;
+      _accent = _limeAccent;
+      await _save();
     }
+
+    final fontMigrated =
+        sp.getBool('theme.workbench_v1_4_font_v3_migrated') ?? false;
+    if (!fontMigrated) {
+      _fontFamily = 'Microsoft YaHei UI';
+      await _save();
+      await sp.setBool('theme.workbench_v1_4_font_v3_migrated', true);
+    }
+
     notifyListeners();
   }
 
   Future<void> reset() async {
-    _mode = ThemeMode.light;
-    _presetId = 'default';
+    _mode = ThemeMode.dark;
+    _presetId = 'comfort_dark';
     _accent = _accentFromName(palette.accentName);
-    _fontFamily = null;
+    _fontFamily = 'Microsoft YaHei UI';
     await _save();
     notifyListeners();
   }
@@ -126,9 +146,29 @@ class ThemeController extends ChangeNotifier {
     'red': Colors.red.toAccentColor(),
     'gray': Colors.grey.toAccentColor(),
     'pink': _pinkAccent,
+    'lime': _limeAccent,
   };
 
   static final Map<String, ThemePalette> palettes = {
+    'comfort_dark': const ThemePalette(
+      id: 'comfort_dark',
+      label: 'Comfort Dark',
+      accentName: 'lime',
+      appBackground: Color(0xFF2B2B2B),
+      navBackground: Color(0xFF292A2B),
+      cardBackground: Color(0xFF303133),
+      surfaceMuted: Color(0xFF353638),
+      softAccent: Color(0xFF343A33),
+      successSoft: Color(0xFF313A31),
+      dangerSoft: Color(0xFF3A3031),
+      cardBorder: Color(0xFF3D4042),
+      navBorder: Color(0xFF36393B),
+      navItemHover: Color(0xFF323436),
+      navItemSelected: Color(0xFF3A3D3F),
+      appBarBackground: Color(0xFF3C3F41),
+      appBarBorder: Color(0xFF45484A),
+      shadow: Color(0xFF151515),
+    ),
     'default': const ThemePalette(
       id: 'default',
       label: '奶油薄荷',
@@ -207,6 +247,15 @@ class ThemeController extends ChangeNotifier {
     ),
   };
 
+  static final AccentColor _limeAccent =
+      AccentColor.swatch(const <String, Color>{
+    'normal': Color(0xFF6A8759),
+    'lighter': Color(0xFF8FA47F),
+    'light': Color(0xFF7D986C),
+    'dark': Color(0xFF587149),
+    'darker': Color(0xFF475C3B),
+  });
+
   static final AccentColor _pinkAccent =
       AccentColor.swatch(const <String, Color>{
     'normal': Color(0xFFE75D8D),
@@ -229,14 +278,42 @@ class ThemeController extends ChangeNotifier {
   }
 
   FluentThemeData buildTheme(Brightness b) {
-    final isLight = b == Brightness.light;
+    final isDark = b == Brightness.dark;
+    final primaryText = isDark
+        ? const Color(0xFFC2C9D0)
+        : const Color(0xFF333A35);
+    final secondaryText = isDark
+        ? const Color(0xFF9DA6AF)
+        : const Color(0xFF667068);
+    final tertiaryText = isDark
+        ? const Color(0xFF7D8790)
+        : const Color(0xFF858E87);
+
     return FluentThemeData(
       brightness: b,
       accentColor: _accent,
       fontFamily: effectiveFontFamily,
-      scaffoldBackgroundColor: isLight ? palette.appBackground : null,
-      cardColor: isLight ? palette.cardBackground : null,
-      inactiveColor: isLight ? palette.cardBorder : null,
+      typography: Typography.fromBrightness(
+        brightness: b,
+        color: primaryText,
+      ),
+      resources: isDark
+          ? ResourceDictionary.dark(
+              textFillColorPrimary: primaryText,
+              textFillColorSecondary: secondaryText,
+              textFillColorTertiary: tertiaryText,
+              textFillColorDisabled: const Color(0xFF697178),
+              textOnAccentFillColorPrimary: const Color(0xFF161A15),
+              textOnAccentFillColorSecondary: const Color(0xFF252B23),
+              controlStrongFillColorDefault: const Color(0xFF9098A0),
+              controlStrongStrokeColorDefault: const Color(0xFF9098A0),
+              focusStrokeColorOuter: const Color(0xFF6A8759),
+              dividerStrokeColorDefault: const Color(0xFF3D4042),
+            )
+          : ResourceDictionary.light(),
+      scaffoldBackgroundColor: palette.appBackground,
+      cardColor: palette.cardBackground,
+      inactiveColor: palette.cardBorder,
     );
   }
 }

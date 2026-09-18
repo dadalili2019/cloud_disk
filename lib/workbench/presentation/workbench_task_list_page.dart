@@ -144,7 +144,6 @@ class _WorkbenchTaskListPageState extends State<WorkbenchTaskListPage> {
   Widget build(BuildContext context) {
     return WorkbenchSectionPage(
       title: '任务',
-      subtitle: '管理当前工作区的任务、进度与下一步。',
       actions: [
         FilledButton(
           onPressed: _createTask,
@@ -175,7 +174,7 @@ class _WorkbenchTaskListPageState extends State<WorkbenchTaskListPage> {
           return ListView.separated(
             padding: const EdgeInsets.only(bottom: 8),
             itemCount: tasks.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final task = tasks[index];
               return _TaskTile(
@@ -222,7 +221,7 @@ class _TaskTile extends StatelessWidget {
 
     return WorkbenchCard(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -252,7 +251,7 @@ class _TaskTile extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -264,13 +263,13 @@ class _TaskTile extends StatelessWidget {
                   ],
                 ),
                 if (task.nextStep.isNotEmpty) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
-                    '下一步 · ${task.nextStep}',
+                    task.nextStep,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 11,
                       color: theme.typography.body?.color?.withValues(alpha: 0.62),
                     ),
                   ),
@@ -344,17 +343,6 @@ class _TaskEditDrawerState extends State<_TaskEditDrawer> {
         return 'done';
       default:
         return 'todo';
-    }
-  }
-
-  String _statusText(String value) {
-    switch (value) {
-      case 'doing':
-        return '进行中';
-      case 'done':
-        return '已完成';
-      default:
-        return '待办';
     }
   }
 

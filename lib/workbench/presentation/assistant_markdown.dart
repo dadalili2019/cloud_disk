@@ -75,7 +75,7 @@ class AssistantMarkdown extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11.5,
                           height: 1.5,
-                          color: theme.typography.body?.color?.withOpacity(0.62),
+                          color: theme.typography.body?.color?.withValues(alpha: 0.62),
                         ),
                       ),
                     ),
@@ -157,7 +157,7 @@ class _CodeBlock extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w500,
-                      color: theme.typography.body?.color?.withOpacity(0.52),
+                      color: theme.typography.body?.color?.withValues(alpha: 0.52),
                     ),
                   ),
                 ),
@@ -170,7 +170,7 @@ class _CodeBlock extends StatelessWidget {
           ),
           Container(
             height: 1,
-            color: palette.cardBorder.withOpacity(0.86),
+            color: palette.cardBorder.withValues(alpha: 0.86),
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,

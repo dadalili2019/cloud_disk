@@ -93,15 +93,12 @@ class _JsonFormatPageState extends State<JsonFormatPage> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldPage(
-      header: const PageHeader(title: Text('JSON 格式化校验')),
       content: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('请输入 JSON 内容（左侧输入，右侧显示格式化结果）：'),
-              const SizedBox(height: 12),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

@@ -3,9 +3,9 @@ import 'package:fluent_ui/fluent_ui.dart';
 import '../../theme/theme_controller.dart';
 
 double _workbenchHorizontalPadding(double width) {
-  if (width >= 1280) return 34;
-  if (width >= 960) return 28;
-  if (width >= 720) return 24;
+  if (width >= 1280) return 40;
+  if (width >= 960) return 32;
+  if (width >= 720) return 26;
   return 16;
 }
 
@@ -17,9 +17,9 @@ class WorkbenchPage extends StatelessWidget {
     this.subtitle,
     this.actions = const [],
     this.maxWidth = 1180,
-    this.topPadding = 24,
+    this.topPadding = 18,
     this.bottomPadding = 48,
-    this.headerGap = 20,
+    this.headerGap = 14,
   });
 
   final String title;
@@ -55,12 +55,14 @@ class WorkbenchPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        WorkbenchPageHeader(
-                          title: title,
-                          subtitle: subtitle,
-                          actions: actions,
-                        ),
-                        SizedBox(height: headerGap),
+                        if (actions.isNotEmpty) ...[
+                          WorkbenchPageHeader(
+                            title: title,
+                            subtitle: subtitle,
+                            actions: actions,
+                          ),
+                          SizedBox(height: headerGap),
+                        ],
                         ...children,
                       ],
                     ),
@@ -83,9 +85,9 @@ class WorkbenchSectionPage extends StatelessWidget {
     this.subtitle,
     this.actions = const [],
     this.maxWidth = 1180,
-    this.topPadding = 20,
-    this.bottomPadding = 24,
-    this.headerGap = 16,
+    this.topPadding = 18,
+    this.bottomPadding = 32,
+    this.headerGap = 14,
   });
 
   final String title;
@@ -121,13 +123,15 @@ class WorkbenchSectionPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      WorkbenchPageHeader(
-                        title: title,
-                        subtitle: subtitle,
-                        actions: actions,
-                        compact: true,
-                      ),
-                      SizedBox(height: headerGap),
+                      if (actions.isNotEmpty) ...[
+                        WorkbenchPageHeader(
+                          title: title,
+                          subtitle: subtitle,
+                          actions: actions,
+                          compact: true,
+                        ),
+                        SizedBox(height: headerGap),
+                      ],
                       Expanded(child: child),
                     ],
                   ),
@@ -157,68 +161,23 @@ class WorkbenchPageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FluentTheme.of(context);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final stackActions = actions.isNotEmpty && constraints.maxWidth < 560;
-        final titleBlock = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: compact ? 20 : 26,
-                height: 1.14,
-                fontWeight: FontWeight.w700,
-                letterSpacing: compact ? -0.1 : -0.3,
-              ),
-            ),
-            if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
-              SizedBox(height: compact ? 4 : 6),
-              Text(
-                subtitle!,
-                style: TextStyle(
-                  fontSize: compact ? 10.5 : 11.5,
-                  height: 1.45,
-                  color: theme.typography.body?.color?.withValues(alpha: 0.56),
-                ),
-              ),
-            ],
-          ],
-        );
+    final actionBlock = Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      alignment: WrapAlignment.end,
+      children: actions,
+    );
 
-        final actionBlock = Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          alignment: WrapAlignment.end,
-          children: actions,
-        );
-
-        if (stackActions) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              titleBlock,
-              const SizedBox(height: 12),
-              Align(alignment: Alignment.centerLeft, child: actionBlock),
-            ],
-          );
-        }
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: titleBlock),
-            if (actions.isNotEmpty) ...[
-              const SizedBox(width: 18),
-              Padding(
-                padding: const EdgeInsets.only(top: 1),
-                child: actionBlock,
-              ),
-            ],
-          ],
-        );
-      },
+    return Semantics(
+      header: true,
+      label: title,
+      child: SizedBox(
+        height: 32,
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: actionBlock,
+        ),
+      ),
     );
   }
 }
@@ -227,7 +186,7 @@ class WorkbenchCard extends StatelessWidget {
   const WorkbenchCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(18),
+    this.padding = const EdgeInsets.all(20),
     this.onTap,
     this.minHeight,
     this.backgroundColor,
@@ -316,10 +275,12 @@ class WorkbenchInfoBlock extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 13),
       decoration: BoxDecoration(
-        color: emphasized ? palette.softAccent : palette.surfaceMuted,
+        color: palette.surfaceMuted,
         borderRadius: BorderRadius.circular(9),
         border: Border.all(
-          color: palette.cardBorder.withValues(alpha: 0.78),
+          color: emphasized
+              ? accent.withValues(alpha: 0.38)
+              : palette.cardBorder.withValues(alpha: 0.78),
         ),
       ),
       child: Column(
@@ -333,7 +294,7 @@ class WorkbenchInfoBlock extends StatelessWidget {
               letterSpacing: 0.55,
               color: emphasized
                   ? accent
-                  : theme.typography.body?.color?.withValues(alpha: 0.46),
+                  : theme.typography.body?.color?.withValues(alpha: 0.66),
             ),
           ),
           const SizedBox(height: 6),
@@ -380,15 +341,17 @@ class WorkbenchEmptyState extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 5),
-              Text(
-                description,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  height: 1.4,
-                  color: theme.typography.body?.color?.withValues(alpha: 0.52),
+              if (description.trim().isNotEmpty) ...[
+                const SizedBox(height: 5),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    height: 1.4,
+                    color: theme.typography.body?.color?.withValues(alpha: 0.70),
+                  ),
                 ),
-              ),
+              ],
             ],
           );
           final action = FilledButton(
@@ -454,7 +417,7 @@ class WorkbenchTag extends StatelessWidget {
           fontSize: 10.5,
           color: selected
               ? theme.accentColor.normal
-              : theme.typography.body?.color?.withValues(alpha: 0.68),
+              : theme.typography.body?.color?.withValues(alpha: 0.82),
         ),
       ),
     );

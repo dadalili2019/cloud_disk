@@ -149,7 +149,6 @@ class _WorkbenchResourcePageState extends State<WorkbenchResourcePage> {
     final theme = FluentTheme.of(context);
     return WorkbenchSectionPage(
       title: '资源',
-      subtitle: '集中维护代码仓库、文档、链接、路径和常用命令。',
       actions: [
         FilledButton(onPressed: _createResource, child: const Text('新建资源')),
       ],
@@ -166,7 +165,7 @@ class _WorkbenchResourcePageState extends State<WorkbenchResourcePage> {
           if (resources.isEmpty) {
             return WorkbenchEmptyState(
               title: '还没有资源',
-              description: '集中保存仓库、文档、服务地址、本地路径和其他工作入口。',
+              description: '',
               actionLabel: '新建资源',
               onAction: _createResource,
             );
@@ -174,7 +173,7 @@ class _WorkbenchResourcePageState extends State<WorkbenchResourcePage> {
           return ListView.separated(
             padding: const EdgeInsets.only(bottom: 8),
             itemCount: resources.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final resource = resources[index];
               return FutureBuilder<List<TaskModel>>(
@@ -183,9 +182,7 @@ class _WorkbenchResourcePageState extends State<WorkbenchResourcePage> {
                 ),
                 builder: (context, taskSnapshot) {
                   final linked = taskSnapshot.data ?? const <TaskModel>[];
-                  final taskText = linked.isEmpty
-                      ? '未关联任务'
-                      : linked.map((e) => e.title).join('、');
+                  final taskText = linked.map((e) => e.title).join('、');
                   return WorkbenchCard(
                     onTap: () => _edit(resource),
                     padding: const EdgeInsets.all(16),
@@ -211,14 +208,16 @@ class _WorkbenchResourcePageState extends State<WorkbenchResourcePage> {
                             WorkbenchTag(label: _typeText(resource.resourceType)),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '关联任务 · $taskText',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            color: theme.typography.body?.color?.withValues(alpha: 0.52),
+                        if (taskText.isNotEmpty) ...[
+                          const SizedBox(height: 7),
+                          Text(
+                            taskText,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: theme.typography.body?.color?.withValues(alpha: 0.52),
+                            ),
                           ),
-                        ),
+                        ],
                         if (resource.uri.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           Text(

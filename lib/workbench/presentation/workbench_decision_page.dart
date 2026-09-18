@@ -124,7 +124,6 @@ class _WorkbenchDecisionPageState extends State<WorkbenchDecisionPage> {
     final theme = FluentTheme.of(context);
     return WorkbenchSectionPage(
       title: '决策',
-      subtitle: '记录已经做出的选择、原因以及需要重新评估的条件。',
       actions: [
         FilledButton(onPressed: _createDecision, child: const Text('新建决策')),
       ],
@@ -141,7 +140,7 @@ class _WorkbenchDecisionPageState extends State<WorkbenchDecisionPage> {
           if (decisions.isEmpty) {
             return WorkbenchEmptyState(
               title: '还没有决策记录',
-              description: '把已经确定的选择、原因以及重新评估条件沉淀下来。',
+              description: '',
               actionLabel: '新建决策',
               onAction: _createDecision,
             );
@@ -149,7 +148,7 @@ class _WorkbenchDecisionPageState extends State<WorkbenchDecisionPage> {
           return ListView.separated(
             padding: const EdgeInsets.only(bottom: 8),
             itemCount: decisions.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final decision = decisions[index];
               return FutureBuilder<List<TaskModel>>(
@@ -158,9 +157,7 @@ class _WorkbenchDecisionPageState extends State<WorkbenchDecisionPage> {
                 ),
                 builder: (context, taskSnapshot) {
                   final linked = taskSnapshot.data ?? const <TaskModel>[];
-                  final taskText = linked.isEmpty
-                      ? '未关联任务'
-                      : linked.map((e) => e.title).join('、');
+                  final taskText = linked.map((e) => e.title).join('、');
                   return WorkbenchCard(
                     onTap: () => _edit(decision),
                     padding: const EdgeInsets.all(16),
@@ -181,14 +178,16 @@ class _WorkbenchDecisionPageState extends State<WorkbenchDecisionPage> {
                             WorkbenchTag(label: _statusText(decision.status)),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '关联任务 · $taskText',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            color: theme.typography.body?.color?.withValues(alpha: 0.52),
+                        if (taskText.isNotEmpty) ...[
+                          const SizedBox(height: 7),
+                          Text(
+                            taskText,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: theme.typography.body?.color?.withValues(alpha: 0.52),
+                            ),
                           ),
-                        ),
+                        ],
                         if (decision.decisionText.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           Text(

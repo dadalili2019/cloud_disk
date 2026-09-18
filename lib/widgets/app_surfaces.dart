@@ -30,14 +30,14 @@ class CloudCard extends StatelessWidget {
         color: backgroundColor ?? palette.cardBackground,
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
-          color: palette.cardBorder.withOpacity(0.72),
+          color: palette.cardBorder.withValues(alpha: 0.72),
           width: 0.8,
         ),
         boxShadow: [
           BoxShadow(
             blurRadius: elevated ? 12 : 4,
             offset: Offset(0, elevated ? 5 : 2),
-            color: palette.shadow.withOpacity(elevated ? 0.22 : 0.10),
+            color: palette.shadow.withValues(alpha: elevated ? 0.22 : 0.10),
           ),
         ],
       ),
@@ -71,7 +71,7 @@ class SoftPill extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor ?? palette.softAccent,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: fg.withOpacity(0.06), width: 0.8),
+        border: Border.all(color: fg.withValues(alpha: 0.06), width: 0.8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -158,7 +158,7 @@ class StatTile extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.14),
+                  color: accentColor.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, size: 15, color: accentColor),

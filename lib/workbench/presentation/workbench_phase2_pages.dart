@@ -68,20 +68,14 @@ class _WorkbenchWorkspaceFrameV2State
             future: _overview,
             builder: (context, snapshot) {
               final overview = snapshot.data;
-              return _WorkspaceHeader(
-                workspace: overview?.workspace,
-                currentTask: overview?.currentTask,
-                loading: snapshot.connectionState != ConnectionState.done,
+              return _WorkspaceNavigation(
+                workspaceId: widget.workspaceId,
+                section: widget.section,
                 onSettings: overview == null
                     ? null
                     : () => _openSettings(overview.workspace),
-                onSwitchWorkspace: () => context.go('/workspace'),
               );
             },
-          ),
-          _WorkspaceNavigation(
-            workspaceId: widget.workspaceId,
-            section: widget.section,
           ),
           Expanded(child: widget.child),
         ],
@@ -90,186 +84,88 @@ class _WorkbenchWorkspaceFrameV2State
   }
 }
 
-class _WorkspaceHeader extends StatelessWidget {
-  const _WorkspaceHeader({
-    required this.workspace,
-    required this.currentTask,
-    required this.loading,
-    required this.onSettings,
-    required this.onSwitchWorkspace,
-  });
-
-  final WorkspaceModel? workspace;
-  final TaskModel? currentTask;
-  final bool loading;
-  final VoidCallback? onSettings;
-  final VoidCallback onSwitchWorkspace;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = ThemeScope.of(context).palette;
-    final theme = FluentTheme.of(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: palette.appBackground,
-        border: Border(
-          bottom: BorderSide(color: palette.cardBorder.withOpacity(0.76)),
-        ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final horizontal = constraints.maxWidth >= 1180 ? 34.0 : 28.0;
-          return Padding(
-            padding: EdgeInsets.fromLTRB(horizontal, 18, horizontal, 14),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1180),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: palette.surfaceMuted,
-                        borderRadius: BorderRadius.circular(9),
-                        border: Border.all(color: palette.cardBorder),
-                      ),
-                      child: Icon(
-                        FluentIcons.open_folder_horizontal,
-                        size: 16,
-                        color: theme.accentColor.normal,
-                      ),
-                    ),
-                    const SizedBox(width: 11),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            loading ? '加载工作区…' : workspace?.name ?? '工作区',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              height: 1.2,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            _subtitle(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              color: theme.typography.body?.color?.withOpacity(0.55),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Button(
-                      onPressed: onSettings,
-                      child: const Text('工作区设置'),
-                    ),
-                    const SizedBox(width: 8),
-                    Button(
-                      onPressed: onSwitchWorkspace,
-                      child: const Text('切换工作区'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  String _subtitle() {
-    if (loading) return '正在恢复工作上下文';
-    final task = currentTask;
-    if (task == null) return '暂无当前任务';
-    if (task.nextStep.trim().isEmpty) return '当前任务 · ${task.title}';
-    return '当前任务 · ${task.title} · 下一步：${task.nextStep}';
-  }
-}
-
 class _WorkspaceNavigation extends StatelessWidget {
   const _WorkspaceNavigation({
     required this.workspaceId,
     required this.section,
+    required this.onSettings,
   });
 
   final String workspaceId;
   final String section;
+  final VoidCallback? onSettings;
 
   @override
   Widget build(BuildContext context) {
     final palette = ThemeScope.of(context).palette;
     return Container(
-      height: 48,
+      height: 42,
       decoration: BoxDecoration(
         color: palette.appBackground,
         border: Border(
-          bottom: BorderSide(color: palette.cardBorder.withOpacity(0.68)),
+          bottom: BorderSide(color: palette.cardBorder.withValues(alpha: 0.68)),
         ),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final horizontal = constraints.maxWidth >= 1180 ? 34.0 : 28.0;
+          final horizontal = constraints.maxWidth >= 1180 ? 40.0 : 32.0;
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontal),
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1180),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _WorkspaceTab(
-                          label: '概览',
-                          selected: section == 'overview',
-                          onTap: () => context.go('/workspace/$workspaceId/overview'),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _WorkspaceTab(
+                              label: '概览',
+                              selected: section == 'overview',
+                              onTap: () => context.go('/workspace/$workspaceId/overview'),
+                            ),
+                            _WorkspaceTab(
+                              label: '任务',
+                              selected: section == 'tasks',
+                              onTap: () => context.go('/workspace/$workspaceId/tasks'),
+                            ),
+                            _WorkspaceTab(
+                              label: '笔记',
+                              selected: section == 'notes',
+                              onTap: () => context.go('/workspace/$workspaceId/notes'),
+                            ),
+                            _WorkspaceTab(
+                              label: '问题',
+                              selected: section == 'issues',
+                              onTap: () => context.go('/workspace/$workspaceId/issues'),
+                            ),
+                            _WorkspaceTab(
+                              label: '资源',
+                              selected: section == 'resources',
+                              onTap: () => context.go('/workspace/$workspaceId/resources'),
+                            ),
+                            _WorkspaceTab(
+                              label: '决策',
+                              selected: section == 'decisions',
+                              onTap: () => context.go('/workspace/$workspaceId/decisions'),
+                            ),
+                            _WorkspaceTab(
+                              label: '开发',
+                              selected: section == 'developer',
+                              onTap: () => context.go('/workspace/$workspaceId/developer'),
+                            ),
+                          ],
                         ),
-                        _WorkspaceTab(
-                          label: '任务',
-                          selected: section == 'tasks',
-                          onTap: () => context.go('/workspace/$workspaceId/tasks'),
-                        ),
-                        _WorkspaceTab(
-                          label: '笔记',
-                          selected: section == 'notes',
-                          onTap: () => context.go('/workspace/$workspaceId/notes'),
-                        ),
-                        _WorkspaceTab(
-                          label: '问题',
-                          selected: section == 'issues',
-                          onTap: () => context.go('/workspace/$workspaceId/issues'),
-                        ),
-                        _WorkspaceTab(
-                          label: '资源',
-                          selected: section == 'resources',
-                          onTap: () => context.go('/workspace/$workspaceId/resources'),
-                        ),
-                        _WorkspaceTab(
-                          label: '决策',
-                          selected: section == 'decisions',
-                          onTap: () => context.go('/workspace/$workspaceId/decisions'),
-                        ),
-                        _WorkspaceTab(
-                          label: '开发',
-                          selected: section == 'developer',
-                          onTap: () => context.go('/workspace/$workspaceId/developer'),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(FluentIcons.settings, size: 14),
+                      onPressed: onSettings,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -303,22 +199,22 @@ class _WorkspaceTab extends StatelessWidget {
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 130),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
             decoration: BoxDecoration(
               color: selected ? palette.navItemSelected : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               border: selected
-                  ? Border.all(color: palette.cardBorder.withOpacity(0.86))
+                  ? Border.all(color: palette.cardBorder.withValues(alpha: 0.86))
                   : null,
             ),
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 11,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                 color: selected
                     ? theme.accentColor.normal
-                    : theme.typography.body?.color?.withOpacity(0.68),
+                    : theme.typography.body?.color?.withValues(alpha: 0.68),
               ),
             ),
           ),
@@ -357,7 +253,7 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
               builder: (context, constraints) {
                 final horizontal = constraints.maxWidth >= 1180 ? 34.0 : 28.0;
                 return ListView(
-                  padding: EdgeInsets.fromLTRB(horizontal, 22, horizontal, 34),
+                  padding: EdgeInsets.fromLTRB(horizontal, 22, horizontal, 36),
                   children: [
                     Center(
                       child: ConstrainedBox(
@@ -369,7 +265,7 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
                               workspaceId: workspaceId,
                               task: overview.currentTask,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 18),
                             _OverviewGrid(
                               currentTask: overview.currentTask,
                               blockers: overview.currentBlockers,
@@ -377,7 +273,7 @@ class WorkbenchOverviewPageV2 extends StatelessWidget {
                               resources: overview.linkedResources,
                               decisions: overview.linkedDecisions,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 18),
                             _Panel(
                               title: '最近动态',
                               emptyText: '暂无动态',
@@ -547,7 +443,7 @@ class _OverviewGrid extends StatelessWidget {
                               .typography
                               .body
                               ?.color
-                              ?.withOpacity(0.58),
+                              ?.withValues(alpha: 0.58),
                         ),
                       ),
                     ),
@@ -565,13 +461,13 @@ class _OverviewGrid extends StatelessWidget {
             children: [
               for (var i = 0; i < panels.length; i++) ...[
                 panels[i],
-                if (i != panels.length - 1) const SizedBox(height: 12),
+                if (i != panels.length - 1) const SizedBox(height: 18),
               ],
             ],
           );
         }
 
-        const gap = 12.0;
+        const gap = 18.0;
         final width = (constraints.maxWidth - gap) / 2;
         return Wrap(
           spacing: gap,
@@ -615,7 +511,7 @@ class _CurrentTaskCard extends StatelessWidget {
 
     return WorkbenchCard(
       onTap: () => context.go('/workspace/$workspaceId/tasks'),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -629,13 +525,13 @@ class _CurrentTaskCard extends StatelessWidget {
               WorkbenchTag(label: '进度 ${current.progress}%'),
             ],
           ),
-          const SizedBox(height: 9),
+          const SizedBox(height: 14),
           Text(
             current.title,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
           if (current.nextStep.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Text(
               '下一步 · ${current.nextStep}',
               style: const TextStyle(fontSize: 12.5),
@@ -684,7 +580,7 @@ class _BlockerPanel extends StatelessWidget {
                                 .typography
                                 .body
                                 ?.color
-                                ?.withOpacity(0.55),
+                                ?.withValues(alpha: 0.55),
                           ),
                         ),
                       ],
@@ -713,11 +609,12 @@ class _Panel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WorkbenchCard(
+      padding: const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           WorkbenchSectionHeader(title: title),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           if (children.isEmpty)
             Text(
               emptyText,
@@ -727,13 +624,13 @@ class _Panel extends StatelessWidget {
                     .typography
                     .body
                     ?.color
-                    ?.withOpacity(0.45),
+                    ?.withValues(alpha: 0.45),
               ),
             )
           else
             ...children.map(
               (child) => Padding(
-                padding: const EdgeInsets.only(bottom: 9),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: child,
               ),
             ),

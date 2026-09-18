@@ -33,7 +33,7 @@ Future<String?> showWorkspaceSettingsDialog(
                 const SizedBox(height: 6),
                 Text(
                   '目录标识在当前阶段保持只读，避免移动已有 Markdown 文件。',
-                  style: TextStyle(fontSize: 11, color: FluentTheme.of(context).typography.body?.color?.withOpacity(0.50)),
+                  style: TextStyle(fontSize: 11, color: FluentTheme.of(context).typography.body?.color?.withValues(alpha: 0.50)),
                 ),
                 if (error != null) ...[
                   const SizedBox(height: 14),
@@ -43,7 +43,7 @@ Future<String?> showWorkspaceSettingsDialog(
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: FluentTheme.of(context).inactiveColor.withOpacity(0.18)),
+                    border: Border.all(color: FluentTheme.of(context).inactiveColor.withValues(alpha: 0.18)),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
@@ -100,6 +100,8 @@ Future<String?> showWorkspaceSettingsDialog(
       ),
     );
 
+    if (!context.mounted) return null;
+
     if (result == 'archive') {
       final confirmed = await showDialog<bool>(
         context: context,
@@ -154,7 +156,7 @@ Future<void> showArchivedWorkspacesDialog(BuildContext context) async {
                     return Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        border: Border.all(color: FluentTheme.of(context).inactiveColor.withOpacity(0.16)),
+                        border: Border.all(color: FluentTheme.of(context).inactiveColor.withValues(alpha: 0.16)),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(

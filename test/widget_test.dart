@@ -1,9 +1,6 @@
-import 'package:cloud_disk/utils/DBHelper.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:xml/xml.dart';
-import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 Future<void> extractWordContent(String wordFilePath, String outputPdfPath) async {
@@ -23,7 +20,6 @@ Future<void> extractWordContent(String wordFilePath, String outputPdfPath) async
   }
 
   if (documentXml == null) {
-    print("未找到 document.xml 文件！");
     return;
   }
 
@@ -34,12 +30,7 @@ Future<void> extractWordContent(String wordFilePath, String outputPdfPath) async
   List<String> extractedTexts = [];
   var texts = document.findAllElements('w:t');
   for (var text in texts) {
-    extractedTexts.add(text.text);
-  }
-
-  // 打印提取的文本内容（仅供调试）
-  for (var text in extractedTexts) {
-    print(text);
+    extractedTexts.add(text.innerText);
   }
 
   // 生成 PDF 文件
@@ -59,7 +50,6 @@ Future<void> generatePdf(List<String> texts, String outputPath) async {
   // 保存 PDF 文件
   final outputFile = File(outputPath);
   await outputFile.writeAsBytes(await pdf.save());
-  print('PDF 文件已生成：$outputPath');
 }
 
 void main() async {

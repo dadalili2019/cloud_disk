@@ -2,9 +2,10 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 
 class WindowButtons extends StatefulWidget {
-  const WindowButtons({Key? key}) : super(key: key);
+  const WindowButtons({super.key});
+
   @override
-  _WindowButtonsState createState() => _WindowButtonsState();
+  State<WindowButtons> createState() => _WindowButtonsState();
 }
 
 class _WindowButtonsState extends State<WindowButtons> {
