@@ -574,14 +574,14 @@ class _Sidebar extends StatelessWidget {
             ),
             _NavItem(
               compact: compact,
-              icon: FluentIcons.code,
+              icon: FluentIcons.link,
               label: '开发者',
               active: isActive(_NavTarget.developer, location),
               onPressed: onDeveloper,
             ),
             _NavItem(
               compact: compact,
-              icon: FluentIcons.toolbox,
+              icon: FluentIcons.format_painter,
               label: '工具',
               active: isActive(_NavTarget.tools, location),
               onPressed: onTools,
