@@ -173,7 +173,7 @@ class _WorkbenchResourcePageState extends State<WorkbenchResourcePage> {
           return ListView.separated(
             padding: const EdgeInsets.only(bottom: 8),
             itemCount: resources.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final resource = resources[index];
               return FutureBuilder<List<TaskModel>>(
@@ -185,7 +185,7 @@ class _WorkbenchResourcePageState extends State<WorkbenchResourcePage> {
                   final taskText = linked.map((e) => e.title).join('、');
                   return WorkbenchCard(
                     onTap: () => _edit(resource),
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
