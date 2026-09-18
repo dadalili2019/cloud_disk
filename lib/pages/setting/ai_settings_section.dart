@@ -203,19 +203,11 @@ class _AISettingsSectionState extends State<AISettingsSection> {
   @override
   Widget build(BuildContext context) {
     final palette = ThemeScope.of(context).palette;
-    final textColor = FluentTheme.of(context).typography.body?.color;
     final hasSessionKey = widget.runtime.settingsService.sessionAIKey.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(2, 2, 2, 12),
-          child: Text(
-            'AI',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-          ),
-        ),
         Container(
           decoration: BoxDecoration(
             color: palette.cardBackground,
@@ -230,7 +222,6 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               _Divider(palette),
               _Row(
                 title: '服务提供方',
-                subtitle: '环境变量模式兼容原有环境变量和 dart-define 配置。',
                 control: SizedBox(
                   width: 300,
                   child: ComboBox<AIProviderMode>(
@@ -261,13 +252,12 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               _Divider(palette),
               _Row(
                 title: '当前状态',
-                subtitle: 'AI 助手当前实际使用的服务提供方。',
                 control: _Badge(_displayProviderName(widget.runtime.aiProvider.name)),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Container(
           decoration: BoxDecoration(
             color: palette.cardBackground,
@@ -282,11 +272,6 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               _Divider(palette),
               _Row(
                 title: '服务地址',
-                subtitle: _mode == AIProviderMode.deepseek
-                    ? 'DeepSeek 默认使用 https://api.deepseek.com。'
-                    : _customProvider
-                        ? 'OpenAI 兼容接口的根地址。'
-                        : '当前模式由 AI 服务提供方自行管理。',
                 control: SizedBox(
                   width: 360,
                   child: TextBox(
@@ -315,7 +300,6 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               _Divider(palette),
               _Row(
                 title: '请求路径',
-                subtitle: '留空时按当前服务提供方使用默认路径。',
                 control: SizedBox(
                   width: 360,
                   child: TextBox(
@@ -330,7 +314,6 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               _Divider(palette),
               _Row(
                 title: '超时时间',
-                subtitle: '允许范围 5–600 秒。',
                 control: SizedBox(
                   width: 160,
                   child: TextBox(
@@ -346,7 +329,7 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               _Divider(palette),
               _Row(
                 title: 'API Key',
-                subtitle: '仅保存在当前应用会话内存；不会写入 SQLite、普通偏好、备份或导出文件。',
+                subtitle: '仅当前会话，不写入备份。',
                 control: SizedBox(
                   width: 360,
                   child: Row(
@@ -387,7 +370,7 @@ class _AISettingsSectionState extends State<AISettingsSection> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         if (_error != null)
           InfoBar(
             title: const Text('AI 配置失败'),
@@ -414,22 +397,7 @@ class _AISettingsSectionState extends State<AISettingsSection> {
               onPressed: _saving || _testing ? null : _testConnection,
               child: Text(_testing ? '测试中…' : '测试连接'),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                _mode == AIProviderMode.environment
-                    ? '环境变量模式继续读取 WORKBENCH_AI_* 配置。'
-                    : _mode == AIProviderMode.preview
-                        ? '预览模式不会访问外部模型。'
-                        : hasSessionKey
-                            ? '本次会话 Key 已设置。'
-                            : '未填写本次会话 Key 时，可回退使用环境变量中的 API Key。',
-                style: TextStyle(
-                  fontSize: 9.5,
-                  color: textColor?.withValues(alpha: 0.52),
-                ),
-              ),
-            ),
+
           ],
         ),
       ],
@@ -448,7 +416,7 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     final textColor = FluentTheme.of(context).typography.body?.color;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -494,7 +462,7 @@ class _GroupTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final textColor = FluentTheme.of(context).typography.body?.color;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(13, 11, 13, 10),
+      padding: const EdgeInsets.fromLTRB(16, 13, 16, 12),
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
