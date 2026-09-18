@@ -500,17 +500,23 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
             return Center(child: Text('加载失败：${snapshot.error}'));
           }
           final data = snapshot.data!;
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(0, 4, 6, 24),
-            children: [
-              _projectsSection(data),
-              const SizedBox(height: 24),
-              _commandsSection(data),
-              const SizedBox(height: 24),
-              _snippetsSection(data),
-              const SizedBox(height: 24),
-              _resourcesSection(data.devResources),
-            ],
+          return Align(
+            alignment: Alignment.topLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1040),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(0, 4, 6, 24),
+                children: [
+                  _projectsSection(data),
+                  const SizedBox(height: 20),
+                  _commandsSection(data),
+                  const SizedBox(height: 20),
+                  _snippetsSection(data),
+                  const SizedBox(height: 20),
+                  _resourcesSection(data.devResources),
+                ],
+              ),
+            ),
           );
         },
       ),
@@ -855,7 +861,7 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
   Widget _emptyCard(String text) {
     final theme = FluentTheme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(2, 10, 2, 14),
+      padding: const EdgeInsets.fromLTRB(2, 8, 2, 10),
       child: Text(
         text,
         style: TextStyle(
