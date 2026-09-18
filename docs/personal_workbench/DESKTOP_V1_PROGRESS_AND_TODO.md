@@ -323,3 +323,81 @@ P7.7 Windows Final Acceptance 暂缓到全部 UI 完成之后。
 ## 9. 状态维护规则
 
 后续每完成一个 Final Pass 子阶段，都更新本文的 Status / Completed / Pending / Known Issue / Next Step。任何新需求如果不属于当前 Desktop V1 封版范围，默认进入 Backlog，不直接打断 Final Pass 主线。
+
+
+## 当前会话交接点
+
+更新时间：2026-09-18
+
+当前开发策略：
+
+```text
+UI First
+先完成全应用 UI 落地
+→ 再做功能细化
+→ 再做 Windows Final Acceptance
+→ 最后 Baseline Seal
+```
+
+Canonical UI Prototype：
+
+```text
+主原型：
+personal_workbench_full_v1_4_global_ai.html
+
+Settings 补充参考：
+personal_workbench_full_v1_3_settings.html
+
+冲突优先级：
+v1_4_global_ai > v1_3_settings > 历史实现
+```
+
+当前状态：
+
+```text
+Workbench Core UI
+Home / Workspace / Knowledge / AI / Settings
+已完成第一轮 Flutter 统一，但仍需按 v1.4 主原型重新逐页核对。
+
+Full App UI Implementation
+尚未完成。
+
+P7.7 Windows Final Acceptance
+暂停，等待全部 UI 完成后再继续。
+```
+
+下一步明确从这里开始：
+
+```text
+Step 1  Global Shell 对照
+Step 2  Home 对照
+Step 3  Workspace
+Step 4  Knowledge
+Step 5  Developer
+Step 6  Productivity Tools
+Step 7  Image Workbench
+Step 8  RAG Knowledge
+Step 9  Game
+Step 10 Settings
+Step 11 Global AI
+Step 12 Full App Responsive / State Review
+```
+
+执行规则：
+
+```text
+1. 先看 HTML 原型
+2. 再看当前 Flutter 页面
+3. 明确差异
+4. 和用户确认最终保留方案
+5. 再修改代码
+6. 每个页面完成后截图验收
+```
+
+当前立即下一步：
+
+```text
+对照 personal_workbench_full_v1_4_global_ai.html
+开始 Global Shell + Home
+先不改代码，先确认原型设计与当前 Flutter 的差异。
+```
