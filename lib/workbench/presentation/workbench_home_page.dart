@@ -198,8 +198,9 @@ class _PrimaryContinueCard extends StatelessWidget {
               final blocker = blockers.isEmpty
                   ? '当前没有阻塞。'
                   : blockers.first.title;
-              if (constraints.maxWidth < 720) {
+              if (constraints.maxWidth < 620) {
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     WorkbenchInfoBlock(
                       label: 'Next Step',
@@ -232,26 +233,42 @@ class _PrimaryContinueCard extends StatelessWidget {
           const SizedBox(height: 16),
           _TaskProgress(progress: task.progress),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    WorkbenchTag(label: '笔记 ${item.context.notes.length}'),
-                    WorkbenchTag(label: '问题 ${item.context.openIssues.length}'),
-                    WorkbenchTag(label: '资源 ${item.context.resources.length}'),
-                    WorkbenchTag(label: '决策 ${item.context.decisions.length}'),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 14),
-              FilledButton(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final tags = Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  WorkbenchTag(label: '笔记 ${item.context.notes.length}'),
+                  WorkbenchTag(label: '问题 ${item.context.openIssues.length}'),
+                  WorkbenchTag(label: '资源 ${item.context.resources.length}'),
+                  WorkbenchTag(label: '决策 ${item.context.decisions.length}'),
+                ],
+              );
+              final action = FilledButton(
                 onPressed: onContinue,
                 child: const Text('打开上下文'),
-              ),
-            ],
+              );
+
+              if (constraints.maxWidth < 560) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    tags,
+                    const SizedBox(height: 12),
+                    Align(alignment: Alignment.centerRight, child: action),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(child: tags),
+                  const SizedBox(width: 14),
+                  action,
+                ],
+              );
+            },
           ),
         ],
       ),
