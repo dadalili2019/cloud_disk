@@ -46,11 +46,11 @@ Future<void> _initDesktopStuff() async {
   doWhenWindowReady(() {
     final win = appWindow;
     const minimumSize = Size(760, 520);
-    const initialSize = Size(1000, 600);
+    const initialSize = Size(1280, 800);
     win.minSize = minimumSize;
     win.size = initialSize;
     win.alignment = Alignment.center;
-    win.title = 'cloud_disk';
+    win.title = 'Personal Workbench';
     win.show();
   });
 
@@ -69,7 +69,7 @@ class MyApp extends StatelessWidget {
       builder: (_, __) {
         return FluentApp.router(
           debugShowCheckedModeBanner: false,
-          title: 'cloud_disk',
+          title: 'Personal Workbench',
           themeMode: theme.mode,
           theme: theme
               .buildTheme(Brightness.light)
