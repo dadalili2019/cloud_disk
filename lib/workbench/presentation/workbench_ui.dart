@@ -341,15 +341,17 @@ class WorkbenchEmptyState extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 5),
-              Text(
-                description,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  height: 1.4,
-                  color: theme.typography.body?.color?.withValues(alpha: 0.70),
+              if (description.trim().isNotEmpty) ...[
+                const SizedBox(height: 5),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    height: 1.4,
+                    color: theme.typography.body?.color?.withValues(alpha: 0.70),
+                  ),
                 ),
-              ),
+              ],
             ],
           );
           final action = FilledButton(
