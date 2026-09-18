@@ -134,7 +134,6 @@ class _QuickCaptureCardState extends State<QuickCaptureCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FluentTheme.of(context);
     final defaultWorkspace = widget.defaultWorkspace;
 
     return WorkbenchCard(
@@ -154,19 +153,11 @@ class _QuickCaptureCardState extends State<QuickCaptureCard> {
                 WorkbenchTag(label: defaultWorkspace.name),
             ],
           ),
-          const SizedBox(height: 5),
-          Text(
-            '先记下来，需要时再整理成完整上下文。',
-            style: TextStyle(
-              fontSize: 10.5,
-              color: theme.typography.body?.color?.withOpacity(0.48),
-            ),
-          ),
           const SizedBox(height: 12),
           TextBox(
             controller: _controller,
-            minLines: 3,
-            maxLines: 5,
+            minLines: 2,
+            maxLines: 4,
             placeholder: '输入任务、想法或临时记录…',
           ),
           const SizedBox(height: 12),
