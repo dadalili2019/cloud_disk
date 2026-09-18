@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:fluent_ui/fluent_ui.dart';
 
+import '../../theme/theme_controller.dart';
 import '../application/continue_service.dart';
 import '../application/today_service.dart';
 import '../workbench_runtime.dart';
