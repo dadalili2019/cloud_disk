@@ -17,7 +17,7 @@ class DBHelper {
   Future<Database> initDb(String tableName, int version, List<String> columns, List<String> columnProperties) async {
     final dir = await getDatabasesPath();
     final path = join(dir, "my_database.db");
-    print("The storage path for Table $tableName is $path");
+    _logger.fine('The storage path for Table $tableName is $path');
     _db = await openDatabase(path, version: version, onCreate: (Database db, int version) async {
       // 使用传入的表名、字段列表和字段属性列表来创建表
       await _onCreate(db, version, tableName, columns, columnProperties);
@@ -60,7 +60,7 @@ class DBHelper {
       // 表不存在，创建表
       await _onCreate(_db!, 1, tableName, columns, columnProperties);
     } else {
-      print("Table $tableName already exists.");
+      _logger.fine('Table $tableName already exists.');
     }
   }
 
@@ -166,13 +166,6 @@ class DBHelper {
   //根据某个字段更新数据
   Future<int> update(String tableName, Map<String, dynamic> row,
       {String? where, List<dynamic>? whereArgs}) async {
-    final setClause = row.entries.map((e) => "${e.key} = ?").join(', ');
-    final updateValues = row.values.toList();
-    String sql = "UPDATE $tableName SET $setClause";
-    if (where != null && whereArgs != null) {
-      sql += " WHERE $where";
-      updateValues.addAll(whereArgs);
-    }
     return await _db!
         .update(tableName, row, where: where, whereArgs: whereArgs);
   }
