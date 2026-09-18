@@ -6,10 +6,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:fluent_ui/fluent_ui.dart';
+
+import '../../theme/theme_controller.dart';
 import 'package:http/http.dart' as http;
 
-void main() => runApp(const MaterialApp(home: SpeedTestPage()));
 
 class SpeedTestPage extends StatefulWidget {
   const SpeedTestPage({Key? key}) : super(key: key);
@@ -128,88 +129,114 @@ class _SpeedTestPageState extends State<SpeedTestPage> {
     }
   }
 
-  Widget _buildSpeedCircle(String label, String value, Color color) {
-    return Column(
-      children: [
-        Text('$label Mbps',
-            style: const TextStyle(fontSize: 16, color: Colors.black54)),
-        const SizedBox(height: 8),
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(colors: [color.withOpacity(0.6), color]),
-            boxShadow: [
-              BoxShadow(color: color.withOpacity(0.3), blurRadius: 6)
-            ],
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            value,
-            style: const TextStyle(
-                fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
-          ),
+  Widget _buildMetric(String label, String value) {
+    final palette = ThemeScope.of(context).palette;
+    final secondary =
+        FluentTheme.of(context).typography.body?.color?.withValues(alpha: 0.52);
+
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 17),
+        decoration: BoxDecoration(
+          color: palette.cardBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: palette.cardBorder),
         ),
-      ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: TextStyle(fontSize: 10.5, color: secondary)),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  value.isEmpty ? '—' : value,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    height: 1,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    'Mbps',
+                    style: TextStyle(fontSize: 10, color: secondary),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('网络测速',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text('当前网络类型：$_networkType',
-                  style: const TextStyle(fontSize: 14, color: Colors.grey)),
-              const SizedBox(height: 4),
-              Text('当前IP地址：$_ipAddress',
-                  style: const TextStyle(fontSize: 14, color: Colors.grey)),
-              const SizedBox(height: 40),
-              GestureDetector(
-                onTap: _testing ? null : _testSpeed,
-                child: Container(
-                  width: 160,
-                  height: 160,
-                  decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [Colors.purpleAccent, Colors.blueAccent],
+    final palette = ThemeScope.of(context).palette;
+    final secondary =
+        FluentTheme.of(context).typography.body?.color?.withValues(alpha: 0.52);
+
+    return ScaffoldPage(
+      content: ListView(
+        padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: palette.cardBackground,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: palette.cardBorder),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Wrap(
+                    spacing: 18,
+                    runSpacing: 8,
+                    children: [
+                      Text(
+                        _networkType,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                            color: Colors.blue.withOpacity(0.3), blurRadius: 10)
-                      ]),
-                  alignment: Alignment.center,
-                  child: _testing
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('测试',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold)),
+                      Text(
+                        _ipAddress,
+                        style: TextStyle(fontSize: 11, color: secondary),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 40),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildSpeedCircle('下载', _downloadSpeed, Colors.cyan),
-                  const SizedBox(width: 40),
-                  _buildSpeedCircle('上传', _uploadSpeed, Colors.pink),
-                ],
-              ),
+                const SizedBox(width: 16),
+                FilledButton(
+                  onPressed: _testing ? null : _testSpeed,
+                  child: _testing
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: ProgressRing(strokeWidth: 2),
+                        )
+                      : const Text('开始测速'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _buildMetric('下载', _downloadSpeed),
+              const SizedBox(width: 16),
+              _buildMetric('上传', _uploadSpeed),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
+
 }
