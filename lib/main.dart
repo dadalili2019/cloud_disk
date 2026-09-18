@@ -45,8 +45,8 @@ Future<void> _initWorkbenchRouteTracking() async {
 Future<void> _initDesktopStuff() async {
   doWhenWindowReady(() {
     final win = appWindow;
-    const minimumSize = Size(680, 480);
-    const initialSize = Size(720, 520);
+    const minimumSize = Size(600, 420);
+    const initialSize = Size(620, 440);
     win.minSize = minimumSize;
     win.size = initialSize;
     win.alignment = Alignment.center;
