@@ -21,11 +21,8 @@ class _RagKnowledgePageState extends State<RagKnowledgePage> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldPage(
-      header: const PageHeader(
-        title: Text('E9知识库'),
-      ),
       content: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -79,12 +76,7 @@ class _RagKnowledgePageState extends State<RagKnowledgePage> {
     }
 
     if (_status == null) {
-      return const Center(
-        child: Text(
-          '等待提问',
-          style: TextStyle(fontSize: 16),
-        ),
-      );
+      return const SizedBox.shrink();
     }
 
     if (_status == 'ERROR') {
