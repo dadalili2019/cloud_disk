@@ -225,18 +225,49 @@ Validate ZIP
 
 Restore 不在运行时直接覆盖正在使用的数据库文件。
 
-## 9. 接下来主要优化什么
+## 9. 页面文件怎么拆
 
-业务分层已经比较清楚，下一步主要是文件粒度和测试。
+当前开始按“入口文件 + 职责 part 文件”的方式拆复杂页面。
 
-当前明显偏大的文件包括：
+Settings：
 
+~~~text
+settings_page.dart
+├─ settings_sections.dart
+├─ settings_navigation.dart
+├─ settings_appearance.dart
+└─ settings_components.dart
+~~~
+
+Workspace Overview：
+
+~~~text
+workbench_workspace_overview_page.dart
+├─ workbench_workspace_navigation.dart
+└─ workbench_workspace_overview_content.dart
+~~~
+
+这里使用 Dart `part / part of`，目的不是增加新的架构层，而是把同一个页面 library 内部的私有组件拆开。这样可以继续保留 private Widget，不需要为了拆文件把大量内部类型改成 public。
+
+拆分原则：
+
+- 入口文件保留页面状态和主要生命周期。
+- Navigation、Section、Components 按职责放到独立 part。
+- 不借拆文件修改 UI 行为。
+- 不为了拆文件制造跨层依赖。
+
+## 10. 接下来主要优化什么
+
+业务分层已经比较清楚，下一步主要是 AI Context、复杂 Drawer 和测试覆盖。
+
+当前优先关注：
+
+- `ai_context_builder.dart`
 - `global_ai_drawer.dart`
 - `workbench_home_page.dart`
 - `workbench_knowledge_page.dart`
 - `workbench_developer_page.dart`
-- `ai_context_builder.dart`
 
-后续按职责拆，不按行数机械切文件，也不借重构顺手改变业务行为。
+后续继续按职责拆，不按行数机械切文件，也不借重构顺手改变业务行为。
 
 具体规则统一看 [11_CODE_DEVELOPMENT_RULES.md](11_CODE_DEVELOPMENT_RULES.md)。
