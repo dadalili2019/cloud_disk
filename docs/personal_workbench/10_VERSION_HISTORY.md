@@ -87,3 +87,14 @@ v1.4 通过 PR #1 合并到 main。
 - State、Conversation、Context 操作仍保留在主文件。
 - `_contextPreview` 因为直接涉及 `setState`，暂不强拆。
 - 不改变 AI Drawer 的交互和业务行为。
+
+
+## 2026-09-20 Home Page Split
+
+继续整理首页代码：
+
+- `workbench_home_page.dart` 保留加载、状态和整体布局。
+- Current Focus / Progress 拆到 `workbench_home_focus.dart`。
+- Today / Recent Activity 拆到 `workbench_home_panels.dart`。
+- Drawer Layer、Loading / Error、内部数据模型和格式化 helper 拆到 `workbench_home_support.dart`。
+- 不改变首页 UI、路由、数据来源和交互。

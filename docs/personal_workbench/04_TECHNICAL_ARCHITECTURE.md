@@ -292,10 +292,25 @@ global_ai_drawer.dart
 
 第一步只拆 UI helper 和纯格式化函数，State 生命周期、Conversation 动作、Context 操作仍留在主文件，避免为了拆文件同时改变状态管理方式。
 
+Home 页面也已经按职责拆开：
+
+~~~text
+workbench_home_page.dart
+├─ workbench_home_focus.dart
+├─ workbench_home_panels.dart
+└─ workbench_home_support.dart
+~~~
+
+职责：
+
+- `workbench_home_page.dart`：数据加载、页面状态、Drawer 开关和整体布局。
+- `workbench_home_focus.dart`：Current Focus、Next Step、Blocker、Progress、Recent Context。
+- `workbench_home_panels.dart`：Today、Recent Activity、Panel Row / Header。
+- `workbench_home_support.dart`：Drawer Layer、Loading / Error、内部数据模型和格式化 helper。
+
 当前继续关注：
 
 - `global_ai_drawer.dart` 的 State / Conversation Action 边界
-- `workbench_home_page.dart`
 - `workbench_knowledge_page.dart`
 - `workbench_developer_page.dart`
 
