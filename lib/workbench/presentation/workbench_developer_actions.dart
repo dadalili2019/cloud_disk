@@ -115,8 +115,7 @@ extension _WorkbenchDeveloperActions on _WorkbenchDeveloperPageState {
           isPrimary: primary,
         );
       }
-      if (!mounted) return;
-      setState(_reload);
+      _reloadState();
     } catch (error) {
       if (mounted) await _showError(error);
     } finally {
@@ -135,7 +134,7 @@ extension _WorkbenchDeveloperActions on _WorkbenchDeveloperPageState {
     try {
       final runtime = await WorkbenchRuntime.instance;
       await runtime.developerProjectService.archive(project);
-      if (mounted) setState(_reload);
+      _reloadState();
     } catch (error) {
       if (mounted) await _showError(error);
     }
@@ -145,7 +144,7 @@ extension _WorkbenchDeveloperActions on _WorkbenchDeveloperPageState {
     try {
       final runtime = await WorkbenchRuntime.instance;
       await runtime.developerProjectService.setPrimary(project);
-      if (mounted) setState(_reload);
+      _reloadState();
     } catch (error) {
       if (mounted) await _showError(error);
     }
@@ -273,7 +272,7 @@ extension _WorkbenchDeveloperActions on _WorkbenchDeveloperPageState {
           isPinned: pinned,
         );
       }
-      if (mounted) setState(_reload);
+      _reloadState();
     } catch (error) {
       if (mounted) await _showError(error);
     } finally {
@@ -290,7 +289,7 @@ extension _WorkbenchDeveloperActions on _WorkbenchDeveloperPageState {
     try {
       final runtime = await WorkbenchRuntime.instance;
       await runtime.developerCommandService.archive(command);
-      if (mounted) setState(_reload);
+      _reloadState();
     } catch (error) {
       if (mounted) await _showError(error);
     }
@@ -406,7 +405,7 @@ extension _WorkbenchDeveloperActions on _WorkbenchDeveloperPageState {
           isPinned: pinned,
         );
       }
-      if (mounted) setState(_reload);
+      _reloadState();
     } catch (error) {
       if (mounted) await _showError(error);
     } finally {
@@ -423,7 +422,7 @@ extension _WorkbenchDeveloperActions on _WorkbenchDeveloperPageState {
     try {
       final runtime = await WorkbenchRuntime.instance;
       await runtime.developerSnippetService.archive(snippet);
-      if (mounted) setState(_reload);
+      _reloadState();
     } catch (error) {
       if (mounted) await _showError(error);
     }

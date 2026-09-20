@@ -120,3 +120,13 @@ v1.4 通过 PR #1 合并到 main。
 - Projects / Commands / Snippets / Resources 展示拆到 `workbench_developer_sections.dart`。
 - Command Category Label 等 helper 拆到 `workbench_developer_support.dart`。
 - 不改变 DeveloperService 调用、CRUD 行为、复制、归档和页面交互。
+
+
+## 2026-09-20 Developer State Boundary Fix
+
+Developer 页面拆分后继续修正 State 边界：
+
+- Action extension 不再直接调用 `State.setState`。
+- 页面 State 增加统一的 `_reloadState()` 状态刷新入口。
+- 修复 Flutter Analyzer 的 7 个 `invalid_use_of_protected_member`。
+- 编码规范补充：part / extension 拆分时，protected State API 必须留在 State 子类内部。
