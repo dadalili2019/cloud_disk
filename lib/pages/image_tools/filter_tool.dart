@@ -96,7 +96,7 @@ class _FilterToolPageState extends State<FilterToolPage> {
       final decoded = img.decodeImage(bytes);
       if (decoded == null) return;
       var out = _apply(decoded);
-      final maxEdge = 560;
+      const maxEdge = 560;
       final maxSide = out.width > out.height ? out.width : out.height;
       if (maxSide > maxEdge) {
         final ratio = maxEdge / maxSide;
@@ -106,8 +106,9 @@ class _FilterToolPageState extends State<FilterToolPage> {
       if (!mounted) return;
       setState(() => _previewBytes = png);
     } finally {
-      if (!mounted) return;
-      setState(() => _previewLoading = false);
+      if (mounted) {
+        setState(() => _previewLoading = false);
+      }
     }
   }
 

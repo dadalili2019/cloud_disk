@@ -82,8 +82,8 @@ class _ComparisonPageState extends State<ComparisonPage> {
             Align(
               alignment: Alignment.center,
               child: FilledButton(
-                child: const Text('对比'),
                 onPressed: _compareText,
+                child: const Text('对比'),
               ),
             ),
             const SizedBox(height: 20),
