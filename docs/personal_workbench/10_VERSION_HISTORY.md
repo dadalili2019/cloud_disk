@@ -76,3 +76,14 @@ v1.4 通过 PR #1 合并到 main。
 - Context 收集、Entity 映射、文本格式化分别拆开。
 - 没有新增无意义的 Service / Manager 层。
 - Context 优先级、数量限制、搜索范围、include / exclude 和输出内容保持原逻辑。
+
+
+## 2026-09-20 Global AI Drawer Split - Step 1
+
+先做低风险拆分：
+
+- UI helper 移到 `global_ai_drawer_widgets.dart`。
+- 纯格式化函数移到 `global_ai_drawer_formatters.dart`。
+- State、Conversation、Context 操作仍保留在主文件。
+- `_contextPreview` 因为直接涉及 `setState`，暂不强拆。
+- 不改变 AI Drawer 的交互和业务行为。
