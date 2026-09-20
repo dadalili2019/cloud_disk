@@ -181,7 +181,10 @@ class _FakeSqlExecutor implements WorkbenchSqlExecutor {
   ]) async {
     final callIndex = selectCalls.length;
     selectCalls.add(_SqlCall(statement, List<Object?>.from(args)));
-    return onSelect?.call(statement, args, callIndex) ?? const [];
+    if (onSelect != null) {
+      return onSelect!(statement, args, callIndex);
+    }
+    return const <Map<String, Object?>>[];
   }
 
   @override
