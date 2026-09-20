@@ -113,7 +113,7 @@ void main() {
     });
 
     test('search forwards filters and limit to index repository', () async {
-      final expected = SearchResultModel(
+      const expected = SearchResultModel(
         entityType: 'task',
         entityId: 'task-1',
         title: 'Search hardening',
