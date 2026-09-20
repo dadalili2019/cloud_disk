@@ -7,8 +7,55 @@ class SqliteSearchIndexRepository implements SearchIndexRepository {
 
   final WorkbenchSqlExecutor db;
 
+  static const int _rebuildBatchSize = 100;
+
   @override
   Future<void> clear() => db.delete('DELETE FROM search_index').then((_) {});
+
+  @override
+  Future<void> rebuild(List<SearchIndexEntry> entries) async {
+    final executor = db;
+    if (executor is WorkbenchDatabase) {
+      await executor.transaction(
+        (tx) => _rebuildWithExecutor(tx, entries),
+      );
+      return;
+    }
+    await _rebuildWithExecutor(executor, entries);
+  }
+
+  Future<void> _rebuildWithExecutor(
+    WorkbenchSqlExecutor executor,
+    List<SearchIndexEntry> entries,
+  ) async {
+    await executor.delete('DELETE FROM search_index');
+    if (entries.isEmpty) return;
+
+    for (var offset = 0; offset < entries.length; offset += _rebuildBatchSize) {
+      final end = (offset + _rebuildBatchSize).clamp(0, entries.length);
+      final batch = entries.sublist(offset, end);
+      final placeholders =
+          List.filled(batch.length, '(?, ?, ?, ?, ?)').join(', ');
+      final args = <Object?>[
+        for (final entry in batch) ...[
+          entry.entityType,
+          entry.entityId,
+          entry.workspaceId ?? '',
+          entry.title,
+          entry.body,
+        ],
+      ];
+
+      await executor.custom(
+        '''
+INSERT INTO search_index (
+  entity_type, entity_id, workspace_id, title, body
+) VALUES $placeholders
+''',
+        args,
+      );
+    }
+  }
 
   @override
   Future<void> replace({

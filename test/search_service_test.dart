@@ -68,14 +68,14 @@ void main() {
 
       await service.rebuildIndex();
 
-      expect(index.clearCalls, 1);
-      expect(index.replacements, hasLength(1));
-      expect(index.replacements.single.entityType, 'task');
-      expect(index.replacements.single.entityId, 'task-1');
-      expect(index.replacements.single.workspaceId, 'workspace-1');
-      expect(index.replacements.single.title, 'Search hardening');
+      expect(index.rebuildCalls, 1);
+      expect(index.entries, hasLength(1));
+      expect(index.entries.single.entityType, 'task');
+      expect(index.entries.single.entityId, 'task-1');
+      expect(index.entries.single.workspaceId, 'workspace-1');
+      expect(index.entries.single.title, 'Search hardening');
       expect(
-        index.replacements.single.body,
+        index.entries.single.body,
         'Add stable tests\nRun flutter test\ndoing',
       );
     });
@@ -90,26 +90,26 @@ void main() {
       await service.rebuildIndex();
       await service.ensureFreshIndex();
 
-      expect(index.clearCalls, 1);
-      expect(index.replacements, hasLength(1));
+      expect(index.rebuildCalls, 1);
+      expect(index.entries, hasLength(1));
     });
 
     test('concurrent rebuild requests share the same in-flight rebuild', () async {
       final blocker = Completer<void>();
-      final index = _FakeSearchIndex(clearBlocker: blocker);
+      final index = _FakeSearchIndex(rebuildBlocker: blocker);
       final service = createService(index);
 
       final first = service.rebuildIndex();
       await Future<void>.delayed(Duration.zero);
       final second = service.rebuildIndex();
 
-      expect(index.clearCalls, 1);
+      expect(index.rebuildCalls, 1);
 
       blocker.complete();
       await Future.wait([first, second]);
 
-      expect(index.clearCalls, 1);
-      expect(index.replacements, hasLength(1));
+      expect(index.rebuildCalls, 1);
+      expect(index.entries, hasLength(1));
     });
 
     test('search forwards filters and limit to index repository', () async {
@@ -371,33 +371,17 @@ class _FakeMarkdownStore implements MarkdownStore {
   Future<void> deleteIfExists(String relativePath) async {}
 }
 
-class _IndexReplacement {
-  const _IndexReplacement({
-    required this.entityType,
-    required this.entityId,
-    required this.workspaceId,
-    required this.title,
-    required this.body,
-  });
-
-  final String entityType;
-  final String entityId;
-  final String? workspaceId;
-  final String title;
-  final String body;
-}
-
 class _FakeSearchIndex implements SearchIndexRepository {
   _FakeSearchIndex({
-    this.clearBlocker,
+    this.rebuildBlocker,
     this.searchResults = const [],
   });
 
-  final Completer<void>? clearBlocker;
+  final Completer<void>? rebuildBlocker;
   final List<SearchResultModel> searchResults;
 
-  int clearCalls = 0;
-  final List<_IndexReplacement> replacements = [];
+  int rebuildCalls = 0;
+  List<SearchIndexEntry> entries = const [];
 
   String? lastQuery;
   Set<String>? lastEntityTypes;
@@ -405,11 +389,15 @@ class _FakeSearchIndex implements SearchIndexRepository {
   int? lastLimit;
 
   @override
-  Future<void> clear() async {
-    clearCalls += 1;
-    if (clearBlocker != null) {
-      await clearBlocker!.future;
+  Future<void> clear() async {}
+
+  @override
+  Future<void> rebuild(List<SearchIndexEntry> entries) async {
+    rebuildCalls += 1;
+    if (rebuildBlocker != null) {
+      await rebuildBlocker!.future;
     }
+    this.entries = List<SearchIndexEntry>.unmodifiable(entries);
   }
 
   @override
@@ -419,17 +407,7 @@ class _FakeSearchIndex implements SearchIndexRepository {
     String? workspaceId,
     required String title,
     required String body,
-  }) async {
-    replacements.add(
-      _IndexReplacement(
-        entityType: entityType,
-        entityId: entityId,
-        workspaceId: workspaceId,
-        title: title,
-        body: body,
-      ),
-    );
-  }
+  }) async {}
 
   @override
   Future<void> remove({
