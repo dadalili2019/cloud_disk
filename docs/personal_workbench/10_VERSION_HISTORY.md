@@ -109,3 +109,14 @@ v1.4 通过 PR #1 合并到 main。
 - Knowledge Editor Dialog 拆到 `workbench_knowledge_editor.dart`。
 - Entity Label 等 helper 拆到 `workbench_knowledge_support.dart`。
 - 不改变 SearchService、KnowledgeService、Distill 和页面交互行为。
+
+
+## 2026-09-20 Developer Page Split
+
+继续整理 Developer 页面：
+
+- 主文件只保留 Context load / refresh 和页面骨架。
+- Project / Command / Snippet CRUD 与 Dialog 拆到 `workbench_developer_actions.dart`。
+- Projects / Commands / Snippets / Resources 展示拆到 `workbench_developer_sections.dart`。
+- Command Category Label 等 helper 拆到 `workbench_developer_support.dart`。
+- 不改变 DeveloperService 调用、CRUD 行为、复制、归档和页面交互。

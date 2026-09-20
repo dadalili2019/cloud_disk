@@ -324,10 +324,26 @@ workbench_knowledge_page.dart
 - `workbench_knowledge_editor.dart`：Knowledge Draft、编辑 Dialog、Source Chip。
 - `workbench_knowledge_support.dart`：Entity Label 等内部 helper。
 
-当前继续关注：
+Developer 页面也已经按职责拆开：
 
-- `global_ai_drawer.dart` 的 State / Conversation Action 边界
-- `workbench_developer_page.dart`
+~~~text
+workbench_developer_page.dart
+├─ workbench_developer_actions.dart
+├─ workbench_developer_sections.dart
+└─ workbench_developer_support.dart
+~~~
+
+职责：
+
+- `workbench_developer_page.dart`：Context 加载、刷新和页面骨架。
+- `workbench_developer_actions.dart`：Project / Command / Snippet CRUD、Dialog、复制、归档确认和错误提示。
+- `workbench_developer_sections.dart`：Projects / Commands / Snippets / Resources 的 Section 和 Card UI。
+- `workbench_developer_support.dart`：Command Category Label 等内部 helper。
+
+当前主要剩下：
+
+- `global_ai_drawer.dart` 的 State / Conversation Action 边界。
+- 自动化测试覆盖继续补强。
 
 后续继续按职责拆，不按行数机械切文件，也不借重构顺手改变业务行为。
 
