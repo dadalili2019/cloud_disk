@@ -1,6 +1,6 @@
 # Personal Workbench 技术架构
 
-## 1. 总体架构
+## 1. 整体结构
 
 ~~~mermaid
 flowchart TB
@@ -22,32 +22,51 @@ flowchart TB
   APP --> AI
 ~~~
 
-## 2. Flutter 层次
+原则很简单：UI 管展示和交互，Application 管业务编排，Domain 定义边界，Data 管数据落地，Core 放真正通用的模型和基础能力。
+
+## 2. 当前目录
+
+~~~text
+lib/
+├─ app/
+│  ├─ navigation_page.dart
+│  └─ system_tray_service.dart
+├─ pages/
+│  ├─ login_page.dart
+│  ├─ settings/
+│  ├─ comparison/
+│  ├─ game/
+│  ├─ image_tools/
+│  ├─ json_format/
+│  ├─ rag_knowledge/
+│  └─ speed_test/
+├─ router/
+├─ theme/
+├─ widgets/
+└─ workbench/
+   ├─ application/
+   ├─ core/
+   ├─ data/
+   ├─ domain/
+   ├─ presentation/
+   └─ workbench_runtime.dart
+~~~
+
+当前 Dart 文件统一使用 `snake_case`，不再混用 camelCase、PascalCase 和带空格的文件名。
+
+## 3. 各层职责
 
 ### presentation
 
-职责：
+负责 Page、Drawer、Dialog、UI State 和用户交互。
 
-- 页面
-- Drawer
-- Dialog
-- UI State
-- 用户交互
-
-不直接编写 SQLite SQL。
+不要直接写 SQLite SQL，也不要把文件处理、大段业务规则塞进 Widget。
 
 ### application
 
-职责：
+负责业务规则、用例编排、Context 聚合、Search、AI、Backup / Restore、Export。
 
-- 业务规则
-- 用例编排
-- Context 聚合
-- Backup / Restore
-- Search
-- AI
-
-代表服务：
+主要服务包括：
 
 - WorkspaceService
 - TaskService
@@ -57,6 +76,7 @@ flowchart TB
 - DecisionService
 - KnowledgeService
 - SearchService
+- WorkspaceOverviewService
 - AIContextBuilder
 - AIConversationService
 - FocusSessionService
@@ -67,30 +87,21 @@ flowchart TB
 
 定义 Repository interfaces 和 AI Provider contract。
 
+这里描述“业务需要什么”，不关心 SQLite 怎么实现。
+
 ### data
 
-实现：
-
-- SQLite repositories
-- Markdown Store
-- FTS Search Repository
+实现 SQLite Repository、Markdown Store、FTS Search Repository。
 
 ### core
 
-负责：
+放 Models、Database、AppPaths、Settings、Provider config 和小范围通用能力。
 
-- Models
-- Database
-- AppPaths
-- Settings model
-- Provider config
-- Utilities
+不要把业务 Service 往 Core 里塞。
 
-## 3. Runtime
+## 4. Runtime
 
-WorkbenchRuntime 是 Workbench 的依赖组装入口。
-
-启动链路：
+`WorkbenchRuntime` 是依赖组装入口。
 
 ~~~mermaid
 sequenceDiagram
@@ -109,13 +120,11 @@ sequenceDiagram
   RT-->>UI: runtime ready
 ~~~
 
-Runtime 使用 Future singleton，避免重复初始化。
+Runtime 继续使用 Future singleton。当前不为了“架构更高级”额外引入 DI 框架。
 
-## 4. 路由
+## 5. 路由
 
-使用 go_router。
-
-主要 Workbench Route：
+Workbench 主路由：
 
 ~~~text
 /login
@@ -135,11 +144,20 @@ Runtime 使用 Future singleton，避免重复初始化。
 /setting
 ~~~
 
-旧工具和 legacy route 仍保留，但由统一 Shell 承载。
+Tools 只保留当前真正能使用的路由：
 
-## 5. 本地优先架构
+~~~text
+/jsonformat
+/comparison
+/speedtestpage
+/ragknowledge
+/imagetools/*
+/game
+~~~
 
-数据分层：
+早期 cloud disk 的 file、favorites、recycle、subscribe、shareFolder、deviceInformation 等路由已经删除。
+
+## 6. 本地优先
 
 ~~~text
 SQLite
@@ -157,27 +175,9 @@ SharedPreferences
   └─ Preferences
 ~~~
 
-优势：
+Search Index 可以重建，不是事实数据的唯一来源。
 
-- 业务关系适合 SQLite
-- 长文本适合 Markdown
-- 用户可直接拿走正文文件
-- Search Index 可重建
-- 设置不污染业务数据库
-
-## 6. Search 架构
-
-~~~mermaid
-flowchart LR
-  Entity[Task / Note / Issue / Resource / Decision / Knowledge / Dev] --> S[SearchService]
-  S --> IDX[(FTS5 search_index)]
-  IDX --> FTS[FTS MATCH + BM25]
-  IDX --> LIKE[LIKE fallback]
-  FTS --> R[SearchResult]
-  LIKE --> R
-~~~
-
-## 7. AI 架构
+## 7. AI
 
 ~~~mermaid
 flowchart LR
@@ -197,11 +197,9 @@ flowchart LR
   UI --> HIST
 ~~~
 
-AI 不能绕过 Context Builder / Budget / Prompt Builder。
+AI 调用不要绕过 Context Builder / Budget / Prompt Builder。
 
-## 8. Backup / Restore 架构
-
-Restore 不在运行时直接覆盖已打开数据库。
+## 8. Backup / Restore
 
 ~~~text
 Validate ZIP
@@ -213,22 +211,21 @@ Validate ZIP
 → Open DB
 ~~~
 
-这避免在 SQLite 正在使用时直接替换数据库文件。
+Restore 不在运行时直接覆盖正在使用的数据库文件。
 
-## 9. 技术边界
+## 9. 接下来主要优化什么
 
-当前 Developer Context 不执行：
+业务分层已经比较清楚，下一步主要是文件粒度和测试。
 
-- Shell
-- Git
-- Docker
-- Test
-- File edit
+当前明显偏大的文件包括：
 
-未来如果增加 Tool Execution，必须单独设计：
+- `global_ai_drawer.dart`
+- `workbench_home_page.dart`
+- `workbench_knowledge_page.dart`
+- `workbench_developer_page.dart`
+- Workspace Overview 页面
+- `ai_context_builder.dart`
 
-- Permission
-- Confirmation
-- Sandbox
-- Audit
-- Failure Recovery
+后续按职责拆，不按行数机械切文件，也不借重构顺手改变业务行为。
+
+具体规则统一看 [11_CODE_DEVELOPMENT_RULES.md](11_CODE_DEVELOPMENT_RULES.md)。

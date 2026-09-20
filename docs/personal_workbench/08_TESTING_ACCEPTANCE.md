@@ -1,179 +1,93 @@
 # Personal Workbench 测试与验收
 
-## 1. 当前已知验收结果
+## 1. 验收原则
 
-- v1.4 UI 已逐页 Windows 人工检查
-- Windows Release Build 已成功
-- flutter analyze 无观察到阻塞性 error
-- 当前剩余历史 lint 不作为 Desktop V1 阻塞项
+不是“页面能打开”就算完成。
+
+至少确认：
+
+- 功能行为正确。
+- 数据能保存。
+- 重启以后数据还在。
+- 异常有兜底。
+- Analyze 没有新 warning。
+- Test 能跑。
+- Windows Release Build 能过。
 
 ## 2. Desktop Smoke Regression
 
 ### Shell
 
-- 登录
+- Login
 - Workspace Switcher
 - Search
 - AI Drawer
 - Settings
 - Sidebar Route Highlight
 - Resize
+- Tray 打开 / 退出
 
-### Home
+### Home / Workspace
 
 - Current Task
 - Next Step
 - Blocker
 - Progress
-- Last Context
-- Today
-- Recent Activity
-- Quick Capture
 - Continue
+- Quick Capture
+- Workspace Create / Rename / Archive / Restore / Switch
 
-### Workspace
+### Task / Notes
 
-- Create
-- Rename
-- Archive
-- Restore
-- Switch
-
-### Task
-
-- Create
-- Edit
-- Current Task
-- Status
-- Progress
-- Complete
-
-### Notes
-
-- Create
-- Edit
-- Auto Save On
-- Auto Save Off
-- Ctrl+S
+- Task CRUD / Current / Status / Progress
+- Note Create / Edit / Auto Save / Ctrl+S
 - Link to Current Task
 - Restart Recovery
 
 ### Issue / Resource / Decision
 
-分别验证 CRUD、关联、重启恢复。
+分别验证 CRUD、关联和重启恢复。
 
-### Knowledge
+### Knowledge / Search
 
-- Manual Create
-- Edit
-- Distill
-- Category
-- Pin
-- Source Relation
-- Restart Recovery
-
-### Search
-
-- Task
-- Note
-- Issue
-- Resource
-- Decision
-- Knowledge
-- Project
-- Command
-- Snippet
-- Numeric substring
+- Knowledge Create / Edit / Distill / Category / Pin
+- Search Task / Note / Issue / Resource / Decision / Knowledge / Developer
 - Chinese text
+- Numeric substring
 - Rebuild Index
 
-### Time
+### Time / Developer / AI
 
-- Start Focus
-- Prevent duplicate active session
-- Finish
-- Today Total
-- Timeline
+- Focus Start / Finish / Today Total
+- Developer Project / Command / Snippet / Resource
+- AI Provider / Context Preview / Scope / Send / Retry / History / Restart Recovery
 
-### Developer
+### Backup / Export / Restore
 
-- Project CRUD
-- Primary
-- Command CRUD / Pin
-- Snippet CRUD / Pin
-- Dev Resource
-- Copy
-- Search
+- Manual / Auto / Retention / Safety Backup
+- Export ZIP / Markdown / JSON
+- Export 不包含 API Key
+- Restore Validate / Stage / Restart Apply / Search rebuild
 
-### AI
-
-- Provider Settings
-- Test Connection
-- Task Scope
-- Workspace Scope
-- Knowledge Scope
-- Global Scope
-- Context Preview
-- Include / Exclude
-- Send
-- Retry
-- Thread Rename
-- Archive
-- Restart Recovery
-
-### Backup
-
-- Manual Backup
-- Auto Backup
-- Retention
-- Safety Backup
-
-### Export
-
-- ZIP
-- Markdown
-- JSON
-- Attachments option
-- No API Key
-
-### Restore
-
-完整验收流程：
-
-~~~text
-创建明显测试数据
-→ Manual Backup
-→ 修改数据
-→ Restore Backup
-→ Safety Backup
-→ Exit
-→ Restart
-→ Verify old state restored
-→ Search works
-→ AI Context works
-~~~
-
-## 3. Build Gate
+## 3. 自动检查 Gate
 
 ~~~powershell
 flutter pub get
 flutter analyze
+flutter test
 flutter build windows
 ~~~
 
-## 4. 当前 Analyze 基线
+当前已经开始把 Analyze 当成真正约束：
 
-当前历史 lint 数量会随清理变化，不把“必须为 0”作为 V1 Gate。
+- `avoid_print: true`
+- 文件名统一 snake_case
+- 历史临时测试脚本已删除
+- 已加入 Workbench utility 单元测试
 
-Gate 为：
+后面不要再默认用“历史 lint 很多，所以先不管”作为处理方式。新 warning 优先解决。
 
-- 无 compile error
-- 新增功能不引入明确 warning
-- Release Build 成功
-
-## 5. 后续应补自动化测试
-
-优先：
+## 4. 自动化测试优先级
 
 1. Repository / Service unit tests
 2. Task current constraint
@@ -184,3 +98,15 @@ Gate 为：
 7. AI Context budget
 8. Settings persistence
 9. Widget smoke tests
+
+测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
+
+## 5. 本轮代码清理回归重点
+
+- Login 能进入 Workbench。
+- Settings 能打开。
+- Tools 卡片都能进入对应工具。
+- Workspace Overview 正常。
+- Global Shell 路由高亮正常。
+- System Tray 文案已经是 Personal Workbench。
+- 已删除的旧 cloud disk route 不再被引用。
