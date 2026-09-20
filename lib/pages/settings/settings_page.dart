@@ -184,7 +184,7 @@ class _SettingPageState extends State<SettingPage> {
           workspaces: _workspaces,
           onChanged: _updateGeneral,
         ),
-      _SettingsSection.appearance => _AppearanceSection(fonts: fonts),
+      _SettingsSection.appearance => const _AppearanceSection(fonts: fonts),
       _SettingsSection.notes => _NotesSection(
           settings: _settings.notes,
           notesPath: _runtime == null

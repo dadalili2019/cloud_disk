@@ -176,8 +176,8 @@ class _GamePageState extends State<GamePage> {
             content: Text('得分：$score'),
             actions: [
               Button(
-                child: const Text('重来'),
                 onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+                child: const Text('重来'),
               )
             ],
           ),
@@ -254,10 +254,10 @@ class _GamePageState extends State<GamePage> {
   Widget build(BuildContext context) {
     return Shortcuts(
       shortcuts: <LogicalKeySet, Intent>{
-        LogicalKeySet(LogicalKeyboardKey.arrowUp):    DoNothingAndStopPropagationIntent(),
-        LogicalKeySet(LogicalKeyboardKey.arrowDown):  DoNothingAndStopPropagationIntent(),
-        LogicalKeySet(LogicalKeyboardKey.arrowLeft):  DoNothingAndStopPropagationIntent(),
-        LogicalKeySet(LogicalKeyboardKey.arrowRight): DoNothingAndStopPropagationIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowUp):    const DoNothingAndStopPropagationIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowDown):  const DoNothingAndStopPropagationIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowLeft):  const DoNothingAndStopPropagationIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowRight): const DoNothingAndStopPropagationIntent(),
       },
       child: Focus(
         focusNode: _focusNode,
@@ -279,17 +279,16 @@ class _GamePageState extends State<GamePage> {
                     ),
                     const Spacer(),
                     Button(
-                      child: Text(isPlaying ? '暂停' : '开始'),
                       onPressed: isPlaying ? _pause : _start,
+                      child: Text(isPlaying ? '暂停' : '开始'),
                     ),
                     const SizedBox(width: 8),
                     Button(
-                      child: Text(musicOn ? '音乐开' : '音乐关'),
                       onPressed: _toggleMusic,
+                      child: Text(musicOn ? '音乐开' : '音乐关'),
                     ),
                     const SizedBox(width: 8),
                     Button(
-                      child: const Text('重置'),
                       onPressed: () {
                         final wasPlaying = isPlaying;
                         _pause();
@@ -297,6 +296,7 @@ class _GamePageState extends State<GamePage> {
                         if (wasPlaying) _start();
                         _focusNode.requestFocus();
                       },
+                      child: const Text('重置'),
                     ),
                   ],
                 ),

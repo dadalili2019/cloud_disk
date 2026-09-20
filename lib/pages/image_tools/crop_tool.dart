@@ -97,7 +97,7 @@ class _CropToolPageState extends State<CropToolPage> {
       if (decoded == null) return;
 
       var target = _applyTransforms(decoded);
-      final maxPreviewEdge = 560;
+      const maxPreviewEdge = 560;
       final maxSide = target.width > target.height ? target.width : target.height;
       if (maxSide > maxPreviewEdge) {
         final ratio = maxPreviewEdge / maxSide;
@@ -113,8 +113,9 @@ class _CropToolPageState extends State<CropToolPage> {
       if (!mounted) return;
       setState(() => _previewBytes = out);
     } finally {
-      if (!mounted) return;
-      setState(() => _previewLoading = false);
+      if (mounted) {
+        setState(() => _previewLoading = false);
+      }
     }
   }
 
