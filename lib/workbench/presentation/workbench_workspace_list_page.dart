@@ -6,16 +6,16 @@ import '../workbench_runtime.dart';
 import 'workbench_ui.dart';
 import 'workbench_workspace_admin_dialog.dart';
 
-class WorkbenchWorkspaceListPageV2 extends StatefulWidget {
-  const WorkbenchWorkspaceListPageV2({super.key});
+class WorkbenchWorkspaceListPage extends StatefulWidget {
+  const WorkbenchWorkspaceListPage({super.key});
 
   @override
-  State<WorkbenchWorkspaceListPageV2> createState() =>
-      _WorkbenchWorkspaceListPageV2State();
+  State<WorkbenchWorkspaceListPage> createState() =>
+      _WorkbenchWorkspaceListPageState();
 }
 
-class _WorkbenchWorkspaceListPageV2State
-    extends State<WorkbenchWorkspaceListPageV2> {
+class _WorkbenchWorkspaceListPageState
+    extends State<WorkbenchWorkspaceListPage> {
   late Future<List<WorkspaceModel>> _workspaces;
 
   @override

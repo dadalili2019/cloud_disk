@@ -43,3 +43,15 @@ v1.4 通过 PR #1 合并到 main。
 - 新增长期编码规范。
 
 这次调整以“减少历史包袱，不改变当前业务行为”为原则。
+
+
+## 2026-09-20 Analyzer / Workspace Cleanup
+
+继续完成：
+
+- Flutter 3.47.4 下 Analyzer issue 从 33 个清到 0。
+- 当前 `flutter analyze` 为 `No issues found`。
+- 当前 `flutter test` 为 4 tests passed。
+- 删除未被引用的旧 `workbench_workspace_pages.dart`。
+- Workspace 当前代码去掉 `V2` 历史命名。
+- 当前 Workspace 页面命名恢复为正常业务语义，不再同时维护旧版 / 新版概念。

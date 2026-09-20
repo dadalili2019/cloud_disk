@@ -69,7 +69,21 @@
 - Export 不包含 API Key
 - Restore Validate / Stage / Restart Apply / Search rebuild
 
-## 3. 自动检查 Gate
+## 3. 当前验证基线
+
+2026-09-20 当前本地验证结果：
+
+~~~text
+flutter analyze
+→ No issues found
+
+flutter test
+→ 4 tests passed
+~~~
+
+`flutter build windows` 继续作为合并和发布前必须执行的 Gate，不在没有真实执行结果时写成“已通过”。
+
+## 4. 自动检查 Gate
 
 ~~~powershell
 flutter pub get
@@ -87,7 +101,7 @@ flutter build windows
 
 后面不要再默认用“历史 lint 很多，所以先不管”作为处理方式。新 warning 优先解决。
 
-## 4. 自动化测试优先级
+## 5. 自动化测试优先级
 
 1. Repository / Service unit tests
 2. Task current constraint
@@ -101,7 +115,7 @@ flutter build windows
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 
-## 5. 本轮代码清理回归重点
+## 6. 本轮代码清理回归重点
 
 - Login 能进入 Workbench。
 - Settings 能打开。

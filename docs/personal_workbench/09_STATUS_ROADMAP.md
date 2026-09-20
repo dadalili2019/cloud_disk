@@ -35,7 +35,19 @@
 - 当前代码退出 Phase 历史命名。
 - 新增长期编码规范。
 
-这批调整先在 `refactor/personal-workbench-cleanup` 分支验证，确认后再合并 main。
+这一批基础清理已经合并到 `main`。
+
+当前代码质量基线：
+
+~~~text
+flutter analyze
+→ No issues found
+
+flutter test
+→ 4 tests passed
+~~~
+
+Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 
 ## 3. Desktop Hardening
 
@@ -47,7 +59,7 @@
 - `workbench_home_page.dart`
 - `workbench_knowledge_page.dart`
 - `workbench_developer_page.dart`
-- Workspace Overview
+- Workspace Overview 的页面组件继续拆细
 - `ai_context_builder.dart`
 
 原则是按职责拆，不机械拆。

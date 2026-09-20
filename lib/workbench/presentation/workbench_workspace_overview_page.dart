@@ -7,8 +7,8 @@ import '../workbench_runtime.dart';
 import 'workbench_ui.dart';
 import 'workbench_workspace_admin_dialog.dart';
 
-class WorkbenchWorkspaceFrameV2 extends StatefulWidget {
-  const WorkbenchWorkspaceFrameV2({
+class WorkbenchWorkspaceFrame extends StatefulWidget {
+  const WorkbenchWorkspaceFrame({
     super.key,
     required this.workspaceId,
     required this.section,
@@ -20,12 +20,12 @@ class WorkbenchWorkspaceFrameV2 extends StatefulWidget {
   final Widget child;
 
   @override
-  State<WorkbenchWorkspaceFrameV2> createState() =>
-      _WorkbenchWorkspaceFrameV2State();
+  State<WorkbenchWorkspaceFrame> createState() =>
+      _WorkbenchWorkspaceFrameState();
 }
 
-class _WorkbenchWorkspaceFrameV2State
-    extends State<WorkbenchWorkspaceFrameV2> {
+class _WorkbenchWorkspaceFrameState
+    extends State<WorkbenchWorkspaceFrame> {
   late Future<WorkspaceOverviewModel> _overview;
 
   @override
@@ -35,7 +35,7 @@ class _WorkbenchWorkspaceFrameV2State
   }
 
   @override
-  void didUpdateWidget(covariant WorkbenchWorkspaceFrameV2 oldWidget) {
+  void didUpdateWidget(covariant WorkbenchWorkspaceFrame oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.workspaceId != widget.workspaceId) _reload();
   }
@@ -224,8 +224,8 @@ class _WorkspaceTab extends StatelessWidget {
   }
 }
 
-class WorkbenchOverviewPageV2 extends StatelessWidget {
-  const WorkbenchOverviewPageV2({super.key, required this.workspaceId});
+class WorkbenchOverviewPage extends StatelessWidget {
+  const WorkbenchOverviewPage({super.key, required this.workspaceId});
 
   final String workspaceId;
 
