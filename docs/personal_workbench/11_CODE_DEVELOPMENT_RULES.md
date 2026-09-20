@@ -183,6 +183,8 @@ Presentation 层负责展示、输入、页面状态和调用 Application Servic
 - 能用局部 StatefulWidget / 小组件隔离就隔离。
 - 不在 `build()` 里做 IO、数据库查询和网络请求。
 - Future 不要每次 build 都重新创建，除非就是要刷新。
+- 用 `part / extension` 拆 StatefulWidget 时，不要在 extension 里直接调用 `State.setState` 这类 protected API。
+- 状态变更统一留在真正的 `State` 子类方法里，extension 只调用明确的私有意图方法，例如 `_reloadState()`。
 
 长列表优先考虑 `ListView.builder`、分页、limit、lazy rendering，不要默认一次 build 几千个 Widget。
 

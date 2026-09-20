@@ -38,10 +38,14 @@ class _WorkbenchDeveloperPageState extends State<WorkbenchDeveloperPage> {
   }
 
   Future<void> _refresh() async {
-    setState(_reload);
+    _reloadState();
     await _context;
   }
 
+  void _reloadState() {
+    if (!mounted) return;
+    setState(_reload);
+  }
 
   @override
   Widget build(BuildContext context) {
