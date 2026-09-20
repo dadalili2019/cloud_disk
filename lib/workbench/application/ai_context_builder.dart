@@ -51,10 +51,10 @@ class AIContextBuilder {
 
   Future<AIContextModel> build(AIContextRequest request) async {
     return switch (request.scope) {
-      AIContextScope.task => _buildTask(request),
-      AIContextScope.workspace => _buildWorkspace(request),
-      AIContextScope.knowledge => _buildKnowledge(request),
-      AIContextScope.global => _buildGlobal(request),
+      AIContextScope.task => this._buildTask(request),
+      AIContextScope.workspace => this._buildWorkspace(request),
+      AIContextScope.knowledge => this._buildKnowledge(request),
+      AIContextScope.global => this._buildGlobal(request),
     };
   }
 

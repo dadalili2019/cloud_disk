@@ -19,7 +19,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
 
     for (final ref in request.manuallyIncludedEntities) {
       if (excluded.contains(ref.key) || deduped.containsKey(ref.key)) continue;
-      final item = await _loadEntityItem(
+      final item = await this._loadEntityItem(
         ref.entityType,
         ref.entityId,
         reason: 'manual_include',
@@ -44,7 +44,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     );
   }
 
-  Future<List<AIContextItem>> _noteItems(
+  Future<List<AIContextItem>> this._noteItems(
     Iterable<NoteModel> values, {
     required int priority,
     required String reason,
@@ -68,7 +68,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     return result;
   }
 
-  Future<List<AIContextItem>> _knowledgeItems(
+  Future<List<AIContextItem>> this._knowledgeItems(
     Iterable<KnowledgeModel> values, {
     required int priority,
     required String reason,
@@ -77,10 +77,10 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     for (final item in values) {
       result.add(
         AIContextItem(
-          ref: _knowledgeRef(item),
+          ref: this._knowledgeRef(item),
           priority: priority,
           reason: reason,
-          content: _knowledgeContent(
+          content: this._knowledgeContent(
             item,
             await markdownStore.read(item.filePath),
           ),
@@ -90,7 +90,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     return result;
   }
 
-  Future<List<AIContextItem>> _developerItemsForWorkspace(
+  Future<List<AIContextItem>> this._developerItemsForWorkspace(
     String workspaceId, {
     required bool workspaceScope,
   }) async {
@@ -100,7 +100,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     final primary = context.primaryProject;
     if (primary != null) {
       result.add(
-        _developerProjectItem(
+        this._developerProjectItem(
           primary,
           priority: 1,
           reason: 'primary_developer_project',
@@ -112,7 +112,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
       for (final project
           in context.projects.where((item) => item.id != primary?.id).take(2)) {
         result.add(
-          _developerProjectItem(
+          this._developerProjectItem(
             project,
             priority: 2,
             reason: 'workspace_developer_project',
@@ -129,7 +129,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
             : context.commands.take(2));
     for (final command in selectedCommands) {
       result.add(
-        _developerCommandItem(
+        this._developerCommandItem(
           command,
           priority: 2,
           reason: workspaceScope
@@ -147,7 +147,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
             : context.snippets.take(1));
     for (final snippet in selectedSnippets) {
       result.add(
-        _developerSnippetItem(
+        this._developerSnippetItem(
           snippet,
           priority: 3,
           reason: workspaceScope
@@ -161,10 +161,10 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     for (final resource in context.devResources.take(resourceLimit)) {
       result.add(
         AIContextItem(
-          ref: _resourceRef(resource),
+          ref: this._resourceRef(resource),
           priority: 2,
           reason: 'developer_resource',
-          content: _resourceContent(resource),
+          content: this._resourceContent(resource),
         ),
       );
     }
@@ -172,13 +172,13 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     return result;
   }
 
-  Future<List<AIContextItem>> _itemsFromSearchHits(
+  Future<List<AIContextItem>> this._itemsFromSearchHits(
     List<SearchResultModel> hits, {
     required String reason,
   }) async {
     final result = <AIContextItem>[];
     for (final hit in hits) {
-      final item = await _loadEntityItem(
+      final item = await this._loadEntityItem(
         hit.entityType,
         hit.entityId,
         reason: reason,

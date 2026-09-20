@@ -11,10 +11,10 @@ extension _AIContextEntityMapper on AIContextBuilder {
         final task = await tasks.getById(entityId);
         if (task == null) return null;
         return AIContextItem(
-          ref: _taskRef(task),
+          ref: this._taskRef(task),
           priority: 2,
           reason: reason,
-          content: _taskSummary(task),
+          content: this._taskSummary(task),
         );
       case 'note':
         final note = await notes.getById(entityId);
@@ -34,37 +34,37 @@ extension _AIContextEntityMapper on AIContextBuilder {
         final issue = await issues.getById(entityId);
         if (issue == null) return null;
         return AIContextItem(
-          ref: _issueRef(issue),
+          ref: this._issueRef(issue),
           priority: 1,
           reason: reason,
-          content: _issueContent(issue),
+          content: this._issueContent(issue),
         );
       case 'resource':
         final resource = await resources.getById(entityId);
         if (resource == null) return null;
         return AIContextItem(
-          ref: _resourceRef(resource),
+          ref: this._resourceRef(resource),
           priority: 2,
           reason: reason,
-          content: _resourceContent(resource),
+          content: this._resourceContent(resource),
         );
       case 'decision':
         final decision = await decisions.getById(entityId);
         if (decision == null) return null;
         return AIContextItem(
-          ref: _decisionRef(decision),
+          ref: this._decisionRef(decision),
           priority: 1,
           reason: reason,
-          content: _decisionContent(decision),
+          content: this._decisionContent(decision),
         );
       case 'knowledge':
         final item = await knowledge.getById(entityId);
         if (item == null) return null;
         return AIContextItem(
-          ref: _knowledgeRef(item),
+          ref: this._knowledgeRef(item),
           priority: 3,
           reason: reason,
-          content: _knowledgeContent(
+          content: this._knowledgeContent(
             item,
             await markdownStore.read(item.filePath),
           ),
@@ -72,7 +72,7 @@ extension _AIContextEntityMapper on AIContextBuilder {
       case 'developer_project':
         final project = await developerContextService.getProjectById(entityId);
         if (project == null || project.archivedAt != null) return null;
-        return _developerProjectItem(
+        return this._developerProjectItem(
           project,
           priority: project.isPrimary ? 1 : 2,
           reason: reason,
@@ -80,7 +80,7 @@ extension _AIContextEntityMapper on AIContextBuilder {
       case 'developer_command':
         final command = await developerContextService.getCommandById(entityId);
         if (command == null || command.archivedAt != null) return null;
-        return _developerCommandItem(
+        return this._developerCommandItem(
           command,
           priority: 2,
           reason: reason,
@@ -88,7 +88,7 @@ extension _AIContextEntityMapper on AIContextBuilder {
       case 'developer_snippet':
         final snippet = await developerContextService.getSnippetById(entityId);
         if (snippet == null || snippet.archivedAt != null) return null;
-        return _developerSnippetItem(
+        return this._developerSnippetItem(
           snippet,
           priority: 3,
           reason: reason,
@@ -104,31 +104,31 @@ extension _AIContextEntityMapper on AIContextBuilder {
   }
 
   AIContextItem _taskItem(TaskModel task) => AIContextItem(
-        ref: _taskRef(task),
+        ref: this._taskRef(task),
         priority: 0,
         reason: 'current_task',
-        content: _taskSummary(task),
+        content: this._taskSummary(task),
       );
 
   AIContextItem _issueItem(IssueModel issue) => AIContextItem(
-        ref: _issueRef(issue),
+        ref: this._issueRef(issue),
         priority: 0,
         reason: 'active_blocker',
-        content: _issueContent(issue),
+        content: this._issueContent(issue),
       );
 
   AIContextItem _resourceItem(ResourceModel resource) => AIContextItem(
-        ref: _resourceRef(resource),
+        ref: this._resourceRef(resource),
         priority: 2,
         reason: 'resource',
-        content: _resourceContent(resource),
+        content: this._resourceContent(resource),
       );
 
   AIContextItem _decisionItem(DecisionModel decision) => AIContextItem(
-        ref: _decisionRef(decision),
+        ref: this._decisionRef(decision),
         priority: 1,
         reason: 'decision',
-        content: _decisionContent(decision),
+        content: this._decisionContent(decision),
       );
 
   AIContextItem _activityItem(ActivityEventModel event) => AIContextItem(
@@ -158,7 +158,7 @@ extension _AIContextEntityMapper on AIContextBuilder {
         ),
         priority: priority,
         reason: reason,
-        content: _developerProjectContent(project),
+        content: this._developerProjectContent(project),
       );
 
   AIContextItem _developerCommandItem(
@@ -175,7 +175,7 @@ extension _AIContextEntityMapper on AIContextBuilder {
         ),
         priority: priority,
         reason: reason,
-        content: _developerCommandContent(command),
+        content: this._developerCommandContent(command),
       );
 
   AIContextItem _developerSnippetItem(
@@ -192,7 +192,7 @@ extension _AIContextEntityMapper on AIContextBuilder {
         ),
         priority: priority,
         reason: reason,
-        content: _developerSnippetContent(snippet),
+        content: this._developerSnippetContent(snippet),
       );
 
   AIContextRef _taskRef(TaskModel task) => AIContextRef(

@@ -11,26 +11,26 @@ extension _AIContextScopeBuilder on AIContextBuilder {
     final workspace = await workspaces.getById(task.workspaceId);
     final context = await taskContextService.load(task);
     final items = <AIContextItem>[
-      _taskItem(task),
-      ...await _noteItems(context.notes, priority: 1, reason: 'linked_note'),
+      this._taskItem(task),
+      ...await this._noteItems(context.notes, priority: 1, reason: 'linked_note'),
       ...context.openIssues.map(_issueItem),
       ...context.decisions.map(_decisionItem),
       ...context.resources.map(_resourceItem),
-      ...await _developerItemsForWorkspace(
+      ...await this._developerItemsForWorkspace(
         task.workspaceId,
         workspaceScope: false,
       ),
-      ...await _knowledgeItems(
+      ...await this._knowledgeItems(
         context.knowledge,
         priority: 3,
         reason: 'task_knowledge',
       ),
       ...context.recentActivity.map(_activityItem),
     ];
-    return _finalize(
+    return this._finalize(
       request,
       workspace: workspace,
-      anchor: _taskRef(task),
+      anchor: this._taskRef(task),
       items: items,
     );
   }
@@ -47,9 +47,9 @@ extension _AIContextScopeBuilder on AIContextBuilder {
     final currentTask = await tasks.getCurrent(workspaceId);
     if (currentTask != null) {
       final context = await taskContextService.load(currentTask);
-      items.add(_taskItem(currentTask));
+      items.add(this._taskItem(currentTask));
       items.addAll(
-        await _noteItems(
+        await this._noteItems(
           context.notes.take(4),
           priority: 1,
           reason: 'current_task_note',
@@ -59,7 +59,7 @@ extension _AIContextScopeBuilder on AIContextBuilder {
       items.addAll(context.decisions.take(4).map(_decisionItem));
       items.addAll(context.resources.take(4).map(_resourceItem));
       items.addAll(
-        await _knowledgeItems(
+        await this._knowledgeItems(
           context.knowledge.take(4),
           priority: 3,
           reason: 'current_task_knowledge',
@@ -72,17 +72,17 @@ extension _AIContextScopeBuilder on AIContextBuilder {
         in workspaceTasks.where((task) => task.id != currentTask?.id).take(3)) {
       items.add(
         AIContextItem(
-          ref: _taskRef(task),
+          ref: this._taskRef(task),
           priority: 2,
           reason: 'recent_workspace_task',
-          content: _taskSummary(task),
+          content: this._taskSummary(task),
         ),
       );
     }
 
     final workspaceNotes = await notes.listByWorkspace(workspaceId);
     items.addAll(
-      await _noteItems(
+      await this._noteItems(
         workspaceNotes.take(4),
         priority: 2,
         reason: 'recent_workspace_note',
@@ -101,7 +101,7 @@ extension _AIContextScopeBuilder on AIContextBuilder {
     items.addAll(workspaceDecisions.take(4).map(_decisionItem));
 
     items.addAll(
-      await _developerItemsForWorkspace(
+      await this._developerItemsForWorkspace(
         workspaceId,
         workspaceScope: true,
       ),
@@ -114,14 +114,14 @@ extension _AIContextScopeBuilder on AIContextBuilder {
         limit: 8,
       );
       items.addAll(
-        await _itemsFromSearchHits(hits, reason: 'workspace_search'),
+        await this._itemsFromSearchHits(hits, reason: 'workspace_search'),
       );
     }
 
     final recentActivity = await activities.listRecent(workspaceId, limit: 6);
     items.addAll(recentActivity.map(_activityItem));
 
-    return _finalize(
+    return this._finalize(
       request,
       workspace: workspace,
       anchor: AIContextRef(
@@ -145,10 +145,10 @@ extension _AIContextScopeBuilder on AIContextBuilder {
     final sourceRefs = await knowledgeService.sources(item);
     final items = <AIContextItem>[
       AIContextItem(
-        ref: _knowledgeRef(item),
+        ref: this._knowledgeRef(item),
         priority: 0,
         reason: 'anchor_knowledge',
-        content: _knowledgeContent(
+        content: this._knowledgeContent(
           item,
           await markdownStore.read(item.filePath),
         ),
@@ -157,14 +157,14 @@ extension _AIContextScopeBuilder on AIContextBuilder {
 
     WorkspaceModel? workspace;
     for (final source in sourceRefs) {
-      final loaded = await _loadEntityItem(
+      final loaded = await this._loadEntityItem(
         source.entityType,
         source.entityId,
         reason: 'knowledge_source',
       );
       if (loaded != null) {
         items.add(loaded);
-        workspace ??= await _workspaceForItem(loaded);
+        workspace ??= await this._workspaceForItem(loaded);
       }
     }
 
@@ -174,17 +174,17 @@ extension _AIContextScopeBuilder on AIContextBuilder {
         limit: 6,
       );
       items.addAll(
-        await _itemsFromSearchHits(
+        await this._itemsFromSearchHits(
           hits,
           reason: 'knowledge_related_search',
         ),
       );
     }
 
-    return _finalize(
+    return this._finalize(
       request,
       workspace: workspace,
-      anchor: _knowledgeRef(item),
+      anchor: this._knowledgeRef(item),
       items: items,
     );
   }
@@ -197,9 +197,9 @@ extension _AIContextScopeBuilder on AIContextBuilder {
         limit: 10,
       );
       items.addAll(
-        await _itemsFromSearchHits(hits, reason: 'global_search'),
+        await this._itemsFromSearchHits(hits, reason: 'global_search'),
       );
     }
-    return _finalize(request, items: items);
+    return this._finalize(request, items: items);
   }
 }
