@@ -37,7 +37,7 @@ class BackupArchiveValidator {
       final bytes = await file.readAsBytes();
       return ZipDecoder().decodeBytes(bytes, verify: true);
     } catch (error) {
-      throw StateError('无法读取 Backup ZIP：${error}');
+      throw StateError('无法读取 Backup ZIP：$error');
     }
   }
 
