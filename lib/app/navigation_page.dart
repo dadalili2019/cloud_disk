@@ -5,7 +5,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 
 import '../router/router.dart';
 import '../theme/theme_controller.dart';
-import '../widgets/windowButtons.dart';
+import '../widgets/window_buttons.dart';
 import '../workbench/application/continue_service.dart';
 import '../workbench/core/models.dart';
 import '../workbench/presentation/global_ai_drawer.dart';
@@ -156,7 +156,6 @@ class _NavigationPageState extends State<NavigationPage> {
       _NavTarget.developer =>
         location.startsWith('/developer') || location.endsWith('/developer'),
       _NavTarget.tools => location.startsWith('/tools') ||
-          location.startsWith('/todo') ||
           location.startsWith('/speedtestpage') ||
           location.startsWith('/jsonformat') ||
           location.startsWith('/comparison') ||
@@ -719,7 +718,6 @@ class _ContentFrame extends StatelessWidget {
       '/speedtestpage': ('工具', '网络测速'),
       '/ragknowledge': ('工具', 'RAG 知识库'),
       '/game': ('工具', '游戏'),
-      '/todo': ('工具', '待办'),
     };
     if (path.startsWith('/setting')) return ('个人空间', '设置');
     if (path.startsWith('/imagetools')) return ('工具', '图片工具');
@@ -776,21 +774,6 @@ class _ContentFrame extends StatelessWidget {
           ]),
         ),
       ),
-    );
-  }
-}
-
-class NavigationBodyItem extends StatelessWidget {
-  const NavigationBodyItem({super.key, this.header, this.content});
-
-  final String? header;
-  final Widget? content;
-
-  @override
-  Widget build(BuildContext context) {
-    return ScaffoldPage.withPadding(
-      header: PageHeader(title: Text(header ?? '页面标题')),
-      content: content ?? const SizedBox.shrink(),
     );
   }
 }

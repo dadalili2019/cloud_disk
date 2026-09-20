@@ -5,7 +5,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 
 import './router/router.dart';
-import './services/tray.dart';
+import 'app/system_tray_service.dart';
 import 'theme/theme_controller.dart';
 import 'workbench/workbench_runtime.dart';
 

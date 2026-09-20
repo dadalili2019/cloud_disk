@@ -7,7 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../theme/theme_controller.dart';
-import '../widgets/windowButtons.dart';
+import '../widgets/window_buttons.dart';
 import '../workbench/core/workbench_settings.dart';
 import '../workbench/workbench_runtime.dart';
 
