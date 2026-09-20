@@ -311,23 +311,6 @@ class _DataBackupSectionState extends State<DataBackupSection> {
   }
 }
 
-class _SectionHeading extends StatelessWidget {
-  const _SectionHeading({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(2, 2, 2, 12),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-      ),
-    );
-  }
-}
-
 class _Group extends StatelessWidget {
   const _Group({required this.title, required this.children});
 
@@ -373,15 +356,13 @@ class _Group extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row({required this.title, required this.control, this.subtitle});
+  const _Row({required this.title, required this.control});
 
   final String title;
-  final String? subtitle;
   final Widget control;
 
   @override
   Widget build(BuildContext context) {
-    final textColor = FluentTheme.of(context).typography.body?.color;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       child: LayoutBuilder(
@@ -396,17 +377,6 @@ class _Row extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              if (subtitle != null) ...[
-                const SizedBox(height: 3),
-                Text(
-                  subtitle!,
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    height: 1.35,
-                    color: textColor?.withValues(alpha: 0.48),
-                  ),
-                ),
-              ],
             ],
           );
 

@@ -310,7 +310,7 @@ class ThemeController extends ChangeNotifier {
               focusStrokeColorOuter: const Color(0xFF6A8759),
               dividerStrokeColorDefault: const Color(0xFF3D4042),
             )
-          : ResourceDictionary.light(),
+          : const ResourceDictionary.light(),
       scaffoldBackgroundColor: palette.appBackground,
       cardColor: palette.cardBackground,
       inactiveColor: palette.cardBorder,

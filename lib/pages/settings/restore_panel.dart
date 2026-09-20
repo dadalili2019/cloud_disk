@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 
-import '../../workbench/application/restore_service.dart';
 import '../../workbench/workbench_runtime.dart';
 
 class RestorePanel extends StatefulWidget {
@@ -110,10 +109,10 @@ class _RestorePanelState extends State<RestorePanel> {
       children: [
         Row(
           children: [
-            Expanded(
+            const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     '从备份恢复',
                     style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
