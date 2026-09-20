@@ -13,7 +13,7 @@ import 'package:http/http.dart' as http;
 
 
 class SpeedTestPage extends StatefulWidget {
-  const SpeedTestPage({Key? key}) : super(key: key);
+  const SpeedTestPage({super.key});
 
   @override
   State<SpeedTestPage> createState() => _SpeedTestPageState();

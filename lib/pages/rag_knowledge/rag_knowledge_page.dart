@@ -38,12 +38,11 @@ class _RagKnowledgePageState extends State<RagKnowledgePage> {
             Row(
               children: [
                 FilledButton(
-                  child: _loading ? const ProgressRing() : const Text('发送'),
                   onPressed: _loading ? null : _onAsk,
+                  child: _loading ? const ProgressRing() : const Text('发送'),
                 ),
                 const SizedBox(width: 12),
                 Button(
-                  child: const Text('清空'),
                   onPressed: () {
                     _questionController.clear();
                     setState(() {
@@ -52,6 +51,7 @@ class _RagKnowledgePageState extends State<RagKnowledgePage> {
                       _errorMessage = null;
                     });
                   },
+                  child: const Text('清空'),
                 ),
               ],
             ),
@@ -136,7 +136,6 @@ class _RagKnowledgePageState extends State<RagKnowledgePage> {
     }
 
     // SUCCESS
-// SUCCESS
     return Card(
       padding: const EdgeInsets.all(20),
       borderRadius: BorderRadius.circular(8),

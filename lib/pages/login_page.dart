@@ -12,7 +12,7 @@ import '../workbench/core/workbench_settings.dart';
 import '../workbench/workbench_runtime.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -199,7 +199,7 @@ class _LoginPageState extends State<LoginPage>
                     BoxShadow(
                       blurRadius: 28,
                       offset: const Offset(0, 12),
-                      color: palette.shadow.withOpacity(0.18),
+                      color: palette.shadow.withValues(alpha: 0.18),
                     ),
                   ],
                 ),
@@ -245,15 +245,15 @@ class _LoginPageState extends State<LoginPage>
                       height: 40,
                       child: ElevatedButton(
                         style: ButtonStyle(
-                          elevation: MaterialStateProperty.all(0),
+                          elevation: WidgetStateProperty.all(0),
                           backgroundColor:
-                              MaterialStateProperty.all(accent),
-                          foregroundColor: MaterialStateProperty.all(
+                              WidgetStateProperty.all(accent),
+                          foregroundColor: WidgetStateProperty.all(
                             const Color(0xFF151711),
                           ),
                           padding:
-                              MaterialStateProperty.all(EdgeInsets.zero),
-                          shape: MaterialStateProperty.all(
+                              WidgetStateProperty.all(EdgeInsets.zero),
+                          shape: WidgetStateProperty.all(
                             RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(9),
                             ),

@@ -766,16 +766,13 @@ class _SettingRow extends StatelessWidget {
   const _SettingRow({
     required this.title,
     required this.control,
-    this.subtitle,
   });
 
   final String title;
-  final String? subtitle;
   final Widget control;
 
   @override
   Widget build(BuildContext context) {
-    final theme = FluentTheme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       child: Row(
@@ -792,16 +789,6 @@ class _SettingRow extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle!,
-                    style: TextStyle(
-                      fontSize: 9.5,
-                      color: theme.typography.body?.color?.withValues(alpha: 0.48),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
