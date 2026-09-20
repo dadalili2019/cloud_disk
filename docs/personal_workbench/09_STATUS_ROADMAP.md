@@ -53,14 +53,20 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 
 ### 结构
 
-优先处理几个超大文件：
+已完成：
 
+- Workspace 历史聚合页面删除。
+- Workspace 当前 V2 命名清理。
+- Workspace Overview 拆成 Frame / Navigation / Overview Content。
+- Settings 拆成 Page / Sections / Navigation / Appearance / Components。
+
+下一批优先处理：
+
+- `ai_context_builder.dart`
 - `global_ai_drawer.dart`
 - `workbench_home_page.dart`
 - `workbench_knowledge_page.dart`
 - `workbench_developer_page.dart`
-- Workspace Overview 的页面组件继续拆细
-- `ai_context_builder.dart`
 
 原则是按职责拆，不机械拆。
 
