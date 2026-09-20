@@ -248,3 +248,26 @@ global_ai_drawer.dart
 - `global_ai_drawer_formatters.dart`：Scope / Entity / Provider / 时间 / 错误文本格式化。
 
 `_contextPreview` 暂时仍留在 State 主类，因为它直接控制 `_contextExpanded` 的 `setState`。后面如果继续拆，会先把状态边界理清楚，而不是为了减少行数强行移动。
+
+
+## Knowledge 页面代码组织
+
+Knowledge 页面现在按“页面状态 / 列表展示 / 编辑 / helper”拆开：
+
+~~~text
+workbench_knowledge_page.dart
+├─ workbench_knowledge_cards.dart
+├─ workbench_knowledge_editor.dart
+└─ workbench_knowledge_support.dart
+~~~
+
+页面主文件仍然负责：
+
+- Knowledge load
+- Search debounce / SearchService
+- Category filter
+- Distill dialog
+- Create / Edit
+- Search Result route
+
+卡片和编辑 Dialog 只负责展示和输入，不直接重新组织 KnowledgeService 业务规则。
