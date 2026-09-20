@@ -256,13 +256,34 @@ workbench_workspace_overview_page.dart
 - 不借拆文件修改 UI 行为。
 - 不为了拆文件制造跨层依赖。
 
-## 10. 接下来主要优化什么
+## 10. AI Context Builder 怎么拆
 
-业务分层已经比较清楚，下一步主要是 AI Context、复杂 Drawer 和测试覆盖。
+`AIContextBuilder` 仍然是唯一对外 Builder，没有新增 Manager / Handler / Executor 之类的中间层。
+
+~~~text
+ai_context_builder.dart
+├─ ai_context_builder_scopes.dart
+├─ ai_context_builder_collection.dart
+├─ ai_context_builder_entities.dart
+└─ ai_context_builder_formatters.dart
+~~~
+
+职责：
+
+- `ai_context_builder.dart`：依赖、构造、`build()` 统一入口。
+- `scopes`：Task / Workspace / Knowledge / Global 四种 Scope 的上下文策略。
+- `collection`：去重、排序、手工 include / exclude、Notes / Knowledge / Developer / Search 数据收集。
+- `entities`：不同业务实体加载、ContextItem 和 ContextRef 映射。
+- `formatters`：Task / Issue / Resource / Decision / Knowledge / Developer 数据转成提供给 AI 的文本。
+
+拆分只改变代码组织，不改变 Context 优先级、数量限制、搜索范围、手工 Include / Exclude 和最终内容格式。
+
+## 11. 接下来主要优化什么
+
+业务分层已经比较清楚，下一步主要是复杂 Drawer、Home / Knowledge / Developer 页面和测试覆盖。
 
 当前优先关注：
 
-- `ai_context_builder.dart`
 - `global_ai_drawer.dart`
 - `workbench_home_page.dart`
 - `workbench_knowledge_page.dart`

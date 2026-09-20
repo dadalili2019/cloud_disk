@@ -183,3 +183,49 @@ Snapshot 记录：
 - 中文检索相关性
 - Search Index 大数据量性能
 - 编辑后索引即时一致性
+
+
+## AI Context Builder 代码组织
+
+AI Context 的业务入口仍然只有：
+
+~~~text
+AIContextBuilder.build(request)
+~~~
+
+内部实现已经按职责拆开：
+
+~~~text
+build(request)
+  ↓
+Scope Strategy
+  ├─ Task
+  ├─ Workspace
+  ├─ Knowledge
+  └─ Global
+  ↓
+Context Collection
+  ├─ linked notes
+  ├─ issues / resources / decisions
+  ├─ developer context
+  ├─ knowledge
+  ├─ search hits
+  └─ activity
+  ↓
+Entity Mapping / Formatting
+  ↓
+dedupe + manual include/exclude + priority sort
+  ↓
+AIContextModel
+~~~
+
+这次拆分不改变原有 Context 规则，只解决一个文件同时承担太多职责的问题。
+
+后面如果新增新的 Context 类型，先判断它属于：
+
+- Scope 选择逻辑；
+- 数据收集；
+- Entity 映射；
+- 内容格式化；
+
+不要继续把所有逻辑堆回 `ai_context_builder.dart`。
