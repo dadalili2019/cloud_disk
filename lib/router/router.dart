@@ -22,7 +22,7 @@ import '../workbench/presentation/workbench_home_page.dart';
 import '../workbench/presentation/workbench_issue_page.dart';
 import '../workbench/presentation/workbench_knowledge_page.dart';
 import '../workbench/presentation/workbench_notes_editor_page.dart';
-import '../workbench/presentation/workbench_phase2_pages.dart';
+import '../workbench/presentation/workbench_workspace_overview_page.dart';
 import '../workbench/presentation/workbench_resource_page.dart';
 import '../workbench/presentation/workbench_task_list_page.dart';
 import '../workbench/presentation/workbench_time_page.dart';

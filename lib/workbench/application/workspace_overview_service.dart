@@ -2,8 +2,8 @@ import '../core/models.dart';
 import '../domain/repositories.dart';
 import 'task_context_service.dart';
 
-class Phase2WorkspaceOverviewService {
-  const Phase2WorkspaceOverviewService({
+class WorkspaceOverviewService {
+  const WorkspaceOverviewService({
     required this.workspaces,
     required this.tasks,
     required this.taskContextService,

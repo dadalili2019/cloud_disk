@@ -18,7 +18,7 @@ import 'application/focus_session_service.dart';
 import 'application/issue_service.dart';
 import 'application/knowledge_distill_service.dart';
 import 'application/knowledge_service.dart';
-import 'application/phase2_overview_service.dart';
+import 'application/workspace_overview_service.dart';
 import 'application/quick_capture_service.dart';
 import 'application/resource_service.dart';
 import 'application/restore_service.dart';
@@ -110,7 +110,7 @@ class WorkbenchRuntime {
   final FocusSessionService focusSessionService;
   final TodayService todayService;
   final EntityLinkService entityLinkService;
-  final Phase2WorkspaceOverviewService overviewService;
+  final WorkspaceOverviewService overviewService;
   final DeveloperProjectService developerProjectService;
   final DeveloperCommandService developerCommandService;
   final DeveloperSnippetService developerSnippetService;
@@ -337,7 +337,7 @@ class WorkbenchRuntime {
       focusSessionService: focusSessionService,
       todayService: todayService,
       entityLinkService: entityLinkService,
-      overviewService: Phase2WorkspaceOverviewService(
+      overviewService: WorkspaceOverviewService(
         workspaces: workspaceRepository,
         tasks: taskRepository,
         taskContextService: taskContextService,
