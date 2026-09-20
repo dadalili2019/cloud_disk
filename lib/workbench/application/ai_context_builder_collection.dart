@@ -19,7 +19,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
 
     for (final ref in request.manuallyIncludedEntities) {
       if (excluded.contains(ref.key) || deduped.containsKey(ref.key)) continue;
-      final item = await this._loadEntityItem(
+      final item = await _loadEntityItem(
         ref.entityType,
         ref.entityId,
         reason: 'manual_include',
@@ -77,10 +77,10 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     for (final item in values) {
       result.add(
         AIContextItem(
-          ref: this._knowledgeRef(item),
+          ref: _knowledgeRef(item),
           priority: priority,
           reason: reason,
-          content: this._knowledgeContent(
+          content: _knowledgeContent(
             item,
             await markdownStore.read(item.filePath),
           ),
@@ -100,7 +100,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     final primary = context.primaryProject;
     if (primary != null) {
       result.add(
-        this._developerProjectItem(
+        _developerProjectItem(
           primary,
           priority: 1,
           reason: 'primary_developer_project',
@@ -112,7 +112,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
       for (final project
           in context.projects.where((item) => item.id != primary?.id).take(2)) {
         result.add(
-          this._developerProjectItem(
+          _developerProjectItem(
             project,
             priority: 2,
             reason: 'workspace_developer_project',
@@ -129,7 +129,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
             : context.commands.take(2));
     for (final command in selectedCommands) {
       result.add(
-        this._developerCommandItem(
+        _developerCommandItem(
           command,
           priority: 2,
           reason: workspaceScope
@@ -147,7 +147,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
             : context.snippets.take(1));
     for (final snippet in selectedSnippets) {
       result.add(
-        this._developerSnippetItem(
+        _developerSnippetItem(
           snippet,
           priority: 3,
           reason: workspaceScope
@@ -161,10 +161,10 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     for (final resource in context.devResources.take(resourceLimit)) {
       result.add(
         AIContextItem(
-          ref: this._resourceRef(resource),
+          ref: _resourceRef(resource),
           priority: 2,
           reason: 'developer_resource',
-          content: this._resourceContent(resource),
+          content: _resourceContent(resource),
         ),
       );
     }
@@ -178,7 +178,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
   }) async {
     final result = <AIContextItem>[];
     for (final hit in hits) {
-      final item = await this._loadEntityItem(
+      final item = await _loadEntityItem(
         hit.entityType,
         hit.entityId,
         reason: reason,
