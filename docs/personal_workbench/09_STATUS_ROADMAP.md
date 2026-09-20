@@ -62,7 +62,8 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 
 下一批优先处理：
 
-- `global_ai_drawer.dart`
+- Global AI Drawer 已完成第一阶段：UI helper / formatter 拆分。
+- 下一步继续判断 Conversation State 是否值得抽离，先不强拆。
 - `workbench_home_page.dart`
 - `workbench_knowledge_page.dart`
 - `workbench_developer_page.dart`

@@ -229,3 +229,22 @@ AIContextModel
 - 内容格式化；
 
 不要继续把所有逻辑堆回 `ai_context_builder.dart`。
+
+
+## Global AI Drawer 代码组织
+
+Global AI Drawer 目前先做第一阶段拆分：
+
+~~~text
+global_ai_drawer.dart
+├─ global_ai_drawer_widgets.dart
+└─ global_ai_drawer_formatters.dart
+~~~
+
+职责：
+
+- `global_ai_drawer.dart`：State、加载、Scope 切换、Context 操作、Conversation 生命周期、发送/重试。
+- `global_ai_drawer_widgets.dart`：Header、Scope UI、Body、Message、Composer 等渲染辅助方法。
+- `global_ai_drawer_formatters.dart`：Scope / Entity / Provider / 时间 / 错误文本格式化。
+
+`_contextPreview` 暂时仍留在 State 主类，因为它直接控制 `_contextExpanded` 的 `setState`。后面如果继续拆，会先把状态边界理清楚，而不是为了减少行数强行移动。

@@ -282,9 +282,19 @@ ai_context_builder.dart
 
 业务分层已经比较清楚，下一步主要是复杂 Drawer、Home / Knowledge / Developer 页面和测试覆盖。
 
-当前优先关注：
+当前已经开始处理 Global AI Drawer：
 
-- `global_ai_drawer.dart`
+~~~text
+global_ai_drawer.dart
+├─ global_ai_drawer_widgets.dart
+└─ global_ai_drawer_formatters.dart
+~~~
+
+第一步只拆 UI helper 和纯格式化函数，State 生命周期、Conversation 动作、Context 操作仍留在主文件，避免为了拆文件同时改变状态管理方式。
+
+当前继续关注：
+
+- `global_ai_drawer.dart` 的 State / Conversation Action 边界
 - `workbench_home_page.dart`
 - `workbench_knowledge_page.dart`
 - `workbench_developer_page.dart`
