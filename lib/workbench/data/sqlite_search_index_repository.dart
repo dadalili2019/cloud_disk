@@ -32,7 +32,7 @@ class SqliteSearchIndexRepository implements SearchIndexRepository {
     if (entries.isEmpty) return;
 
     for (var offset = 0; offset < entries.length; offset += _rebuildBatchSize) {
-      final end = (offset + _rebuildBatchSize).clamp(0, entries.length);
+      final end = (offset + _rebuildBatchSize).clamp(0, entries.length).toInt();
       final batch = entries.sublist(offset, end);
       final placeholders =
           List.filled(batch.length, '(?, ?, ?, ?, ?)').join(', ');
