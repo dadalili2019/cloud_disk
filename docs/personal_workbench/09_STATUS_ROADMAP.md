@@ -65,8 +65,9 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 - Global AI Drawer 已完成第一阶段：UI helper / formatter 拆分。
 - Home 页面已按 Focus / Panels / Support 拆分，保留原 UI 和加载逻辑。
 - Knowledge 页面已按 Cards / Editor / Support 拆分，保留原搜索和沉淀逻辑。
-- 下一步继续判断 Conversation State 是否值得抽离，先不强拆。
-- `workbench_developer_page.dart`
+- Developer 页面已按 Actions / Sections / Support 拆分，保留原 CRUD 和展示逻辑。
+- 下一步继续判断 Global AI Conversation State 是否值得抽离，先不强拆。
+- 同时开始把重点转向 Service / Repository / Search / Backup / AI Context 自动化测试。
 
 原则是按职责拆，不机械拆。
 
