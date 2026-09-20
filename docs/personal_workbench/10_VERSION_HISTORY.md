@@ -98,3 +98,14 @@ v1.4 通过 PR #1 合并到 main。
 - Today / Recent Activity 拆到 `workbench_home_panels.dart`。
 - Drawer Layer、Loading / Error、内部数据模型和格式化 helper 拆到 `workbench_home_support.dart`。
 - 不改变首页 UI、路由、数据来源和交互。
+
+
+## 2026-09-20 Knowledge Page Split
+
+继续整理 Knowledge 页面：
+
+- 主文件保留 load / search / category / distill / editor orchestration。
+- Knowledge Card / Search Result 拆到 `workbench_knowledge_cards.dart`。
+- Knowledge Editor Dialog 拆到 `workbench_knowledge_editor.dart`。
+- Entity Label 等 helper 拆到 `workbench_knowledge_support.dart`。
+- 不改变 SearchService、KnowledgeService、Distill 和页面交互行为。
