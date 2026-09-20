@@ -108,16 +108,20 @@ flutter build windows
 - AI Context Budget：预算、P0 保留、最大条数、excluded。
 - SearchService：rebuild、freshness window、并发 rebuild 合并、查询参数透传。
 
+本轮继续补：
+
+- Search Repository：空查询、FTS + LIKE 合并、FTS 失败 fallback、过滤、LIKE 转义、limit clamp、replace 顺序。
+- Restore Validator：有效 manifest、路径穿越、绝对路径、缺失数据库、format version、future schema、损坏 ZIP。
+
 下一批：
 
-1. Search Repository：FTS + LIKE fallback、过滤、limit。
-2. Backup manifest / portable settings。
-3. Restore validation / 路径安全。
-4. Repository / Service unit tests。
-5. Task current constraint。
-6. Knowledge source links。
-7. Settings persistence。
-8. Widget smoke tests。
+1. Backup manifest / portable settings。
+2. Restore staging / next-start apply。
+3. Repository / Service unit tests。
+4. Task current constraint。
+5. Knowledge source links。
+6. Settings persistence。
+7. Widget smoke tests。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 

@@ -142,3 +142,16 @@ Developer 页面拆分后继续修正 State 边界：
 - 覆盖并发 rebuild 合并，避免重复重建。
 - 覆盖 Search 参数透传。
 - 测试不依赖真实 SQLite、外网、个人路径。
+
+
+## 2026-09-20 Search / Restore Test Hardening
+
+继续补核心链路保护：
+
+- 新增 SqliteSearchIndexRepository 行为测试。
+- 覆盖 FTS + LIKE 合并和去重。
+- 覆盖 FTS 失败时 LIKE fallback。
+- 覆盖 entity type / workspace filter、LIKE escape 和 limit clamp。
+- Restore 校验逻辑从 RestoreService 抽成 BackupArchiveValidator。
+- 覆盖路径穿越、绝对路径、缺失快照、format version、future schema 和损坏 ZIP。
+- RestoreService 继续只负责 staging / apply，不改变 Restore 流程。
