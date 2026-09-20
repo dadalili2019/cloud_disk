@@ -134,6 +134,19 @@ search_index 是派生数据。
 
 > Search Index 可以清空并从业务数据重建，因此不属于唯一数据源。
 
+完整重建现在采用：
+
+~~~text
+业务数据并发读取
+→ 组装 SearchIndexEntry
+→ SearchIndexRepository.rebuild(entries)
+→ transaction
+→ clear once
+→ 每 100 条批量 INSERT
+~~~
+
+增量更新仍然使用单条 replace / remove；完整 rebuild 不再对每条记录执行 delete + insert。
+
 ## 9. Settings
 
 Workbench 非敏感设置使用 SharedPreferences：

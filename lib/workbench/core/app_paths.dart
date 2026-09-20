@@ -10,9 +10,12 @@ class AppPaths {
 
   static Future<AppPaths> create() async {
     final supportDirectory = await getApplicationSupportDirectory();
-    final root = Directory(
-      p.join(supportDirectory.path, 'PersonalWorkbench'),
+    return createAt(
+      Directory(p.join(supportDirectory.path, 'PersonalWorkbench')),
     );
+  }
+
+  static Future<AppPaths> createAt(Directory root) async {
     final paths = AppPaths._(root);
     await paths.ensureBaseDirectories();
     return paths;

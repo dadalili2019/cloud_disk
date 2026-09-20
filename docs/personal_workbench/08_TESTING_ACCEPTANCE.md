@@ -113,15 +113,19 @@ flutter build windows
 - Search Repository：空查询、FTS + LIKE 合并、FTS 失败 fallback、过滤、LIKE 转义、limit clamp、replace 顺序。
 - Restore Validator：有效 manifest、路径穿越、绝对路径、缺失数据库、format version、future schema、损坏 ZIP。
 
+本轮继续补：
+
+- Search 完整 rebuild：Service 组装 Entry、Repository 批量写入、100 条分批。
+- Backup ZIP：manifest、数据库快照、Markdown / Attachment、portable settings、敏感配置排除。
+
 下一批：
 
-1. Backup manifest / portable settings。
-2. Restore staging / next-start apply。
-3. Repository / Service unit tests。
-4. Task current constraint。
-5. Knowledge source links。
-6. Settings persistence。
-7. Widget smoke tests。
+1. Restore staging / next-start apply。
+2. Repository / Service unit tests。
+3. Task current constraint。
+4. Knowledge source links。
+5. Settings persistence。
+6. Widget smoke tests。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 
