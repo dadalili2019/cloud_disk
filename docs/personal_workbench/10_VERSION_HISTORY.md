@@ -55,3 +55,13 @@ v1.4 通过 PR #1 合并到 main。
 - 删除未被引用的旧 `workbench_workspace_pages.dart`。
 - Workspace 当前代码去掉 `V2` 历史命名。
 - 当前 Workspace 页面命名恢复为正常业务语义，不再同时维护旧版 / 新版概念。
+
+
+## 2026-09-20 Workspace / Settings File Split
+
+继续做低风险结构整理：
+
+- Settings 页面按 Sections / Navigation / Appearance / Components 拆文件。
+- Workspace Overview 按 Navigation / Overview Content 拆文件。
+- 保留原有 private Widget 和行为，不为了拆文件扩大 public API。
+- 使用 Dart `part / part of` 维持同一个 library 内部的封装边界。

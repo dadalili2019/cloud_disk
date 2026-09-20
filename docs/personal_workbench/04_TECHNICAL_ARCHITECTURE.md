@@ -235,7 +235,6 @@ Restore 不在运行时直接覆盖正在使用的数据库文件。
 - `workbench_home_page.dart`
 - `workbench_knowledge_page.dart`
 - `workbench_developer_page.dart`
-- Workspace Overview 页面
 - `ai_context_builder.dart`
 
 后续按职责拆，不按行数机械切文件，也不借重构顺手改变业务行为。
