@@ -68,25 +68,64 @@ class SearchService {
   }
 
   Future<void> _rebuildIndexInternal() async {
-    await index.clear();
+    final activeWorkspacesFuture = workspaces.listActive();
+    final knowledgeItemsFuture = knowledge.listActive();
 
-    final activeWorkspaces = await workspaces.listActive();
-    for (final workspace in activeWorkspaces) {
-      final workspaceId = workspace.id;
-      final workspaceTasks = await tasks.listByWorkspace(workspaceId);
-      final workspaceNotes = await notes.listByWorkspace(workspaceId);
-      final workspaceIssues = await issues.listByWorkspace(workspaceId);
-      final workspaceResources = await resources.listByWorkspace(workspaceId);
-      final workspaceDecisions = await decisions.listByWorkspace(workspaceId);
-      final workspaceDeveloperProjects =
-          await developerProjects.listByWorkspace(workspaceId);
-      final workspaceDeveloperCommands =
-          await developerCommands.listByWorkspace(workspaceId);
-      final workspaceDeveloperSnippets =
-          await developerSnippets.listByWorkspace(workspaceId);
+    final activeWorkspaces = await activeWorkspacesFuture;
+    final workspaceEntryGroups = await Future.wait(
+      activeWorkspaces.map(_workspaceEntries),
+    );
 
-      for (final task in workspaceTasks) {
-        await index.replace(
+    final entries = <SearchIndexEntry>[
+      for (final group in workspaceEntryGroups) ...group,
+    ];
+
+    final knowledgeItems = await knowledgeItemsFuture;
+    final knowledgeEntries = await Future.wait(
+      knowledgeItems.map((item) async {
+        return SearchIndexEntry(
+          entityType: 'knowledge',
+          entityId: item.id,
+          title: item.title,
+          body: [
+            item.summary,
+            item.useWhen,
+            await markdownStore.read(item.filePath),
+          ].where((value) => value.trim().isNotEmpty).join('\n\n'),
+        );
+      }),
+    );
+    entries.addAll(knowledgeEntries);
+
+    await index.rebuild(entries);
+  }
+
+  Future<List<SearchIndexEntry>> _workspaceEntries(
+    WorkspaceModel workspace,
+  ) async {
+    final workspaceId = workspace.id;
+
+    final tasksFuture = tasks.listByWorkspace(workspaceId);
+    final notesFuture = notes.listByWorkspace(workspaceId);
+    final issuesFuture = issues.listByWorkspace(workspaceId);
+    final resourcesFuture = resources.listByWorkspace(workspaceId);
+    final decisionsFuture = decisions.listByWorkspace(workspaceId);
+    final projectsFuture = developerProjects.listByWorkspace(workspaceId);
+    final commandsFuture = developerCommands.listByWorkspace(workspaceId);
+    final snippetsFuture = developerSnippets.listByWorkspace(workspaceId);
+
+    final workspaceTasks = await tasksFuture;
+    final workspaceNotes = await notesFuture;
+    final workspaceIssues = await issuesFuture;
+    final workspaceResources = await resourcesFuture;
+    final workspaceDecisions = await decisionsFuture;
+    final workspaceDeveloperProjects = await projectsFuture;
+    final workspaceDeveloperCommands = await commandsFuture;
+    final workspaceDeveloperSnippets = await snippetsFuture;
+
+    final entries = <SearchIndexEntry>[
+      for (final task in workspaceTasks)
+        SearchIndexEntry(
           entityType: 'task',
           entityId: task.id,
           workspaceId: workspaceId,
@@ -94,21 +133,9 @@ class SearchService {
           body: [task.description, task.nextStep, task.status]
               .where((value) => value.trim().isNotEmpty)
               .join('\n'),
-        );
-      }
-
-      for (final note in workspaceNotes) {
-        await index.replace(
-          entityType: 'note',
-          entityId: note.id,
-          workspaceId: workspaceId,
-          title: note.title,
-          body: await markdownStore.read(note.filePath),
-        );
-      }
-
-      for (final issue in workspaceIssues) {
-        await index.replace(
+        ),
+      for (final issue in workspaceIssues)
+        SearchIndexEntry(
           entityType: 'issue',
           entityId: issue.id,
           workspaceId: workspaceId,
@@ -121,11 +148,9 @@ class SearchService {
             issue.nextInvestigationStep,
             issue.resolution,
           ].where((value) => value.trim().isNotEmpty).join('\n'),
-        );
-      }
-
-      for (final resource in workspaceResources) {
-        await index.replace(
+        ),
+      for (final resource in workspaceResources)
+        SearchIndexEntry(
           entityType: 'resource',
           entityId: resource.id,
           workspaceId: workspaceId,
@@ -133,11 +158,9 @@ class SearchService {
           body: [resource.resourceType, resource.description, resource.uri]
               .where((value) => value.trim().isNotEmpty)
               .join('\n'),
-        );
-      }
-
-      for (final decision in workspaceDecisions) {
-        await index.replace(
+        ),
+      for (final decision in workspaceDecisions)
+        SearchIndexEntry(
           entityType: 'decision',
           entityId: decision.id,
           workspaceId: workspaceId,
@@ -148,11 +171,9 @@ class SearchService {
             decision.revisitCondition,
             decision.status,
           ].where((value) => value.trim().isNotEmpty).join('\n'),
-        );
-      }
-
-      for (final project in workspaceDeveloperProjects) {
-        await index.replace(
+        ),
+      for (final project in workspaceDeveloperProjects)
+        SearchIndexEntry(
           entityType: 'developer_project',
           entityId: project.id,
           workspaceId: workspaceId,
@@ -165,11 +186,9 @@ class SearchService {
             project.notes,
             if (project.isPrimary) 'primary project 主项目',
           ].where((value) => value.trim().isNotEmpty).join('\n'),
-        );
-      }
-
-      for (final command in workspaceDeveloperCommands) {
-        await index.replace(
+        ),
+      for (final command in workspaceDeveloperCommands)
+        SearchIndexEntry(
           entityType: 'developer_command',
           entityId: command.id,
           workspaceId: workspaceId,
@@ -179,12 +198,13 @@ class SearchService {
             command.workingDirectory,
             command.category,
             command.notes,
-          ].whereType<String>().where((value) => value.trim().isNotEmpty).join('\n'),
-        );
-      }
-
-      for (final snippet in workspaceDeveloperSnippets) {
-        await index.replace(
+          ]
+              .whereType<String>()
+              .where((value) => value.trim().isNotEmpty)
+              .join('\n'),
+        ),
+      for (final snippet in workspaceDeveloperSnippets)
+        SearchIndexEntry(
           entityType: 'developer_snippet',
           entityId: snippet.id,
           workspaceId: workspaceId,
@@ -192,21 +212,23 @@ class SearchService {
           body: [snippet.language, snippet.content, snippet.notes]
               .where((value) => value.trim().isNotEmpty)
               .join('\n'),
-        );
-      }
-    }
+        ),
+    ];
 
-    final knowledgeItems = await knowledge.listActive();
-    for (final item in knowledgeItems) {
-      await index.replace(
-        entityType: 'knowledge',
-        entityId: item.id,
-        title: item.title,
-        body: [item.summary, item.useWhen, await markdownStore.read(item.filePath)]
-            .where((value) => value.trim().isNotEmpty)
-            .join('\n\n'),
-      );
-    }
+    final noteEntries = await Future.wait(
+      workspaceNotes.map((note) async {
+        return SearchIndexEntry(
+          entityType: 'note',
+          entityId: note.id,
+          workspaceId: workspaceId,
+          title: note.title,
+          body: await markdownStore.read(note.filePath),
+        );
+      }),
+    );
+    entries.addAll(noteEntries);
+
+    return entries;
   }
 
   Future<List<SearchResultModel>> search(

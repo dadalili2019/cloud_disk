@@ -37,15 +37,14 @@
 
 这一批基础清理已经合并到 `main`。
 
-当前代码质量基线：
+上一次已确认的代码质量基线：
 
 ~~~text
 flutter analyze
 → No issues found
-
-flutter test
-→ 4 tests passed
 ~~~
+
+当前测试套件已经从最初 4 个 utility tests 扩展到 Search、AI Context、Backup / Restore 等核心链路。测试数量不在文档里写死，每次合并核心改动后以本地 `flutter test` 实际结果为准。
 
 Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 
@@ -83,9 +82,13 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 - Search Repository FTS / LIKE fallback / filter / limit 测试。
 - Restore archive manifest / schema / path safety / corrupted ZIP 测试。
 
+继续完成：
+
+- Backup portable settings / manifest ZIP 测试。
+- Search rebuild batch / transaction 路径测试。
+
 下一批：
 
-- Backup portable settings / manifest tests
 - Restore staging / next-start apply tests
 - Service / Repository tests
 - Settings persistence
@@ -126,7 +129,18 @@ Provider Config
 
 Search 重点：即时同步、重建性能、中文 relevance、大数据量。
 
-当前性能审计已经确认：完整 Rebuild 仍按 Workspace 顺序读取，并对每个 Entity 顺序执行 replace（delete + insert）。测试稳定后再做批量写入 / transaction 优化，不直接在没有保护的情况下改索引链路。
+完整 Search Rebuild 已完成第一轮性能优化：
+
+- Workspace 之间并发收集。
+- 同一 Workspace 的 Repository 查询并发发起。
+- Note / Knowledge Markdown 并发读取。
+- Service 一次提交 SearchIndexEntry 集合。
+- SQLite 真实运行时使用 transaction。
+- clear 只执行一次。
+- 每 100 条批量 INSERT。
+- 增量 replace / remove 逻辑保持不变。
+
+下一步再用真实数据量观察 rebuild 时间和中文 relevance，不继续凭感觉优化。
 
 Backup / Restore 重点：完整灾难恢复、Manifest compatibility、Corrupted ZIP、Missing DB、Search rebuild。
 

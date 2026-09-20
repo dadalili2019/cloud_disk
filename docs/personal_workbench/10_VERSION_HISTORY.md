@@ -155,3 +155,18 @@ Developer 页面拆分后继续修正 State 边界：
 - Restore 校验逻辑从 RestoreService 抽成 BackupArchiveValidator。
 - 覆盖路径穿越、绝对路径、缺失快照、format version、future schema 和损坏 ZIP。
 - RestoreService 继续只负责 staging / apply，不改变 Restore 流程。
+
+
+## 2026-09-20 Search Rebuild Performance / Backup Test
+
+继续从“有测试”进入“测试保护下优化”：
+
+- SearchService 完整 rebuild 改为先收集 SearchIndexEntry，再一次交给 Repository。
+- Workspace Repository 查询并发发起。
+- Note / Knowledge Markdown 并发读取。
+- SQLite Search rebuild 在真实 WorkbenchDatabase 下使用 transaction。
+- 完整 rebuild clear 一次，每 100 条批量 INSERT，不再逐实体 delete + insert。
+- 增量 Search replace / remove 保持原逻辑。
+- AppPaths 增加 createAt，用于临时目录测试，不依赖个人机器路径。
+- BackupService 依赖收窄为 WorkbenchSqlExecutor。
+- 新增真实 Backup ZIP 测试，覆盖 manifest、文件清单、portable settings 和敏感配置排除。

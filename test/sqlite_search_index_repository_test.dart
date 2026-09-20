@@ -1,5 +1,6 @@
 import 'package:cloud_disk/workbench/core/workbench_database.dart';
 import 'package:cloud_disk/workbench/data/sqlite_search_index_repository.dart';
+import 'package:cloud_disk/workbench/domain/search_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -107,6 +108,30 @@ void main() {
       expect(like.args.take(3), everyElement(r'%100\%\_\\%'));
       expect(like.args.last, 100);
       expect(like.args, contains('workspace-1'));
+    });
+
+    test('rebuild clears once and writes entries in batches', () async {
+      final db = _FakeSqlExecutor();
+      final repository = SqliteSearchIndexRepository(db);
+      final entries = List.generate(
+        205,
+        (index) => SearchIndexEntry(
+          entityType: 'task',
+          entityId: 'task-$index',
+          workspaceId: 'workspace-1',
+          title: 'Task $index',
+          body: 'Body $index',
+        ),
+      );
+
+      await repository.rebuild(entries);
+
+      expect(db.deleteCalls, hasLength(1));
+      expect(db.deleteCalls.single.statement, 'DELETE FROM search_index');
+      expect(db.customCalls, hasLength(3));
+      expect(db.customCalls[0].args, hasLength(500));
+      expect(db.customCalls[1].args, hasLength(500));
+      expect(db.customCalls[2].args, hasLength(25));
     });
 
     test('replace removes old row before inserting replacement', () async {

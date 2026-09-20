@@ -1,7 +1,25 @@
 import '../core/models.dart';
 
+class SearchIndexEntry {
+  const SearchIndexEntry({
+    required this.entityType,
+    required this.entityId,
+    this.workspaceId,
+    required this.title,
+    required this.body,
+  });
+
+  final String entityType;
+  final String entityId;
+  final String? workspaceId;
+  final String title;
+  final String body;
+}
+
 abstract interface class SearchIndexRepository {
   Future<void> clear();
+
+  Future<void> rebuild(List<SearchIndexEntry> entries);
 
   Future<void> replace({
     required String entityType,

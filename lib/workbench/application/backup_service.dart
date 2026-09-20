@@ -27,7 +27,7 @@ class BackupService {
   });
 
   final AppPaths paths;
-  final WorkbenchDatabase database;
+  final WorkbenchSqlExecutor database;
 
   static const int formatVersion = 1;
   static const String appVersion = '1.0.0+1';
