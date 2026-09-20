@@ -1,4 +1,3 @@
-import 'package:cloud_disk/workbench/core/models.dart';
 import 'package:cloud_disk/workbench/core/workbench_database.dart';
 import 'package:cloud_disk/workbench/data/sqlite_search_index_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -90,7 +89,7 @@ void main() {
       final repository = SqliteSearchIndexRepository(db);
 
       await repository.search(
-        r'100%_\',
+        '100%_\\',
         entityTypes: {'task', 'note'},
         workspaceId: ' workspace-1 ',
         limit: 500,
