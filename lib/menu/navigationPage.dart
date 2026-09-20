@@ -155,37 +155,32 @@ class _NavigationPageState extends State<NavigationPage> {
       _NavTarget.knowledge => location.startsWith('/knowledge'),
       _NavTarget.developer =>
         location.startsWith('/developer') || location.endsWith('/developer'),
-      _NavTarget.tools =>
-        location.startsWith('/tools') ||
-            location.startsWith('/todo') ||
-            location.startsWith('/speedtestpage') ||
-            location.startsWith('/jsonformat') ||
-            location.startsWith('/comparison') ||
-            location.startsWith('/imagetools') ||
-            location.startsWith('/ragknowledge') ||
-            location.startsWith('/game'),
+      _NavTarget.tools => location.startsWith('/tools') ||
+          location.startsWith('/todo') ||
+          location.startsWith('/speedtestpage') ||
+          location.startsWith('/jsonformat') ||
+          location.startsWith('/comparison') ||
+          location.startsWith('/imagetools') ||
+          location.startsWith('/ragknowledge') ||
+          location.startsWith('/game'),
       _NavTarget.settings => location.startsWith('/setting'),
     };
   }
 
   @override
   Widget build(BuildContext context) {
-    final palette = ThemeScope.of(context).palette;
+    final colors = _ShellColors.of(context);
 
     return Stack(
       children: [
         Container(
-          color: palette.appBackground,
+          color: colors.background,
           child: Column(
             children: [
               _Topbar(
-                currentWork: _currentWork,
-                contextLoading: _contextLoading,
                 aiOpen: _aiOpen,
-                onWorkspacePressed: _switchWorkspace,
                 onSearchPressed: () => _go('/knowledge'),
                 onAiPressed: () => setState(() => _aiOpen = !_aiOpen),
-                onSettingsPressed: () => _go('/setting'),
               ),
               Expanded(
                 child: LayoutBuilder(
@@ -195,6 +190,9 @@ class _NavigationPageState extends State<NavigationPage> {
                       children: [
                         _Sidebar(
                           compact: compact,
+                          currentWork: _currentWork,
+                          contextLoading: _contextLoading,
+                          onWorkspacePressed: _switchWorkspace,
                           location: router.location,
                           isActive: _isActive,
                           onHome: () => _go('/home'),
@@ -205,7 +203,13 @@ class _NavigationPageState extends State<NavigationPage> {
                           onTools: () => _go('/tools'),
                           onSettings: () => _go('/setting'),
                         ),
-                        Expanded(child: widget.child),
+                        Expanded(
+                          child: _ContentFrame(
+                            location: router.location,
+                            compact: compact,
+                            child: widget.child,
+                          ),
+                        ),
                       ],
                     );
                   },
@@ -216,7 +220,7 @@ class _NavigationPageState extends State<NavigationPage> {
         ),
         if (_aiOpen)
           Positioned(
-            top: 54,
+            top: _shellTopbarHeight,
             right: 0,
             bottom: 0,
             child: GlobalAiDrawer(
@@ -239,273 +243,212 @@ enum _NavTarget {
   settings,
 }
 
+const double _shellTopbarHeight = 58;
+const double _shellSidebarWidth = 208;
+
+/// 外框单独配色，避免本轮视觉调整改变内页的主题与表单。
+class _ShellColors {
+  const _ShellColors({
+    required this.background,
+    required this.surface,
+    required this.border,
+    required this.text,
+    required this.secondary,
+    required this.accent,
+    required this.selection,
+    required this.hover,
+  });
+
+  final Color background;
+  final Color surface;
+  final Color border;
+  final Color text;
+  final Color secondary;
+  final Color accent;
+  final Color selection;
+  final Color hover;
+
+  factory _ShellColors.of(BuildContext context) {
+    final theme = FluentTheme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+    final accent = dark
+        ? Color.lerp(theme.accentColor.normal, Colors.white, 0.38)!
+        : theme.accentColor.dark;
+    return _ShellColors(
+      background: dark ? const Color(0xFF1C1F22) : const Color(0xFFF0F2EF),
+      surface: dark ? const Color(0xFF25292C) : const Color(0xFFFAFBF9),
+      border: dark ? const Color(0xFF363B3D) : const Color(0xFFDDE2DA),
+      text: dark ? const Color(0xFFE8ECE7) : const Color(0xFF262E29),
+      secondary: dark ? const Color(0xFF9BA59E) : const Color(0xFF657068),
+      accent: accent,
+      selection: accent.withValues(alpha: dark ? 0.12 : 0.10),
+      hover: dark ? const Color(0xFF292E30) : const Color(0xFFE5EAE3),
+    );
+  }
+}
+
+/// 标题栏只放全局入口，中间留出可拖动区域。
 class _Topbar extends StatelessWidget {
   const _Topbar({
-    required this.currentWork,
-    required this.contextLoading,
     required this.aiOpen,
-    required this.onWorkspacePressed,
     required this.onSearchPressed,
     required this.onAiPressed,
-    required this.onSettingsPressed,
   });
 
-  final ContinueItem? currentWork;
-  final bool contextLoading;
   final bool aiOpen;
-  final VoidCallback onWorkspacePressed;
   final VoidCallback onSearchPressed;
   final VoidCallback onAiPressed;
-  final VoidCallback onSettingsPressed;
 
   @override
   Widget build(BuildContext context) {
-    final palette = ThemeScope.of(context).palette;
-    final theme = FluentTheme.of(context);
-    final accent = theme.accentColor.normal;
-    final primary = theme.typography.body?.color ?? const Color(0xFFE5E8EB);
-    final secondary = primary.withValues(alpha: 0.76);
-
-    return Container(
-      height: 54,
-      decoration: BoxDecoration(
-        color: palette.appBarBackground,
-        border: Border(
-          bottom: BorderSide(color: palette.appBarBorder, width: 0.8),
-        ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final showWorkspace = constraints.maxWidth >= 820;
-          final showSearch = constraints.maxWidth >= 1040;
-          return Row(
-            children: [
-              SizedBox(
-                width: 224,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 16, right: 12),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 26,
-                        height: 26,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: accent,
-                          borderRadius: BorderRadius.circular(7),
-                        ),
-                        child: const Text(
-                          'PW',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF151711),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 9),
-                      Expanded(
-                        child: Text(
-                          'Personal Workbench',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: primary,
-                          ),
-                        ),
-                      ),
-                    ],
+    final colors = _ShellColors.of(context);
+    return SizedBox(
+      height: _shellTopbarHeight,
+      child: Row(
+        children: [
+          SizedBox(
+            width: _shellSidebarWidth,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: Row(
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: colors.selection,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: colors.accent.withValues(alpha: 0.25)),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text('W',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: colors.accent,
+                        )),
                   ),
-                ),
-              ),
-              if (showWorkspace) ...[
-                const SizedBox(width: 10),
-                _TopbarButton(
-                  width: 180,
-                  icon: FluentIcons.open_folder_horizontal,
-                  label: contextLoading
-                      ? '加载工作区…'
-                      : currentWork?.workspace.name ?? '选择工作区',
-                  trailing: FluentIcons.chevron_down,
-                  onPressed: onWorkspacePressed,
-                ),
-              ],
-              if (showSearch) ...[
-                const SizedBox(width: 10),
-                _SearchEntry(
-                  secondary: secondary,
-                  onPressed: onSearchPressed,
-                ),
-              ],
-              const SizedBox(width: 10),
-              Expanded(
-                child: WindowTitleBarBox(child: MoveWindow()),
-              ),
-              _IconTopbarButton(
-                icon: FluentIcons.chat_bot,
-                tooltip: 'AI',
-                active: aiOpen,
-                onPressed: onAiPressed,
-              ),
-              const SizedBox(width: 4),
-              _IconTopbarButton(
-                icon: FluentIcons.settings,
-                tooltip: '设置',
-                onPressed: onSettingsPressed,
-              ),
-              const SizedBox(width: 6),
-              if (Platform.isWindows)
-                const SizedBox(width: 168, child: WindowButtons()),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _SearchEntry extends StatelessWidget {
-  const _SearchEntry({
-    required this.secondary,
-    required this.onPressed,
-  });
-
-  final Color secondary;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = ThemeScope.of(context).palette;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onPressed,
-        child: Container(
-          width: 360,
-          height: 34,
-          padding: const EdgeInsets.symmetric(horizontal: 11),
-          decoration: BoxDecoration(
-            color: palette.cardBackground,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: palette.cardBorder),
-          ),
-          child: Row(
-            children: [
-              Icon(FluentIcons.search, size: 13, color: secondary),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  '搜索任务、笔记、问题、知识…',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 10.5, color: secondary),
-                ),
-              ),
-              Text(
-                'Ctrl K',
-                style: TextStyle(fontSize: 9.5, color: secondary),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TopbarButton extends StatelessWidget {
-  const _TopbarButton({
-    required this.width,
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-    this.trailing,
-  });
-
-  final double width;
-  final IconData icon;
-  final String label;
-  final IconData? trailing;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = ThemeScope.of(context).palette;
-    final theme = FluentTheme.of(context);
-    final color = theme.typography.body?.color ?? const Color(0xFFE5E8EB);
-    return Button(
-      onPressed: onPressed,
-      style: ButtonStyle(
-        padding: WidgetStateProperty.all(
-          const EdgeInsets.symmetric(horizontal: 10),
-        ),
-      ),
-      child: SizedBox(
-        width: width,
-        height: 32,
-        child: Row(
-          children: [
-            Icon(icon, size: 13, color: color.withValues(alpha: 0.80)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 10.5, color: color),
+                  const SizedBox(width: 10),
+                  Text('个人工作台',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        height: 1.4,
+                        color: colors.text,
+                      )),
+                ],
               ),
             ),
-            if (trailing != null)
-              Icon(
-                trailing,
-                size: 9,
-                color: color.withValues(alpha: 0.68),
-              ),
-          ],
-        ),
+          ),
+          Expanded(
+            child: LayoutBuilder(builder: (context, constraints) {
+              return Row(children: [
+                if (constraints.maxWidth >= 260)
+                  SizedBox(
+                    width: constraints.maxWidth >= 460 ? 340 : 220,
+                    child: _ShellButton(
+                      label: '搜索知识与工作内容',
+                      onPressed: onSearchPressed,
+                      background: colors.surface,
+                      child: Row(children: [
+                        Icon(FluentIcons.search,
+                            size: 14, color: colors.secondary),
+                        const SizedBox(width: 10),
+                        Expanded(
+                            child: Text(
+                          '搜索知识与工作内容',
+                          textAlign: TextAlign.left,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              TextStyle(fontSize: 12, color: colors.secondary),
+                        )),
+                      ]),
+                    ),
+                  )
+                else
+                  Tooltip(
+                      message: '搜索知识与工作内容',
+                      child: SizedBox(
+                        width: 36,
+                        child: _ShellButton(
+                          label: '搜索知识与工作内容',
+                          onPressed: onSearchPressed,
+                          child: Icon(FluentIcons.search,
+                              size: 15, color: colors.secondary),
+                        ),
+                      )),
+                Expanded(child: WindowTitleBarBox(child: MoveWindow())),
+              ]);
+            }),
+          ),
+          Tooltip(
+              message: '打开 AI 助手',
+              child: SizedBox(
+                width: 38,
+                child: _ShellButton(
+                  label: 'AI 助手',
+                  selected: aiOpen,
+                  onPressed: onAiPressed,
+                  child: Icon(FluentIcons.chat_bot,
+                      size: 17,
+                      color: aiOpen ? colors.accent : colors.secondary),
+                ),
+              )),
+          const SizedBox(width: 12),
+          Container(width: 1, height: 18, color: colors.border),
+          if (Platform.isWindows)
+            const SizedBox(width: 150, child: WindowButtons())
+          else
+            const SizedBox(width: 12),
+        ],
       ),
     );
   }
 }
 
-class _IconTopbarButton extends StatelessWidget {
-  const _IconTopbarButton({
-    required this.icon,
-    required this.tooltip,
+/// 统一外框按钮的悬停与键盘焦点，避免仅靠鼠标手势响应。
+class _ShellButton extends StatelessWidget {
+  const _ShellButton({
+    required this.label,
     required this.onPressed,
-    this.active = false,
+    required this.child,
+    this.selected = false,
+    this.background,
+    this.height = 36,
+    this.padding = const EdgeInsets.symmetric(horizontal: 12),
   });
 
-  final IconData icon;
-  final String tooltip;
+  final String label;
   final VoidCallback onPressed;
-  final bool active;
+  final Widget child;
+  final bool selected;
+  final Color? background;
+  final double height;
+  final EdgeInsets padding;
 
   @override
   Widget build(BuildContext context) {
-    final palette = ThemeScope.of(context).palette;
-    final theme = FluentTheme.of(context);
-    final foreground = active
-        ? theme.accentColor.normal
-        : (theme.typography.body?.color ?? const Color(0xFFE5E8EB))
-            .withValues(alpha: 0.82);
-
+    final colors = _ShellColors.of(context);
     return Semantics(
-      button: true,
-      label: tooltip,
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          color: active ? palette.surfaceMuted : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: active ? Border.all(color: palette.cardBorder) : null,
+      label: label,
+      selected: selected,
+      child: Button(
+        onPressed: onPressed,
+        style: ButtonStyle(
+          padding: WidgetStateProperty.all(padding),
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (selected) return colors.selection;
+            if (states.isHovered || states.isPressed) return colors.hover;
+            return background ?? Colors.transparent;
+          }),
+          shape: WidgetStateProperty.all(RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          )),
         ),
-        child: IconButton(
-          icon: Icon(icon, size: 15, color: foreground),
-          onPressed: onPressed,
+        child: DefaultTextStyle.merge(
+          textAlign: TextAlign.left,
+          child: SizedBox(height: height, child: child),
         ),
       ),
     );
@@ -515,6 +458,9 @@ class _IconTopbarButton extends StatelessWidget {
 class _Sidebar extends StatelessWidget {
   const _Sidebar({
     required this.compact,
+    required this.currentWork,
+    required this.contextLoading,
+    required this.onWorkspacePressed,
     required this.location,
     required this.isActive,
     required this.onHome,
@@ -527,6 +473,9 @@ class _Sidebar extends StatelessWidget {
   });
 
   final bool compact;
+  final ContinueItem? currentWork;
+  final bool contextLoading;
+  final VoidCallback onWorkspacePressed;
   final String location;
   final bool Function(_NavTarget, String) isActive;
   final VoidCallback onHome;
@@ -539,75 +488,116 @@ class _Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = ThemeScope.of(context).palette;
-    return Container(
-      width: compact ? 76 : 224,
-      decoration: BoxDecoration(
-        color: palette.navBackground,
-        border: Border(
-          right: BorderSide(color: palette.navBorder, width: 0.8),
-        ),
-      ),
+    final colors = _ShellColors.of(context);
+    final workspace =
+        contextLoading ? '加载中…' : currentWork?.workspace.name ?? '选择工作区';
+    return SizedBox(
+      width: compact ? 68 : _shellSidebarWidth,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(compact ? 8 : 10, 10, compact ? 8 : 10, 10),
-        child: Column(
-          children: [
-            _NavItem(
-              compact: compact,
-              icon: FluentIcons.home,
-              label: '首页',
-              active: isActive(_NavTarget.home, location),
-              onPressed: onHome,
-            ),
-            _NavItem(
-              compact: compact,
-              icon: FluentIcons.open_folder_horizontal,
-              label: '工作区',
-              active: isActive(_NavTarget.workspace, location),
-              onPressed: onWorkspace,
-            ),
-            _NavItem(
-              compact: compact,
-              icon: FluentIcons.clock,
-              label: '时间',
-              active: isActive(_NavTarget.time, location),
-              onPressed: onTime,
-            ),
-            if (!compact) const _SidebarSectionLabel('工作台'),
-            if (compact) const SizedBox(height: 10),
-            _NavItem(
-              compact: compact,
-              icon: FluentIcons.doc_library,
-              label: '知识',
-              active: isActive(_NavTarget.knowledge, location),
-              onPressed: onKnowledge,
-            ),
-            _NavItem(
-              compact: compact,
-              icon: FluentIcons.developer_tools,
-              label: '开发者',
-              active: isActive(_NavTarget.developer, location),
-              onPressed: onDeveloper,
-            ),
-            _NavItem(
-              compact: compact,
-              icon: FluentIcons.toolbox,
-              label: '工具',
-              active: isActive(_NavTarget.tools, location),
-              onPressed: onTools,
-            ),
-            const Spacer(),
-            Container(height: 1, color: palette.navBorder),
-            const SizedBox(height: 8),
-            _NavItem(
+        padding:
+            EdgeInsets.fromLTRB(compact ? 10 : 12, 10, compact ? 10 : 12, 14),
+        child: Column(children: [
+          Tooltip(
+              message: '切换工作区 · $workspace',
+              child: _ShellButton(
+                label: '切换工作区',
+                height: compact ? 44 : 60,
+                padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 12),
+                background: colors.surface,
+                onPressed: onWorkspacePressed,
+                child: Row(
+                  mainAxisAlignment: compact
+                      ? MainAxisAlignment.center
+                      : MainAxisAlignment.start,
+                  children: [
+                    Icon(FluentIcons.open_folder_horizontal,
+                        size: 18, color: colors.accent),
+                    if (!compact) ...[
+                      const SizedBox(width: 10),
+                      Expanded(
+                          child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('当前工作区',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  height: 1.5,
+                                  color: colors.secondary)),
+                          const SizedBox(height: 2),
+                          Text(workspace,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  height: 1.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: colors.text)),
+                        ],
+                      )),
+                      Icon(FluentIcons.chevron_down,
+                          size: 9, color: colors.secondary),
+                    ],
+                  ],
+                ),
+              )),
+          const SizedBox(height: 16),
+          Expanded(
+              child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              if (!compact) const _SidebarSectionLabel('日常'),
+              _NavItem(
+                  compact: compact,
+                  icon: FluentIcons.home,
+                  label: '首页',
+                  active: isActive(_NavTarget.home, location),
+                  onPressed: onHome),
+              _NavItem(
+                  compact: compact,
+                  icon: FluentIcons.open_folder_horizontal,
+                  label: '工作区',
+                  active: isActive(_NavTarget.workspace, location),
+                  onPressed: onWorkspace),
+              _NavItem(
+                  compact: compact,
+                  icon: FluentIcons.clock,
+                  label: '时间',
+                  active: isActive(_NavTarget.time, location),
+                  onPressed: onTime),
+              const SizedBox(height: 20),
+              if (!compact) const _SidebarSectionLabel('资料与工具'),
+              _NavItem(
+                  compact: compact,
+                  icon: FluentIcons.doc_library,
+                  label: '知识',
+                  active: isActive(_NavTarget.knowledge, location),
+                  onPressed: onKnowledge),
+              _NavItem(
+                  compact: compact,
+                  icon: FluentIcons.developer_tools,
+                  label: '开发者',
+                  active: isActive(_NavTarget.developer, location),
+                  onPressed: onDeveloper),
+              _NavItem(
+                  compact: compact,
+                  icon: FluentIcons.toolbox,
+                  label: '工具',
+                  active: isActive(_NavTarget.tools, location),
+                  onPressed: onTools),
+            ],
+          )),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: Container(height: 1, color: colors.border),
+          ),
+          _NavItem(
               compact: compact,
               icon: FluentIcons.settings,
               label: '设置',
               active: isActive(_NavTarget.settings, location),
-              onPressed: onSettings,
-            ),
-          ],
-        ),
+              onPressed: onSettings),
+        ]),
       ),
     );
   }
@@ -615,30 +605,23 @@ class _Sidebar extends StatelessWidget {
 
 class _SidebarSectionLabel extends StatelessWidget {
   const _SidebarSectionLabel(this.label);
-
   final String label;
 
   @override
   Widget build(BuildContext context) {
-    final color = (FluentTheme.of(context).typography.body?.color ??
-            const Color(0xFFE5E8EB))
-        .withValues(alpha: 0.58);
-    return Container(
-      alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.fromLTRB(10, 12, 10, 6),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      child: Text(label,
+          style: TextStyle(
+            fontSize: 11,
+            height: 1.4,
+            color: _ShellColors.of(context).secondary,
+          )),
     );
   }
 }
 
-class _NavItem extends StatefulWidget {
+class _NavItem extends StatelessWidget {
   const _NavItem({
     required this.compact,
     required this.icon,
@@ -654,109 +637,145 @@ class _NavItem extends StatefulWidget {
   final VoidCallback onPressed;
 
   @override
-  State<_NavItem> createState() => _NavItemState();
-}
-
-class _NavItemState extends State<_NavItem> {
-  bool _hovered = false;
-
-  @override
   Widget build(BuildContext context) {
-    final palette = ThemeScope.of(context).palette;
-    final theme = FluentTheme.of(context);
-    final primary = theme.typography.body?.color ?? const Color(0xFFE5E8EB);
-    final foreground =
-        widget.active ? primary : primary.withValues(alpha: 0.82);
-
-    final background = widget.active
-        ? palette.navItemSelected
-        : _hovered
-            ? palette.navItemHover
-            : Colors.transparent;
-
-    final child = MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        child: Container(
-          height: 36,
-          margin: const EdgeInsets.only(bottom: 3),
-          decoration: BoxDecoration(
-            color: background,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Stack(
-            children: [
-              if (widget.active)
-                Positioned(
-                  left: 0,
-                  top: 7,
-                  bottom: 7,
-                  child: Container(
-                    width: 2,
-                    decoration: BoxDecoration(
-                      color: theme.accentColor.normal,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
+    final colors = _ShellColors.of(context);
+    final foreground = active ? colors.text : colors.secondary;
+    final button = Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: _ShellButton(
+        label: label,
+        onPressed: onPressed,
+        selected: active,
+        height: 40,
+        padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 12),
+        child: Row(
+          mainAxisAlignment:
+              compact ? MainAxisAlignment.center : MainAxisAlignment.start,
+          children: [
+            Icon(icon, size: 17, color: active ? colors.accent : foreground),
+            if (!compact) ...[
+              const SizedBox(width: 12),
+              Expanded(
+                  child: Text(
+                label,
+                textAlign: TextAlign.left,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontSize: 13,
+                    height: 1.45,
+                    fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                    color: foreground),
+              )),
+              if (active)
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                      color: colors.accent, shape: BoxShape.circle),
                 ),
-              Positioned.fill(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: widget.compact ? 0 : 8,
-                    right: widget.compact ? 0 : 8,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: widget.compact
-                        ? MainAxisAlignment.center
-                        : MainAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: Center(
-                          child: Icon(
-                            widget.icon,
-                            size: 15.5,
-                            color: foreground,
-                          ),
-                        ),
-                      ),
-                      if (!widget.compact) ...[
-                        const SizedBox(width: 9),
-                        Expanded(
-                          child: Text(
-                            widget.label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              height: 1.0,
-                              fontWeight: widget.active
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                              color: foreground,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
             ],
-          ),
+          ],
         ),
       ),
     );
+    return compact ? Tooltip(message: label, child: button) : button;
+  }
+}
 
-    if (!widget.compact) return child;
-    return Semantics(
-      button: true,
-      label: widget.label,
-      child: child,
+/// 路由只用于外框标题，内部页面仍保留原有布局与滚动区域。
+class _ContentFrame extends StatelessWidget {
+  const _ContentFrame(
+      {required this.location, required this.compact, required this.child});
+
+  final String location;
+  final bool compact;
+  final Widget child;
+
+  (String, String) get _breadcrumb {
+    final path = Uri.parse(location).path;
+    if (path.startsWith('/workspace/')) {
+      final section = path.split('/').last;
+      const sections = {
+        'overview': '概览',
+        'tasks': '任务',
+        'notes': '笔记',
+        'issues': '问题',
+        'resources': '资源',
+        'decisions': '决策',
+        'developer': '开发',
+      };
+      return ('工作区', sections[section] ?? '概览');
+    }
+    const pages = {
+      '/home': ('个人空间', '首页'),
+      '/workspace': ('个人空间', '工作区'),
+      '/time': ('个人空间', '时间'),
+      '/knowledge': ('资料与工具', '知识'),
+      '/developer': ('资料与工具', '开发者'),
+      '/tools': ('资料与工具', '工具'),
+      '/jsonformat': ('工具', 'JSON 格式化'),
+      '/comparison': ('工具', '文字比对'),
+      '/speedtestpage': ('工具', '网络测速'),
+      '/ragknowledge': ('工具', 'RAG 知识库'),
+      '/game': ('工具', '游戏'),
+      '/todo': ('工具', '待办'),
+    };
+    if (path.startsWith('/setting')) return ('个人空间', '设置');
+    if (path.startsWith('/imagetools')) return ('工具', '图片工具');
+    return pages[path] ?? ('个人空间', '工作台');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = _ShellColors.of(context);
+    final palette = ThemeScope.of(context).palette;
+    final (section, title) = _breadcrumb;
+    return Padding(
+      padding: EdgeInsets.only(right: compact ? 8 : 14, bottom: 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: palette.appBackground,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.border),
+        ),
+        padding: const EdgeInsets.all(1),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(13),
+          child: Column(children: [
+            Container(
+              height: 50,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              decoration: BoxDecoration(
+                color: palette.appBackground,
+                border: Border(bottom: BorderSide(color: colors.border)),
+              ),
+              child: Row(children: [
+                Text(section,
+                    style: TextStyle(fontSize: 12, color: colors.secondary)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Icon(FluentIcons.chevron_right,
+                      size: 8, color: colors.secondary),
+                ),
+                Expanded(
+                    child: Semantics(
+                        header: true,
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: colors.text),
+                        ))),
+              ]),
+            ),
+            Expanded(child: child),
+          ]),
+        ),
+      ),
     );
   }
 }
