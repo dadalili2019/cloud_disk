@@ -13,9 +13,9 @@ extension _AIContextScopeBuilder on AIContextBuilder {
     final items = <AIContextItem>[
       this._taskItem(task),
       ...await this._noteItems(context.notes, priority: 1, reason: 'linked_note'),
-      ...context.openIssues.map(_issueItem),
-      ...context.decisions.map(_decisionItem),
-      ...context.resources.map(_resourceItem),
+      ...context.openIssues.map(this._issueItem),
+      ...context.decisions.map(this._decisionItem),
+      ...context.resources.map(this._resourceItem),
       ...await this._developerItemsForWorkspace(
         task.workspaceId,
         workspaceScope: false,
@@ -25,7 +25,7 @@ extension _AIContextScopeBuilder on AIContextBuilder {
         priority: 3,
         reason: 'task_knowledge',
       ),
-      ...context.recentActivity.map(_activityItem),
+      ...context.recentActivity.map(this._activityItem),
     ];
     return this._finalize(
       request,
@@ -55,9 +55,9 @@ extension _AIContextScopeBuilder on AIContextBuilder {
           reason: 'current_task_note',
         ),
       );
-      items.addAll(context.openIssues.take(4).map(_issueItem));
-      items.addAll(context.decisions.take(4).map(_decisionItem));
-      items.addAll(context.resources.take(4).map(_resourceItem));
+      items.addAll(context.openIssues.take(4).map(this._issueItem));
+      items.addAll(context.decisions.take(4).map(this._decisionItem));
+      items.addAll(context.resources.take(4).map(this._resourceItem));
       items.addAll(
         await this._knowledgeItems(
           context.knowledge.take(4),
@@ -91,14 +91,14 @@ extension _AIContextScopeBuilder on AIContextBuilder {
 
     final workspaceIssues = await issues.listByWorkspace(workspaceId);
     items.addAll(
-      workspaceIssues.where((issue) => issue.isOpen).take(4).map(_issueItem),
+      workspaceIssues.where((issue) => issue.isOpen).take(4).map(this._issueItem),
     );
 
     final workspaceResources = await resources.listByWorkspace(workspaceId);
-    items.addAll(workspaceResources.take(4).map(_resourceItem));
+    items.addAll(workspaceResources.take(4).map(this._resourceItem));
 
     final workspaceDecisions = await decisions.listByWorkspace(workspaceId);
-    items.addAll(workspaceDecisions.take(4).map(_decisionItem));
+    items.addAll(workspaceDecisions.take(4).map(this._decisionItem));
 
     items.addAll(
       await this._developerItemsForWorkspace(
@@ -119,7 +119,7 @@ extension _AIContextScopeBuilder on AIContextBuilder {
     }
 
     final recentActivity = await activities.listRecent(workspaceId, limit: 6);
-    items.addAll(recentActivity.map(_activityItem));
+    items.addAll(recentActivity.map(this._activityItem));
 
     return this._finalize(
       request,

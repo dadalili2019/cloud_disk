@@ -44,7 +44,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     );
   }
 
-  Future<List<AIContextItem>> this._noteItems(
+  Future<List<AIContextItem>> _noteItems(
     Iterable<NoteModel> values, {
     required int priority,
     required String reason,
@@ -68,7 +68,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     return result;
   }
 
-  Future<List<AIContextItem>> this._knowledgeItems(
+  Future<List<AIContextItem>> _knowledgeItems(
     Iterable<KnowledgeModel> values, {
     required int priority,
     required String reason,
@@ -90,7 +90,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     return result;
   }
 
-  Future<List<AIContextItem>> this._developerItemsForWorkspace(
+  Future<List<AIContextItem>> _developerItemsForWorkspace(
     String workspaceId, {
     required bool workspaceScope,
   }) async {
@@ -172,7 +172,7 @@ extension _AIContextCollectionBuilder on AIContextBuilder {
     return result;
   }
 
-  Future<List<AIContextItem>> this._itemsFromSearchHits(
+  Future<List<AIContextItem>> _itemsFromSearchHits(
     List<SearchResultModel> hits, {
     required String reason,
   }) async {
