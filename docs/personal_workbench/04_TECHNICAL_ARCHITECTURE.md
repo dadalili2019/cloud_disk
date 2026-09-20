@@ -54,6 +54,18 @@ lib/
 
 当前 Dart 文件统一使用 `snake_case`，不再混用 camelCase、PascalCase 和带空格的文件名。
 
+Workspace 当前入口也已经去掉历史 `V2` 命名：
+
+~~~text
+workbench_workspace_list_page.dart
+workbench_workspace_overview_page.dart
+WorkbenchWorkspaceListPage
+WorkbenchWorkspaceFrame
+WorkbenchOverviewPage
+~~~
+
+旧的聚合文件 `workbench_workspace_pages.dart` 已确认无引用并删除，不再保留两套 Workspace 页面实现。
+
 ## 3. 各层职责
 
 ### presentation

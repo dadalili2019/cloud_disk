@@ -27,7 +27,7 @@ import '../workbench/presentation/workbench_resource_page.dart';
 import '../workbench/presentation/workbench_task_list_page.dart';
 import '../workbench/presentation/workbench_time_page.dart';
 import '../workbench/presentation/workbench_tools_page.dart';
-import '../workbench/presentation/workbench_workspace_list_v2_page.dart';
+import '../workbench/presentation/workbench_workspace_list_page.dart';
 
 final router = GoRouter(
   initialLocation: '/login',
@@ -65,7 +65,7 @@ final List<RouteBase> _workbenchRoutes = [
     name: 'workbenchWorkspace',
     path: '/workspace',
     pageBuilder: (_, __) =>
-        const NoTransitionPage(child: WorkbenchWorkspaceListPageV2()),
+        const NoTransitionPage(child: WorkbenchWorkspaceListPage()),
   ),
   GoRoute(
     name: 'workbenchKnowledge',
@@ -97,10 +97,10 @@ final List<RouteBase> _workbenchRoutes = [
     pageBuilder: (_, state) {
       final workspaceId = state.params['workspaceId']!;
       return NoTransitionPage(
-        child: WorkbenchWorkspaceFrameV2(
+        child: WorkbenchWorkspaceFrame(
           workspaceId: workspaceId,
           section: 'overview',
-          child: WorkbenchOverviewPageV2(workspaceId: workspaceId),
+          child: WorkbenchOverviewPage(workspaceId: workspaceId),
         ),
       );
     },
@@ -111,7 +111,7 @@ final List<RouteBase> _workbenchRoutes = [
     pageBuilder: (_, state) {
       final workspaceId = state.params['workspaceId']!;
       return NoTransitionPage(
-        child: WorkbenchWorkspaceFrameV2(
+        child: WorkbenchWorkspaceFrame(
           workspaceId: workspaceId,
           section: 'tasks',
           child: WorkbenchTaskListPage(workspaceId: workspaceId),
@@ -125,7 +125,7 @@ final List<RouteBase> _workbenchRoutes = [
     pageBuilder: (_, state) {
       final workspaceId = state.params['workspaceId']!;
       return NoTransitionPage(
-        child: WorkbenchWorkspaceFrameV2(
+        child: WorkbenchWorkspaceFrame(
           workspaceId: workspaceId,
           section: 'notes',
           child: WorkbenchNotesEditorPage(workspaceId: workspaceId),
@@ -139,7 +139,7 @@ final List<RouteBase> _workbenchRoutes = [
     pageBuilder: (_, state) {
       final workspaceId = state.params['workspaceId']!;
       return NoTransitionPage(
-        child: WorkbenchWorkspaceFrameV2(
+        child: WorkbenchWorkspaceFrame(
           workspaceId: workspaceId,
           section: 'issues',
           child: WorkbenchIssuePage(workspaceId: workspaceId),
@@ -153,7 +153,7 @@ final List<RouteBase> _workbenchRoutes = [
     pageBuilder: (_, state) {
       final workspaceId = state.params['workspaceId']!;
       return NoTransitionPage(
-        child: WorkbenchWorkspaceFrameV2(
+        child: WorkbenchWorkspaceFrame(
           workspaceId: workspaceId,
           section: 'resources',
           child: WorkbenchResourcePage(workspaceId: workspaceId),
@@ -167,7 +167,7 @@ final List<RouteBase> _workbenchRoutes = [
     pageBuilder: (_, state) {
       final workspaceId = state.params['workspaceId']!;
       return NoTransitionPage(
-        child: WorkbenchWorkspaceFrameV2(
+        child: WorkbenchWorkspaceFrame(
           workspaceId: workspaceId,
           section: 'decisions',
           child: WorkbenchDecisionPage(workspaceId: workspaceId),
@@ -181,7 +181,7 @@ final List<RouteBase> _workbenchRoutes = [
     pageBuilder: (_, state) {
       final workspaceId = state.params['workspaceId']!;
       return NoTransitionPage(
-        child: WorkbenchWorkspaceFrameV2(
+        child: WorkbenchWorkspaceFrame(
           workspaceId: workspaceId,
           section: 'developer',
           child: WorkbenchDeveloperPage(workspaceId: workspaceId),
