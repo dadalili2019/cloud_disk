@@ -1,151 +1,313 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:go_router/go_router.dart';
 
-import '../menu/navigationPage.dart';
-import '../pages/capacityInformation.dart';
-import '../pages/comparison/comparison.dart' deferred as cmp;
-import '../pages/deviceInformation.dart';
-import '../pages/favorites.dart';
-import '../pages/file.dart';
-import '../pages/game/game.dart' deferred as game;
-import '../pages/imagetools/collage_tool.dart' deferred as collagetool;
-import '../pages/imagetools/crop_tool.dart' deferred as croptool;
-import '../pages/imagetools/dedupe_tool.dart' deferred as dedupetool;
-import '../pages/imagetools/filter_tool.dart' deferred as filtertool;
-import '../pages/imagetools/imagetools.dart' deferred as imagetools;
-import '../pages/imagetools/watermark_tool.dart' deferred as watermarktool;
-import '../pages/jsonformat/jsonformat.dart' deferred as jf;
-import '../pages/login.dart';
-import '../pages/myProfile.dart';
-import '../pages/password.dart';
-import '../pages/photo.dart' deferred as photo;
-import '../pages/ragknowledge/ragknowledge.dart' deferred as ragknowledge;
-import '../pages/recently_played.dart';
-import '../pages/recyclePage.dart';
-import '../pages/setting/setting.dart';
-import '../pages/shareFolder/shareFolder.dart' deferred as share;
-import '../pages/speedtestpage/speedtestpage.dart' deferred as speed;
-import '../pages/subscribe.dart';
-import '../pages/todo.dart';
+import '../app/navigation_page.dart';
+import '../pages/comparison/comparison_page.dart' deferred as comparison;
+import '../pages/game/game_page.dart' deferred as game;
+import '../pages/image_tools/collage_tool.dart' deferred as collage_tool;
+import '../pages/image_tools/crop_tool.dart' deferred as crop_tool;
+import '../pages/image_tools/dedupe_tool.dart' deferred as dedupe_tool;
+import '../pages/image_tools/filter_tool.dart' deferred as filter_tool;
+import '../pages/image_tools/image_convert_page.dart' deferred as image_convert;
+import '../pages/image_tools/watermark_tool.dart' deferred as watermark_tool;
+import '../pages/json_format/json_format_page.dart' deferred as json_format;
+import '../pages/login_page.dart';
+import '../pages/rag_knowledge/rag_knowledge_page.dart' deferred as rag_knowledge;
+import '../pages/settings/settings_page.dart';
+import '../pages/speed_test/speed_test_page.dart' deferred as speed_test;
 import '../workbench/presentation/workbench_decision_page.dart';
-import '../workbench/presentation/workbench_developer_page.dart';
 import '../workbench/presentation/workbench_developer_landing_page.dart';
+import '../workbench/presentation/workbench_developer_page.dart';
 import '../workbench/presentation/workbench_home_page.dart';
 import '../workbench/presentation/workbench_issue_page.dart';
 import '../workbench/presentation/workbench_knowledge_page.dart';
 import '../workbench/presentation/workbench_notes_editor_page.dart';
-import '../workbench/presentation/workbench_phase2_pages.dart';
+import '../workbench/presentation/workbench_workspace_overview_page.dart';
 import '../workbench/presentation/workbench_resource_page.dart';
 import '../workbench/presentation/workbench_task_list_page.dart';
 import '../workbench/presentation/workbench_time_page.dart';
 import '../workbench/presentation/workbench_tools_page.dart';
 import '../workbench/presentation/workbench_workspace_list_v2_page.dart';
 
-class DeferredWidget extends StatelessWidget {
-  const DeferredWidget({super.key, required this.loader, required this.builder});
-  final Future<void> Function() loader;
-  final Widget Function() builder;
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<void>(
-      future: loader(),
-      builder: (context, snap) {
-        if (snap.connectionState == ConnectionState.done) return builder();
-        return const ScaffoldPage(content: Center(child: ProgressRing()));
-      },
-    );
-  }
-}
-
 final router = GoRouter(
   initialLocation: '/login',
   routes: [
-    GoRoute(path: '/', redirect: (context, state) => '/home'),
-    GoRoute(name: 'login', path: '/login', pageBuilder: (context, state) => const NoTransitionPage(child: LoginPage())),
+    GoRoute(path: '/', redirect: (_, __) => '/home'),
+    GoRoute(
+      name: 'login',
+      path: '/login',
+      pageBuilder: (_, __) => const NoTransitionPage(child: LoginPage()),
+    ),
     ShellRoute(
-      builder: (context, state, child) => NavigationPage(child: child),
-      routes: <RouteBase>[
-        GoRoute(name: 'home', path: '/home', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchHomePage())),
-        GoRoute(name: 'workbenchWorkspace', path: '/workspace', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchWorkspaceListPageV2())),
-        GoRoute(name: 'workbenchKnowledge', path: '/knowledge', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchKnowledgePage())),
-        GoRoute(name: 'workbenchTime', path: '/time', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchTimePage())),
-        GoRoute(name: 'workbenchDeveloperLanding', path: '/developer', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchDeveloperLandingPage())),
-        GoRoute(name: 'workbenchTools', path: '/tools', pageBuilder: (context, state) => const NoTransitionPage(child: WorkbenchToolsPage())),
+      builder: (_, __, child) => NavigationPage(child: child),
+      routes: [
+        ..._workbenchRoutes,
         GoRoute(
-          name: 'workbenchOverview', path: '/workspace/:workspaceId/overview',
-          pageBuilder: (context, state) {
-            final workspaceId = state.params['workspaceId']!;
-            return NoTransitionPage(child: WorkbenchWorkspaceFrameV2(workspaceId: workspaceId, section: 'overview', child: WorkbenchOverviewPageV2(workspaceId: workspaceId)));
-          },
+          name: 'setting',
+          path: '/setting',
+          pageBuilder: (_, __) =>
+              const NoTransitionPage(child: SettingPage()),
         ),
-        GoRoute(
-          name: 'workbenchTasks', path: '/workspace/:workspaceId/tasks',
-          pageBuilder: (context, state) {
-            final workspaceId = state.params['workspaceId']!;
-            return NoTransitionPage(child: WorkbenchWorkspaceFrameV2(workspaceId: workspaceId, section: 'tasks', child: WorkbenchTaskListPage(workspaceId: workspaceId)));
-          },
-        ),
-        GoRoute(
-          name: 'workbenchNotes', path: '/workspace/:workspaceId/notes',
-          pageBuilder: (context, state) {
-            final workspaceId = state.params['workspaceId']!;
-            return NoTransitionPage(child: WorkbenchWorkspaceFrameV2(workspaceId: workspaceId, section: 'notes', child: WorkbenchNotesEditorPage(workspaceId: workspaceId)));
-          },
-        ),
-        GoRoute(
-          name: 'workbenchIssues', path: '/workspace/:workspaceId/issues',
-          pageBuilder: (context, state) {
-            final workspaceId = state.params['workspaceId']!;
-            return NoTransitionPage(child: WorkbenchWorkspaceFrameV2(workspaceId: workspaceId, section: 'issues', child: WorkbenchIssuePage(workspaceId: workspaceId)));
-          },
-        ),
-        GoRoute(
-          name: 'workbenchResources', path: '/workspace/:workspaceId/resources',
-          pageBuilder: (context, state) {
-            final workspaceId = state.params['workspaceId']!;
-            return NoTransitionPage(child: WorkbenchWorkspaceFrameV2(workspaceId: workspaceId, section: 'resources', child: WorkbenchResourcePage(workspaceId: workspaceId)));
-          },
-        ),
-        GoRoute(
-          name: 'workbenchDecisions', path: '/workspace/:workspaceId/decisions',
-          pageBuilder: (context, state) {
-            final workspaceId = state.params['workspaceId']!;
-            return NoTransitionPage(child: WorkbenchWorkspaceFrameV2(workspaceId: workspaceId, section: 'decisions', child: WorkbenchDecisionPage(workspaceId: workspaceId)));
-          },
-        ),
-        GoRoute(
-          name: 'workbenchDeveloper', path: '/workspace/:workspaceId/developer',
-          pageBuilder: (context, state) {
-            final workspaceId = state.params['workspaceId']!;
-            return NoTransitionPage(child: WorkbenchWorkspaceFrameV2(workspaceId: workspaceId, section: 'developer', child: WorkbenchDeveloperPage(workspaceId: workspaceId)));
-          },
-        ),
-        GoRoute(name: 'file', path: '/file', pageBuilder: (context, state) => const NoTransitionPage(child: FilePage())),
-        GoRoute(name: 'myProfile', path: '/myProfile', pageBuilder: (context, state) => const NoTransitionPage(child: MyProfilePage())),
-        GoRoute(name: 'favorites', path: '/favorites', pageBuilder: (context, state) => const NoTransitionPage(child: FavoritesPage())),
-        GoRoute(name: 'recentlyPlayed', path: '/recentlyPlayed', pageBuilder: (context, state) => const NoTransitionPage(child: RecentlyPlayedPage())),
-        GoRoute(name: 'password', path: '/password', pageBuilder: (context, state) => const NoTransitionPage(child: PasswordPage())),
-        GoRoute(name: 'setting', path: '/setting', pageBuilder: (context, state) => const NoTransitionPage(child: SettingPage())),
-        GoRoute(name: 'subscribe', path: '/subscribe', pageBuilder: (context, state) => const NoTransitionPage(child: SubscribePage())),
-        GoRoute(name: 'recycle', path: '/recycle', pageBuilder: (context, state) => const NoTransitionPage(child: RecyclePage())),
-        GoRoute(name: 'deviceInformation', path: '/deviceInformation', pageBuilder: (context, state) => const NoTransitionPage(child: DeviceInformation())),
-        GoRoute(name: 'capacityInformation', path: '/capacityInformation', pageBuilder: (context, state) => const NoTransitionPage(child: CapacityInformation())),
-        GoRoute(name: 'photo', path: '/photo', builder: (context, state) => DeferredWidget(loader: photo.loadLibrary, builder: () => photo.PhotoPage())),
-        GoRoute(name: 'comparison', path: '/comparison', builder: (context, state) => DeferredWidget(loader: cmp.loadLibrary, builder: () => cmp.ComparisonPage())),
-        GoRoute(name: 'jsonformat', path: '/jsonformat', builder: (context, state) => DeferredWidget(loader: jf.loadLibrary, builder: () => jf.JsonFormatPage())),
-        GoRoute(name: 'imageConvert', path: '/imagetools/convert', builder: (context, state) => DeferredWidget(loader: imagetools.loadLibrary, builder: () => imagetools.ImageToolsPage())),
-        GoRoute(name: 'imageWatermark', path: '/imagetools/watermark', builder: (context, state) => DeferredWidget(loader: watermarktool.loadLibrary, builder: () => watermarktool.WatermarkToolPage())),
-        GoRoute(name: 'imageCrop', path: '/imagetools/crop', builder: (context, state) => DeferredWidget(loader: croptool.loadLibrary, builder: () => croptool.CropToolPage())),
-        GoRoute(name: 'imageFilter', path: '/imagetools/filter', builder: (context, state) => DeferredWidget(loader: filtertool.loadLibrary, builder: () => filtertool.FilterToolPage())),
-        GoRoute(name: 'imageCollage', path: '/imagetools/collage', builder: (context, state) => DeferredWidget(loader: collagetool.loadLibrary, builder: () => collagetool.CollageToolPage())),
-        GoRoute(name: 'imageDedupe', path: '/imagetools/dedupe', builder: (context, state) => DeferredWidget(loader: dedupetool.loadLibrary, builder: () => dedupetool.DedupeToolPage())),
-        GoRoute(name: 'imagetools', path: '/imagetools', redirect: (context, state) => '/imagetools/convert'),
-        GoRoute(name: 'speedtestpage', path: '/speedtestpage', builder: (context, state) => DeferredWidget(loader: speed.loadLibrary, builder: () => speed.SpeedTestPage())),
-        GoRoute(name: 'ragknowledge', path: '/ragknowledge', builder: (context, state) => DeferredWidget(loader: ragknowledge.loadLibrary, builder: () => ragknowledge.RagKnowledgePage())),
-        GoRoute(name: 'game', path: '/game', builder: (context, state) => DeferredWidget(loader: game.loadLibrary, builder: () => game.GamePage())),
-        GoRoute(name: 'shareFolder', path: '/shareFolder', builder: (context, state) => DeferredWidget(loader: share.loadLibrary, builder: () => share.ShareFolder())),
-        GoRoute(name: 'todo', path: '/todo', pageBuilder: (context, state) => const NoTransitionPage(child: TodoPage())),
+        ..._toolRoutes,
       ],
     ),
   ],
 );
+
+final List<RouteBase> _workbenchRoutes = [
+  GoRoute(
+    name: 'home',
+    path: '/home',
+    pageBuilder: (_, __) =>
+        const NoTransitionPage(child: WorkbenchHomePage()),
+  ),
+  GoRoute(
+    name: 'workbenchWorkspace',
+    path: '/workspace',
+    pageBuilder: (_, __) =>
+        const NoTransitionPage(child: WorkbenchWorkspaceListPageV2()),
+  ),
+  GoRoute(
+    name: 'workbenchKnowledge',
+    path: '/knowledge',
+    pageBuilder: (_, __) =>
+        const NoTransitionPage(child: WorkbenchKnowledgePage()),
+  ),
+  GoRoute(
+    name: 'workbenchTime',
+    path: '/time',
+    pageBuilder: (_, __) =>
+        const NoTransitionPage(child: WorkbenchTimePage()),
+  ),
+  GoRoute(
+    name: 'workbenchDeveloperLanding',
+    path: '/developer',
+    pageBuilder: (_, __) =>
+        const NoTransitionPage(child: WorkbenchDeveloperLandingPage()),
+  ),
+  GoRoute(
+    name: 'workbenchTools',
+    path: '/tools',
+    pageBuilder: (_, __) =>
+        const NoTransitionPage(child: WorkbenchToolsPage()),
+  ),
+  GoRoute(
+    name: 'workbenchOverview',
+    path: '/workspace/:workspaceId/overview',
+    pageBuilder: (_, state) {
+      final workspaceId = state.params['workspaceId']!;
+      return NoTransitionPage(
+        child: WorkbenchWorkspaceFrameV2(
+          workspaceId: workspaceId,
+          section: 'overview',
+          child: WorkbenchOverviewPageV2(workspaceId: workspaceId),
+        ),
+      );
+    },
+  ),
+  GoRoute(
+    name: 'workbenchTasks',
+    path: '/workspace/:workspaceId/tasks',
+    pageBuilder: (_, state) {
+      final workspaceId = state.params['workspaceId']!;
+      return NoTransitionPage(
+        child: WorkbenchWorkspaceFrameV2(
+          workspaceId: workspaceId,
+          section: 'tasks',
+          child: WorkbenchTaskListPage(workspaceId: workspaceId),
+        ),
+      );
+    },
+  ),
+  GoRoute(
+    name: 'workbenchNotes',
+    path: '/workspace/:workspaceId/notes',
+    pageBuilder: (_, state) {
+      final workspaceId = state.params['workspaceId']!;
+      return NoTransitionPage(
+        child: WorkbenchWorkspaceFrameV2(
+          workspaceId: workspaceId,
+          section: 'notes',
+          child: WorkbenchNotesEditorPage(workspaceId: workspaceId),
+        ),
+      );
+    },
+  ),
+  GoRoute(
+    name: 'workbenchIssues',
+    path: '/workspace/:workspaceId/issues',
+    pageBuilder: (_, state) {
+      final workspaceId = state.params['workspaceId']!;
+      return NoTransitionPage(
+        child: WorkbenchWorkspaceFrameV2(
+          workspaceId: workspaceId,
+          section: 'issues',
+          child: WorkbenchIssuePage(workspaceId: workspaceId),
+        ),
+      );
+    },
+  ),
+  GoRoute(
+    name: 'workbenchResources',
+    path: '/workspace/:workspaceId/resources',
+    pageBuilder: (_, state) {
+      final workspaceId = state.params['workspaceId']!;
+      return NoTransitionPage(
+        child: WorkbenchWorkspaceFrameV2(
+          workspaceId: workspaceId,
+          section: 'resources',
+          child: WorkbenchResourcePage(workspaceId: workspaceId),
+        ),
+      );
+    },
+  ),
+  GoRoute(
+    name: 'workbenchDecisions',
+    path: '/workspace/:workspaceId/decisions',
+    pageBuilder: (_, state) {
+      final workspaceId = state.params['workspaceId']!;
+      return NoTransitionPage(
+        child: WorkbenchWorkspaceFrameV2(
+          workspaceId: workspaceId,
+          section: 'decisions',
+          child: WorkbenchDecisionPage(workspaceId: workspaceId),
+        ),
+      );
+    },
+  ),
+  GoRoute(
+    name: 'workbenchDeveloper',
+    path: '/workspace/:workspaceId/developer',
+    pageBuilder: (_, state) {
+      final workspaceId = state.params['workspaceId']!;
+      return NoTransitionPage(
+        child: WorkbenchWorkspaceFrameV2(
+          workspaceId: workspaceId,
+          section: 'developer',
+          child: WorkbenchDeveloperPage(workspaceId: workspaceId),
+        ),
+      );
+    },
+  ),
+];
+
+final List<RouteBase> _toolRoutes = [
+  GoRoute(
+    name: 'comparison',
+    path: '/comparison',
+    builder: (_, __) => _DeferredPage(
+      loader: comparison.loadLibrary,
+      builder: () => comparison.ComparisonPage(),
+    ),
+  ),
+  GoRoute(
+    name: 'jsonformat',
+    path: '/jsonformat',
+    builder: (_, __) => _DeferredPage(
+      loader: json_format.loadLibrary,
+      builder: () => json_format.JsonFormatPage(),
+    ),
+  ),
+  GoRoute(
+    name: 'imageConvert',
+    path: '/imagetools/convert',
+    builder: (_, __) => _DeferredPage(
+      loader: image_convert.loadLibrary,
+      builder: () => image_convert.ImageToolsPage(),
+    ),
+  ),
+  GoRoute(
+    name: 'imageWatermark',
+    path: '/imagetools/watermark',
+    builder: (_, __) => _DeferredPage(
+      loader: watermark_tool.loadLibrary,
+      builder: () => watermark_tool.WatermarkToolPage(),
+    ),
+  ),
+  GoRoute(
+    name: 'imageCrop',
+    path: '/imagetools/crop',
+    builder: (_, __) => _DeferredPage(
+      loader: crop_tool.loadLibrary,
+      builder: () => crop_tool.CropToolPage(),
+    ),
+  ),
+  GoRoute(
+    name: 'imageFilter',
+    path: '/imagetools/filter',
+    builder: (_, __) => _DeferredPage(
+      loader: filter_tool.loadLibrary,
+      builder: () => filter_tool.FilterToolPage(),
+    ),
+  ),
+  GoRoute(
+    name: 'imageCollage',
+    path: '/imagetools/collage',
+    builder: (_, __) => _DeferredPage(
+      loader: collage_tool.loadLibrary,
+      builder: () => collage_tool.CollageToolPage(),
+    ),
+  ),
+  GoRoute(
+    name: 'imageDedupe',
+    path: '/imagetools/dedupe',
+    builder: (_, __) => _DeferredPage(
+      loader: dedupe_tool.loadLibrary,
+      builder: () => dedupe_tool.DedupeToolPage(),
+    ),
+  ),
+  GoRoute(
+    name: 'imagetools',
+    path: '/imagetools',
+    redirect: (_, __) => '/imagetools/convert',
+  ),
+  GoRoute(
+    name: 'speedtestpage',
+    path: '/speedtestpage',
+    builder: (_, __) => _DeferredPage(
+      loader: speed_test.loadLibrary,
+      builder: () => speed_test.SpeedTestPage(),
+    ),
+  ),
+  GoRoute(
+    name: 'ragknowledge',
+    path: '/ragknowledge',
+    builder: (_, __) => _DeferredPage(
+      loader: rag_knowledge.loadLibrary,
+      builder: () => rag_knowledge.RagKnowledgePage(),
+    ),
+  ),
+  GoRoute(
+    name: 'game',
+    path: '/game',
+    builder: (_, __) => _DeferredPage(
+      loader: game.loadLibrary,
+      builder: () => game.GamePage(),
+    ),
+  ),
+];
+
+class _DeferredPage extends StatelessWidget {
+  const _DeferredPage({
+    required this.loader,
+    required this.builder,
+  });
+
+  final Future<void> Function() loader;
+  final Widget Function() builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: loader(),
+      builder: (_, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return builder();
+        }
+        return const ScaffoldPage(
+          content: Center(child: ProgressRing()),
+        );
+      },
+    );
+  }
+}

@@ -1,55 +1,83 @@
 # Personal Workbench 当前状态与 Roadmap
 
-## 1. 当前状态
+## 1. 现在做到哪里
 
-截至 Personal Workbench v1.4 合并到 main：
+核心能力已经基本齐了：
 
-### 已完成
-
-- Global Shell
-- Home
-- Workspace Core
-- Task
-- Note
-- Issue
-- Resource
-- Decision
+- Global Shell / Home
+- Workspace / Task / Notes
+- Issue / Resource / Decision
 - Time / Focus
-- Knowledge
-- Search
+- Knowledge / Search
 - Developer Context
-- Global AI
-- AI History
+- Global AI / AI History
 - Settings
-- Backup
-- Export
-- Restore
+- Backup / Export / Restore
 - Tool Shell
 - Windows UI Polish
-- Windows Release Build
 
-## 2. 当前不是“继续加页面”的阶段
+现在不应该继续无节制加页面。
 
-下一阶段应进入 Hardening。
+下一阶段重点是：**把代码、测试、异常和性能做扎实。**
 
-## 3. Phase A — Desktop Hardening
+## 2. 当前代码清理
 
-优先级最高。
+本轮已经开始处理：
 
-内容：
+- 删除早期 cloud disk 的 DTO / DBHelper / Utils。
+- 删除文件、收藏、回收站、订阅、设备容量、共享目录等旧路由和旧页面。
+- 当前目录收口为 `app / pages / workbench` 等明确职责。
+- Dart 文件名统一 snake_case。
+- 删除依赖个人电脑绝对路径的旧测试脚本。
+- Tray 从 NetDisk 改为 Personal Workbench。
+- 清理未使用依赖。
+- 开启 `avoid_print`。
+- 当前代码退出 Phase 历史命名。
+- 新增长期编码规范。
 
-- 回归测试
-- 新代码 warning 清理
-- 历史 lint 分批偿还
-- Notes Auto Save Off 边界保护复核
-- Search consistency
-- Restore full verification
-- Error state
-- Long text / resize regression
+这批调整先在 `refactor/personal-workbench-cleanup` 分支验证，确认后再合并 main。
 
-## 4. Phase B — AI Real Environment Verification
+## 3. Desktop Hardening
 
-目标：
+### 结构
+
+优先处理几个超大文件：
+
+- `global_ai_drawer.dart`
+- `workbench_home_page.dart`
+- `workbench_knowledge_page.dart`
+- `workbench_developer_page.dart`
+- Workspace Overview
+- `ai_context_builder.dart`
+
+原则是按职责拆，不机械拆。
+
+### 测试
+
+- Service / Repository tests
+- Search tests
+- Backup / Restore tests
+- AI Context budget tests
+- Settings persistence
+- Widget smoke
+
+### 异常
+
+- 页面加载失败
+- SQLite 异常
+- 文件写入异常
+- Search rebuild 异常
+- AI timeout / HTTP error / empty response
+
+### 性能
+
+- 避免重复 IO 和重复查询。
+- 大列表避免无意义全量 rebuild。
+- Search rebuild 看真实数据量表现。
+- AI Context 不重复读取不需要的 Markdown。
+- 图片工具避免长期阻塞 UI isolate。
+
+## 4. AI Real Environment Verification
 
 ~~~text
 Provider Config
@@ -62,37 +90,17 @@ Provider Config
 → Restart Recovery
 ~~~
 
-补充：
+验证真实 Gateway、API Key、Timeout、HTTP error、Empty response、Long response。
 
-- 真实 Gateway
-- 真实 API Key
-- Timeout
-- HTTP error
-- Empty response
-- Long response
+## 5. Search / Backup / Restore Hardening
 
-## 5. Phase C — Search / Backup / Restore Hardening
+Search 重点：即时同步、重建性能、中文 relevance、大数据量。
 
-Search：
+Backup / Restore 重点：完整灾难恢复、Manifest compatibility、Corrupted ZIP、Missing DB、Search rebuild。
 
-- 修改后即时同步
-- 重建索引性能
-- 中文 relevance
-- 大数据量性能
+## 6. CI
 
-Backup / Restore：
-
-- 完整灾难恢复演练
-- Manifest compatibility
-- Corrupted ZIP
-- Missing DB
-- Search rebuild
-
-## 6. Phase D — Automated Test + CI
-
-当前 GitHub 无正式 CI。
-
-建议 GitHub Actions：
+GitHub Actions 最低：
 
 ~~~text
 flutter pub get
@@ -100,43 +108,27 @@ flutter analyze
 flutter test
 ~~~
 
-可选：
+Windows Build 可以放 merge / release：
 
 ~~~text
 flutter build windows
 ~~~
 
-Windows Build 较慢，可只在 release / merge 时执行。
+## 7. Desktop Stable V1
 
-## 7. Desktop Stable Baseline
-
-完成 A–D 后标记：
+上面完成以后，再标记：
 
 ~~~text
 Personal Workbench Desktop Stable V1
 ~~~
 
-## 8. Phase E — Mobile Adaptation
+## 8. 后面再考虑 Mobile
 
-当前未开始。
+Mobile 需要重新设计 Navigation、Small-screen Layout、Touch Target、Drawer / Dialog、File Picker、Storage、Backup / Export、AI Drawer、Workspace Tabs。
 
-需要重新设计：
+不要直接复制 Desktop UI。
 
-- Navigation
-- Small-screen Layout
-- Touch Target
-- Drawer / Dialog
-- File Picker
-- Local Storage Path
-- Backup / Export
-- AI Drawer
-- Workspace Tabs
-
-Mobile 不应直接复制 Desktop UI。
-
-## 9. 非当前 Roadmap
-
-以下除非需求明确变化，否则不进入最近计划：
+## 9. 近期不做
 
 - Cloud Sync
 - Team Collaboration

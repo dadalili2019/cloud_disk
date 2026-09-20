@@ -350,39 +350,3 @@ class NoteService {
     await notes.touchUpdatedAt(note.id, DateTime.now().toUtc());
   }
 }
-
-class WorkspaceOverviewService {
-  const WorkspaceOverviewService({
-    required this.workspaces,
-    required this.tasks,
-    required this.notes,
-    required this.links,
-    required this.activities,
-  });
-
-  final WorkspaceRepository workspaces;
-  final TaskRepository tasks;
-  final NoteRepository notes;
-  final EntityLinkService links;
-  final ActivityRepository activities;
-
-  Future<WorkspaceOverviewModel> loadOverview(String workspaceId) async {
-    final workspace = await workspaces.getById(workspaceId);
-    if (workspace == null) {
-      throw StateError('Workspace not found: $workspaceId');
-    }
-
-    final currentTask = await tasks.getCurrent(workspaceId);
-    final linkedNotes = currentTask == null
-        ? <NoteModel>[]
-        : await notes.getByIds(await links.linkedNoteIds(currentTask.id));
-    final recentActivity = await activities.listRecent(workspaceId, limit: 8);
-
-    return WorkspaceOverviewModel(
-      workspace: workspace,
-      currentTask: currentTask,
-      linkedNotes: linkedNotes,
-      recentActivity: recentActivity,
-    );
-  }
-}

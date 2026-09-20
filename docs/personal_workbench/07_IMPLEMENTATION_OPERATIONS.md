@@ -1,65 +1,65 @@
 # Personal Workbench 实施与运行
 
-## 1. 当前验证环境
-
-当前 Windows 验证基线：
+## 1. 当前环境
 
 ~~~text
 Flutter 3.47.4 stable
 Windows Desktop
 ~~~
 
-用户当前固定 Flutter SDK 示例：
+本机 SDK 示例：
 
 ~~~powershell
 D:\person\config\flutter_win\flutter_3_47\flutter_windows_3.47.4-stable\flutter\bin\flutter.bat
 ~~~
 
-## 2. 初始化
+## 2. 初始化和运行
 
 ~~~powershell
 flutter pub get
-~~~
-
-## 3. 运行
-
-~~~powershell
 flutter run -d windows
 ~~~
 
-## 4. 静态检查
+## 3. 提交前检查
+
+以后不再只看“能不能跑起来”。
+
+只要碰 Dart、依赖或 Windows 配置，至少执行：
 
 ~~~powershell
 flutter analyze
+flutter test
+flutter build windows
 ~~~
 
-当前仓库仍存在历史 lint，主要包括：
+要求：
 
-- file_names
-- prefer_const
-- avoid_print
-- 少量 legacy warning
+- 不允许 compile error。
+- 新代码不要引入 warning。
+- `avoid_print` 已开启，正式代码不要直接 `print()`。
+- Dart 文件统一 `snake_case`。
+- 测试不能依赖个人电脑绝对路径。
+- Release Build 要成功。
 
-验收重点：
+纯文档改动可以不 Build。
 
-- 无 compile error
-- 无本阶段新增关键 warning
-
-## 5. Windows Release Build
+## 4. Windows Release
 
 ~~~powershell
 flutter build windows
 ~~~
 
-当前已验证输出：
+当前输出：
 
 ~~~text
 build/windows/x64/runner/Release/cloud_disk.exe
 ~~~
 
-## 6. AI 配置
+可执行文件名字暂时保留历史仓库名字。正式发版前如果要改 package / executable 名称，单独处理。
 
-可以在 Settings → AI 配置：
+## 5. AI 配置
+
+Settings → AI：
 
 - Provider
 - Base URL
@@ -68,9 +68,7 @@ build/windows/x64/runner/Release/cloud_disk.exe
 - Timeout
 - Session API Key
 
-也保留 Environment 配置兼容。
-
-常见环境项：
+环境变量仍兼容：
 
 ~~~text
 WORKBENCH_AI_BASE_URL
@@ -83,23 +81,11 @@ WORKBENCH_AI_EXTRA_HEADERS_JSON
 WORKBENCH_AI_TIMEOUT_SECONDS
 ~~~
 
-## 7. Backup 操作
+## 6. Backup / Restore
 
-Settings → Data & Backup：
+重要改动、升级和 Restore 测试前先手动备份。
 
-- Manual Backup
-- Auto Backup
-- Retention
-
-建议：
-
-- 升级前手动备份
-- Restore 测试前手动备份
-- 重要数据变更前保留 Safety Backup
-
-## 8. Restore
-
-Restore 操作：
+Restore：
 
 ~~~text
 选择 Workbench Backup ZIP
@@ -107,48 +93,38 @@ Restore 操作：
 → 确认
 → Safety Backup
 → Stage Restore
-→ 完全退出应用
+→ 完全退出
 → 重新启动
-→ 启动前自动应用 Pending Restore
+→ 启动前应用 Pending Restore
 ~~~
 
-不要在 Restore Staged 后继续长时间写入旧数据。
-
-## 9. 故障定位
+## 7. 常见问题
 
 ### 搜索搜不到
 
-1. 确认实体已保存。
-2. 在 Knowledge 页面执行“重建索引”。
-3. 再搜索。
-4. 检查 search_index 是否可重建。
+先确认内容已经保存，再重建索引。仍然不对时，检查业务实体和 `search_index` 是否一致。
 
 ### AI 不返回
 
-1. 检查 Provider mode。
-2. 检查 Base URL / Model / Chat Path。
-3. Test Connection。
-4. 检查 API Key。
-5. 检查 Gateway 是否 OpenAI-compatible。
+依次检查 Provider、Base URL、Model、Chat Path、API Key、Timeout 和 Gateway 是否 OpenAI-compatible。
 
 ### Windows AXTree 日志
 
-历史上 Windows Debug 模式可能输出 accessibility AXTree 日志。
+Debug 偶尔出现 accessibility AXTree 日志，如果 UI 正常，不先当业务错误处理。持续高频时再看 Semantics Tree、窗口 resize 和 route transition。
 
-如果 UI 功能正常且日志只是偶发，不作为业务错误处理；持续高频输出时再检查频繁 Semantics Tree 重建、窗口 resize 和 route transition。
-
-## 10. Git 开发流程
-
-当前推荐：
+## 8. Git 开发方式
 
 ~~~text
 main
-→ feature/*
-→ Windows Run
+→ feature/* 或 refactor/*
+→ 本地 Run
 → flutter analyze
+→ flutter test
 → flutter build windows
 → PR
-→ squash merge
+→ merge
 ~~~
 
-文档改动与功能改动应放在同一 PR 或紧随其后的 docs PR 中，避免实现与文档长期漂移。
+大范围清理不要直接在 main 上做。
+
+代码和文档一起改，详细编码要求看 [11_CODE_DEVELOPMENT_RULES.md](11_CODE_DEVELOPMENT_RULES.md)。
