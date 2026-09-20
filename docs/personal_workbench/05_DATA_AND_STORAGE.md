@@ -177,6 +177,25 @@ Export 是 Portable Data，不等价于 Backup。
 
 ## 12. Restore
 
+Restore 现在把“备份包校验”和“真正恢复”分开：
+
+~~~text
+BackupArchiveValidator
+  ├─ ZIP decode
+  ├─ archive path safety
+  ├─ manifest
+  ├─ format_version
+  └─ schema compatibility
+
+RestoreService
+  ├─ validate
+  ├─ safety backup
+  ├─ stage .pending_restore
+  └─ next-start apply
+~~~
+
+这样路径穿越、损坏 ZIP、未来 Schema 等安全边界可以单独自动化测试，不需要真正覆盖用户数据。
+
 Pending Restore 存放在：
 
 ~~~text

@@ -78,10 +78,15 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 - AI Context Budget 单元测试。
 - SearchService rebuild / freshness / concurrency / query forwarding 测试。
 
+继续完成：
+
+- Search Repository FTS / LIKE fallback / filter / limit 测试。
+- Restore archive manifest / schema / path safety / corrupted ZIP 测试。
+
 下一批：
 
-- Search Repository tests
-- Backup / Restore tests
+- Backup portable settings / manifest tests
+- Restore staging / next-start apply tests
 - Service / Repository tests
 - Settings persistence
 - Widget smoke
@@ -120,6 +125,8 @@ Provider Config
 ## 5. Search / Backup / Restore Hardening
 
 Search 重点：即时同步、重建性能、中文 relevance、大数据量。
+
+当前性能审计已经确认：完整 Rebuild 仍按 Workspace 顺序读取，并对每个 Entity 顺序执行 replace（delete + insert）。测试稳定后再做批量写入 / transaction 优化，不直接在没有保护的情况下改索引链路。
 
 Backup / Restore 重点：完整灾难恢复、Manifest compatibility、Corrupted ZIP、Missing DB、Search rebuild。
 
