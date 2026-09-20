@@ -373,4 +373,3 @@ extension _WorkbenchDeveloperSections on _WorkbenchDeveloperPageState {
     );
   }
 }
-}
