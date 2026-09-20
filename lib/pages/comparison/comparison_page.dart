@@ -106,7 +106,7 @@ class _ComparisonPageState extends State<ComparisonPage> {
                     ),
                     child: RichText(
                       text: TextSpan(
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.black,
                           fontSize: 14,
                         ),

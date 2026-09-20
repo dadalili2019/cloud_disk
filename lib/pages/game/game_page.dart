@@ -115,7 +115,7 @@ class _GamePageState extends State<GamePage> {
   // ===================
 
   void _reset() {
-    final start = Point(columns ~/ 2, rows ~/ 2);
+    const start = Point<int>(columns ~/ 2, rows ~/ 2);
     setState(() {
       snake = [start];
       direction = 'right';
@@ -168,6 +168,7 @@ class _GamePageState extends State<GamePage> {
         // NEW: 失败时先标记不在玩 & 同步让 BGM 停止
         setState(() => isPlaying = false);
         await _syncBgm();
+        if (!mounted) return;
 
         await showDialog(
           context: context,
