@@ -130,3 +130,15 @@ Developer 页面拆分后继续修正 State 边界：
 - 页面 State 增加统一的 `_reloadState()` 状态刷新入口。
 - 修复 Flutter Analyzer 的 7 个 `invalid_use_of_protected_member`。
 - 编码规范补充：part / extension 拆分时，protected State API 必须留在 State 子类内部。
+
+
+## 2026-09-20 Core Test Hardening - Step 1
+
+开始从结构重构转向自动化测试：
+
+- 新增 AI Context Budget 单元测试。
+- 新增 SearchService rebuild 行为测试。
+- 覆盖 Search freshness window。
+- 覆盖并发 rebuild 合并，避免重复重建。
+- 覆盖 Search 参数透传。
+- 测试不依赖真实 SQLite、外网、个人路径。

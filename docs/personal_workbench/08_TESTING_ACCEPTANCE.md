@@ -103,15 +103,21 @@ flutter build windows
 
 ## 5. 自动化测试优先级
 
-1. Repository / Service unit tests
-2. Task current constraint
-3. Knowledge source links
-4. Search query / fallback
-5. Backup manifest
-6. Restore validation
-7. AI Context budget
-8. Settings persistence
-9. Widget smoke tests
+已经开始补：
+
+- AI Context Budget：预算、P0 保留、最大条数、excluded。
+- SearchService：rebuild、freshness window、并发 rebuild 合并、查询参数透传。
+
+下一批：
+
+1. Search Repository：FTS + LIKE fallback、过滤、limit。
+2. Backup manifest / portable settings。
+3. Restore validation / 路径安全。
+4. Repository / Service unit tests。
+5. Task current constraint。
+6. Knowledge source links。
+7. Settings persistence。
+8. Widget smoke tests。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 

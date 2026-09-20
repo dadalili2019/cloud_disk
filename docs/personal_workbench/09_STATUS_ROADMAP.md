@@ -73,10 +73,16 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 
 ### 测试
 
-- Service / Repository tests
-- Search tests
+已开始：
+
+- AI Context Budget 单元测试。
+- SearchService rebuild / freshness / concurrency / query forwarding 测试。
+
+下一批：
+
+- Search Repository tests
 - Backup / Restore tests
-- AI Context budget tests
+- Service / Repository tests
 - Settings persistence
 - Widget smoke
 
