@@ -62,7 +62,6 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 
 下一批优先处理：
 
-- `ai_context_builder.dart`
 - `global_ai_drawer.dart`
 - `workbench_home_page.dart`
 - `workbench_knowledge_page.dart`

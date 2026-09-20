@@ -65,3 +65,14 @@ v1.4 通过 PR #1 合并到 main。
 - Workspace Overview 按 Navigation / Overview Content 拆文件。
 - 保留原有 private Widget 和行为，不为了拆文件扩大 public API。
 - 使用 Dart `part / part of` 维持同一个 library 内部的封装边界。
+
+
+## 2026-09-20 AI Context Builder Split
+
+继续做 AI 核心链路结构整理：
+
+- `AIContextBuilder` 对外接口保持不变。
+- Task / Workspace / Knowledge / Global Scope 逻辑独立组织。
+- Context 收集、Entity 映射、文本格式化分别拆开。
+- 没有新增无意义的 Service / Manager 层。
+- Context 优先级、数量限制、搜索范围、include / exclude 和输出内容保持原逻辑。
