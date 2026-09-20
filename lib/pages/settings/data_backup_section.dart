@@ -320,6 +320,7 @@ class _Group extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = ThemeScope.of(context).palette;
+    final textColor = FluentTheme.of(context).typography.body?.color;
     return Container(
       decoration: BoxDecoration(
         color: palette.cardBackground,
@@ -362,7 +363,6 @@ class _Row extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = FluentTheme.of(context).typography.body?.color;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       child: LayoutBuilder(
