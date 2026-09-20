@@ -37,15 +37,14 @@
 
 这一批基础清理已经合并到 `main`。
 
-当前代码质量基线：
+上一次已确认的代码质量基线：
 
 ~~~text
 flutter analyze
 → No issues found
-
-flutter test
-→ 4 tests passed
 ~~~
+
+当前测试套件已经从最初 4 个 utility tests 扩展到 Search、AI Context、Backup / Restore 等核心链路。测试数量不在文档里写死，每次合并核心改动后以本地 `flutter test` 实际结果为准。
 
 Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 
