@@ -278,6 +278,9 @@ class _KnowledgeRepository implements KnowledgeRepository {
 
   @override
   Future<void> update(KnowledgeModel knowledge) => throw UnimplementedError();
+
+  @override
+  Future<void> delete(String id) => throw UnimplementedError();
 }
 
 class _DeveloperProjectRepository implements DeveloperProjectRepository {

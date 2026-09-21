@@ -219,3 +219,15 @@ Developer 页面拆分后继续修正 State 边界：
 - 覆盖 setCurrent 失败后的事务回滚。
 - 覆盖 Done Task 不能成为 Current。
 - 覆盖历史 done + current 脏状态的 normalize。
+
+
+## 2026-09-21 Knowledge Cross-store Compensation
+
+继续加固 Knowledge 跨存储一致性：
+
+- KnowledgeRepository 增加 delete，用于 create 失败补偿。
+- EntityLinkRepository 增加精确 unlink。
+- create 在 Link / Search Index 失败时按 Search → Link → Repository → Markdown 反向补偿。
+- update 在失败时恢复旧 Markdown、旧 Repository 数据和旧 Search Index。
+- 补偿使用 best-effort，原始业务异常仍然作为调用方看到的错误。
+- 新增 Link 失败、Search Index 失败和 Update 回滚测试。

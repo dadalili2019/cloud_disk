@@ -114,11 +114,16 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 
 - Task Repository 用真实 SQLite 锁 Current Task 唯一约束、事务切换和失败回滚。
 
+本轮继续：
+
+- Knowledge create / update 跨 Markdown、Repository、Entity Link、Search Index 增加反向补偿。
+- Task Repository 真实 SQLite Current 约束已补。
+
 下一批：
 
-- Knowledge 跨存储一致性加固
 - Database Schema / Migration
 - GitHub Actions CI
+- AI Provider / Conversation 异常测试
 - Widget smoke
 
 ### 异常

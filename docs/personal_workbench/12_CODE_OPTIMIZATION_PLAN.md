@@ -268,16 +268,17 @@ AI 功能后面不要只验证“正常返回”。
 
 当前进度：
 
-- Task / Workspace 业务规则测试：已开始完成。
-- Knowledge / Settings 业务规则测试：当前进行。
-- 已识别 Knowledge 跨 Markdown / SQLite / Link / Search 的失败补偿问题，单独处理，不和规则测试混在一起。
+- Task / Workspace 业务规则测试：第一轮完成，Repository 真实数据库约束也已补。
+- Knowledge / Settings 业务规则测试：第一轮完成。
+- Knowledge 跨 Markdown / SQLite / Link / Search 的失败补偿：第一轮加固完成。
+- 下一步进入 Database Schema / Migration 测试。
 
 现在按这个顺序继续：
 
 ~~~text
-1. Task / Workspace 业务规则测试
-2. Knowledge / Settings 业务规则测试
-3. Database Schema / Migration 测试
+1. Task / Workspace 业务规则测试（第一轮已完成）
+2. Knowledge / Settings 业务规则测试（第一轮已完成）
+3. Database Schema / Migration 测试（下一步）
 4. GitHub Actions CI
 5. AI Provider / Conversation 异常测试
 6. Image Tools 重复逻辑整理
