@@ -231,3 +231,14 @@ Developer 页面拆分后继续修正 State 边界：
 - update 在失败时恢复旧 Markdown、旧 Repository 数据和旧 Search Index。
 - 补偿使用 best-effort，原始业务异常仍然作为调用方看到的错误。
 - 新增 Link 失败、Search Index 失败和 Update 回滚测试。
+
+
+## 2026-09-21 SQLite Repository Test Isolation Fix
+
+修正 Task Repository 测试环境边界：
+
+- 正式运行的 WorkbenchDatabase.open 继续使用 NativeDatabase.createInBackground。
+- 新增 WorkbenchDatabase.openInMemoryForTesting，只用于 Repository / Schema 自动化测试。
+- Repository 测试不再额外依赖 Drift background isolate 和临时数据库文件。
+- sqlite_task_repository_test 的 tearDown 改为数据库成功初始化后才 close，避免 setup 失败后再抛 LateInitializationError。
+- 测试目标保持不变：仍然验证真实 SQLite Schema、Index、Transaction 和 Repository 行为。

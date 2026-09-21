@@ -38,8 +38,17 @@ class WorkbenchDatabase implements WorkbenchSqlExecutor {
   final QueryExecutor _executor;
   final _WorkbenchExecutorUser _executorUser;
 
-  static Future<WorkbenchDatabase> open(String databasePath) async {
-    final executor = NativeDatabase.createInBackground(File(databasePath));
+  static Future<WorkbenchDatabase> open(String databasePath) {
+    return _open(
+      NativeDatabase.createInBackground(File(databasePath)),
+    );
+  }
+
+  static Future<WorkbenchDatabase> openInMemoryForTesting() {
+    return _open(NativeDatabase.memory());
+  }
+
+  static Future<WorkbenchDatabase> _open(QueryExecutor executor) async {
     final user = _WorkbenchExecutorUser();
     await executor.ensureOpen(user);
     return WorkbenchDatabase._(executor, user);

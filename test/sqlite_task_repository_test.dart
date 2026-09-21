@@ -1,27 +1,20 @@
-import 'dart:io';
-
 import 'package:cloud_disk/workbench/core/models.dart';
 import 'package:cloud_disk/workbench/core/workbench_database.dart';
 import 'package:cloud_disk/workbench/data/sqlite_repositories.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:path/path.dart' as p;
 
 void main() {
   group('SqliteTaskRepository current task constraint', () {
-    late Directory tempDirectory;
-    late WorkbenchDatabase database;
+    WorkbenchDatabase? database;
     late SqliteWorkspaceRepository workspaces;
     late SqliteTaskRepository tasks;
 
     setUp(() async {
-      tempDirectory = await Directory.systemTemp.createTemp(
-        'personal_workbench_task_repository_',
-      );
-      database = await WorkbenchDatabase.open(
-        p.join(tempDirectory.path, 'workbench.db'),
-      );
-      workspaces = SqliteWorkspaceRepository(database);
-      tasks = SqliteTaskRepository(database);
+      final openedDatabase =
+          await WorkbenchDatabase.openInMemoryForTesting();
+      database = openedDatabase;
+      workspaces = SqliteWorkspaceRepository(openedDatabase);
+      tasks = SqliteTaskRepository(openedDatabase);
 
       final now = DateTime.utc(2026, 9, 21, 9);
       await workspaces.insert(
@@ -37,10 +30,7 @@ void main() {
     });
 
     tearDown(() async {
-      await database.close();
-      if (await tempDirectory.exists()) {
-        await tempDirectory.delete(recursive: true);
-      }
+      await database?.close();
     });
 
     test('database unique index rejects two current tasks in one workspace', () async {
@@ -97,7 +87,7 @@ void main() {
 
     test('getCurrent normalizes completed current rows', () async {
       await tasks.insert(_task(id: 'task-1', isCurrent: true));
-      await database.update(
+      await database!.update(
         "UPDATE tasks SET status = 'done', progress = 100 WHERE id = ?",
         ['task-1'],
       );
