@@ -274,6 +274,8 @@ flutter --version
 → flutter pub get
 → flutter analyze
 → flutter test
+→ lightweight Scale Smoke
+→ enable Windows desktop
 → flutter build windows --release
 → Windows Release Startup Smoke
 ~~~
