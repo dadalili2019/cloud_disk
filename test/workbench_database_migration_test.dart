@@ -450,15 +450,29 @@ Future<void> _deleteDirectoryWithRetry(
   int maxAttempts = 10,
   Duration retryDelay = const Duration(milliseconds: 100),
 }) async {
+  PathAccessException? lastError;
+
   for (var attempt = 1; attempt <= maxAttempts; attempt++) {
     if (!await directory.exists()) return;
 
     try {
       await directory.delete(recursive: true);
       return;
-    } on PathAccessException {
-      if (attempt == maxAttempts) rethrow;
-      await Future<void>.delayed(retryDelay);
+    } on PathAccessException catch (error) {
+      lastError = error;
+      if (attempt < maxAttempts) {
+        await Future<void>.delayed(retryDelay);
+      }
     }
+  }
+
+  if (Platform.isWindows &&
+      lastError != null &&
+      lastError.osError?.errorCode == 32) {
+    return;
+  }
+
+  if (lastError != null) {
+    throw lastError;
   }
 }

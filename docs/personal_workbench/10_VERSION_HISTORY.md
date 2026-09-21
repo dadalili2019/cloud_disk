@@ -270,3 +270,14 @@ Developer 页面拆分后继续修正 State 边界：
 - 验证 search_index FTS 可写可查。
 - 验证 user_version 最终为当前 Schema Version。
 - 正式 WorkbenchDatabase.open 仍然保持 background database + WAL，不改变运行逻辑。
+
+
+## 2026-09-21 Windows Migration Test File Lock Boundary
+
+继续收口 Windows 下 Migration Test 的清理边界：
+
+- openFileForTesting 关闭 prepared statement cache，只影响测试入口。
+- Migration 测试关闭数据库后仍会尝试删除临时目录并重试。
+- 仅在 Windows 且确认是 errno 32 的文件占用时，清理失败不再把 Migration Test 判为失败。
+- 其他 PathAccessException 仍然继续抛出。
+- 正式数据库 open / WAL / background isolate 不变。
