@@ -22,7 +22,7 @@ class NotesEditorSaveCoordinator {
     final current = _inFlight;
     if (current != null) {
       await current;
-      if (repeatWhileDirty && dirty) {
+      if (dirty) {
         await flush(
           persist: persist,
           repeatWhileDirty: repeatWhileDirty,
