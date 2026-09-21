@@ -429,3 +429,59 @@ class WorkbenchTag extends StatelessWidget {
     );
   }
 }
+
+
+class WorkbenchAsyncList<T> extends StatelessWidget {
+  const WorkbenchAsyncList({
+    super.key,
+    required this.future,
+    required this.emptyTitle,
+    required this.emptyActionLabel,
+    required this.onEmptyAction,
+    required this.itemBuilder,
+    this.emptyDescription = '',
+    this.separatorHeight = 12,
+    this.padding = const EdgeInsets.only(bottom: 8),
+  });
+
+  final Future<List<T>> future;
+  final String emptyTitle;
+  final String emptyDescription;
+  final String emptyActionLabel;
+  final VoidCallback onEmptyAction;
+  final Widget Function(BuildContext context, T item) itemBuilder;
+  final double separatorHeight;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<T>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: ProgressRing());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('加载失败：${snapshot.error}'));
+        }
+
+        final items = snapshot.data ?? <T>[];
+        if (items.isEmpty) {
+          return WorkbenchEmptyState(
+            title: emptyTitle,
+            description: emptyDescription,
+            actionLabel: emptyActionLabel,
+            onAction: onEmptyAction,
+          );
+        }
+
+        return ListView.separated(
+          padding: padding,
+          itemCount: items.length,
+          separatorBuilder: (_, __) => SizedBox(height: separatorHeight),
+          itemBuilder: (context, index) => itemBuilder(context, items[index]),
+        );
+      },
+    );
+  }
+}
