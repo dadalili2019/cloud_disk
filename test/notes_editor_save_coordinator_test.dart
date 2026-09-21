@@ -69,6 +69,37 @@ void main() {
       expect(coordinator.dirty, isFalse);
     });
 
+    test('a second explicit flush queues the latest edit', () async {
+      final coordinator = NotesEditorSaveCoordinator();
+      final firstSave = Completer<void>();
+      final revisions = <int>[];
+
+      coordinator.markEdited();
+      final firstFlush = coordinator.flush(
+        persist: (revision) async {
+          revisions.add(revision);
+          await firstSave.future;
+        },
+        repeatWhileDirty: false,
+      );
+
+      await Future<void>.delayed(Duration.zero);
+      coordinator.markEdited();
+
+      final secondFlush = coordinator.flush(
+        persist: (revision) async {
+          revisions.add(revision);
+        },
+        repeatWhileDirty: false,
+      );
+
+      firstSave.complete();
+      await Future.wait([firstFlush, secondFlush]);
+
+      expect(revisions, [1, 2]);
+      expect(coordinator.dirty, isFalse);
+    });
+
     test('failed persistence leaves the latest revision dirty', () async {
       final coordinator = NotesEditorSaveCoordinator();
       coordinator.markEdited();
