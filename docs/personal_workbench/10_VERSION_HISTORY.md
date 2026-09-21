@@ -170,3 +170,15 @@ Developer 页面拆分后继续修正 State 边界：
 - AppPaths 增加 createAt，用于临时目录测试，不依赖个人机器路径。
 - BackupService 依赖收窄为 WorkbenchSqlExecutor。
 - 新增真实 Backup ZIP 测试，覆盖 manifest、文件清单、portable settings 和敏感配置排除。
+
+
+## 2026-09-21 Restore Stage / Apply Hardening
+
+继续补灾难恢复链路：
+
+- Restore staging 增加 settings preflight。
+- staging 时把 portable settings 重新写成已过滤版本，不把 api_key / secret / token 留在 pending。
+- next-start apply 在覆盖数据库和目录前先解析 settings。
+- preflight 失败时当前数据库和业务目录保持不动，并清理无效 pending。
+- 新增 staging / next-start apply 自动化测试。
+- 覆盖 Safety Backup、pending marker、DB / WAL / SHM、Workspace / Knowledge / Attachment、portable settings 和失败清理。

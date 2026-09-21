@@ -69,6 +69,16 @@ class RestoreService {
         throw StateError('Restore staging 缺少 workbench.db。');
       }
 
+      final pendingSettings =
+          File(p.join(_pendingDirectory.path, 'settings', 'settings.json'));
+      if (await pendingSettings.exists()) {
+        final portableSettings = await _readPortablePreferences(pendingSettings);
+        await pendingSettings.writeAsString(
+          jsonEncode(portableSettings),
+          flush: true,
+        );
+      }
+
       await File(p.join(_pendingDirectory.path, 'restore_ready.json'))
           .writeAsString(
         jsonEncode({
@@ -102,6 +112,18 @@ class RestoreService {
       throw StateError('Pending Restore 无有效数据库快照。');
     }
 
+    final settingsFile =
+        File(p.join(pending.path, 'settings', 'settings.json'));
+    Map<String, Object?>? portableSettings;
+    if (await settingsFile.exists()) {
+      try {
+        portableSettings = await _readPortablePreferences(settingsFile);
+      } catch (_) {
+        await pending.delete(recursive: true);
+        rethrow;
+      }
+    }
+
     await paths.ensureBaseDirectories();
 
     for (final suffix in ['', '-wal', '-shm']) {
@@ -123,10 +145,8 @@ class RestoreService {
       paths.attachmentsDirectory,
     );
 
-    final settingsFile =
-        File(p.join(pending.path, 'settings', 'settings.json'));
-    if (await settingsFile.exists()) {
-      await _restorePreferences(settingsFile);
+    if (portableSettings != null) {
+      await _applyPortablePreferences(portableSettings);
     }
 
     await pending.delete(recursive: true);
@@ -161,12 +181,41 @@ Future<void> _copyDirectory(Directory source, Directory target) async {
   }
 }
 
-Future<void> _restorePreferences(File source) async {
+Future<Map<String, Object?>> _readPortablePreferences(File source) async {
   final decoded = jsonDecode(await source.readAsString());
   if (decoded is! Map) {
     throw StateError('Backup settings.json 格式无效。');
   }
 
+  final result = <String, Object?>{};
+  for (final entry in decoded.entries) {
+    final key = '${entry.key}';
+    if (!key.startsWith('workbench.') && !key.startsWith('theme.')) continue;
+
+    final lower = key.toLowerCase();
+    if (lower.contains('api_key') ||
+        lower.contains('apikey') ||
+        lower.contains('secret') ||
+        lower.contains('token')) {
+      continue;
+    }
+
+    final value = entry.value;
+    if (value is String ||
+        value is bool ||
+        value is int ||
+        value is double) {
+      result[key] = value;
+    } else if (value is List) {
+      result[key] = value.map((item) => '$item').toList(growable: false);
+    }
+  }
+  return result;
+}
+
+Future<void> _applyPortablePreferences(
+  Map<String, Object?> values,
+) async {
   final preferences = await SharedPreferences.getInstance();
   final removable = preferences
       .getKeys()
@@ -176,16 +225,8 @@ Future<void> _restorePreferences(File source) async {
     await preferences.remove(key);
   }
 
-  for (final entry in decoded.entries) {
-    final key = '${entry.key}';
-    if (!key.startsWith('workbench.') && !key.startsWith('theme.')) continue;
-    final lower = key.toLowerCase();
-    if (lower.contains('api_key') ||
-        lower.contains('apikey') ||
-        lower.contains('secret') ||
-        lower.contains('token')) {
-      continue;
-    }
+  for (final entry in values.entries) {
+    final key = entry.key;
     final value = entry.value;
     if (value is String) {
       await preferences.setString(key, value);
@@ -195,9 +236,8 @@ Future<void> _restorePreferences(File source) async {
       await preferences.setInt(key, value);
     } else if (value is double) {
       await preferences.setDouble(key, value);
-    } else if (value is List) {
-      final strings = value.map((item) => '$item').toList(growable: false);
-      await preferences.setStringList(key, strings);
+    } else if (value is List<String>) {
+      await preferences.setStringList(key, value);
     }
   }
 }
