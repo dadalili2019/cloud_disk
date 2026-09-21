@@ -374,3 +374,27 @@ workbench_notes_editor_page.dart
 - error state
 
 展示文件只接收状态和 callback，不直接访问 Runtime / Repository，也不维护保存生命周期。
+
+
+## Issue / Resource / Decision 公共列表外壳
+
+三个实体页面只统一重复的异步列表外壳：
+
+~~~text
+WorkbenchAsyncList<T>
+├─ loading
+├─ error
+├─ empty
+└─ separated list
+~~~
+
+每个页面仍自己维护：
+
+- Create / Edit
+- Service 调用
+- Entity Card 内容
+- Status / Type / Severity 文案
+- Task Link
+- Drawer / Dialog
+
+不做万能 CRUD 页面。
