@@ -199,10 +199,19 @@ Image Tools 第一轮公共基础测试已补：
 - 默认输出目录创建。
 - 自定义输出目录创建。
 
+Image Tools 第二轮公共逻辑测试已补：
+
+- Preview 大图等比缩放 / 小图保持尺寸。
+- Preview PNG 编码。
+- 空文字水印不改图。
+- 文字水印实际绘制。
+- Batch success / failure / progress。
+- Batch 中途停止。
+
 下一批：
 
 1. Widget smoke tests。
-2. Image Tools Preview / Watermark / Run-Retry 进一步去重。
+2. Image Tools 剩余 Failed Task / Preview Widget 是否值得继续整理。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 
