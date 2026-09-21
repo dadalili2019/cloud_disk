@@ -80,24 +80,20 @@ class _FilterToolPageState extends State<FilterToolPage> {
       setState(() => _previewBytes = null);
       return;
     }
+
     final path = _pickedFiles.first.path;
     if (path == null) return;
 
     setState(() => _previewLoading = true);
     try {
-      final bytes = await File(path).readAsBytes();
-      final decoded = img.decodeImage(bytes);
+      final decoded = await readImageFile(path);
       if (decoded == null) return;
-      var out = _apply(decoded);
-      const maxEdge = 560;
-      final maxSide = out.width > out.height ? out.width : out.height;
-      if (maxSide > maxEdge) {
-        final ratio = maxEdge / maxSide;
-        out = img.copyResize(out, width: (out.width * ratio).round(), height: (out.height * ratio).round());
-      }
-      final png = Uint8List.fromList(img.encodePng(out, level: 4));
+
+      final target = resizeImageForPreview(_apply(decoded));
+      final preview = encodeImagePreviewPng(target);
+
       if (!mounted) return;
-      setState(() => _previewBytes = png);
+      setState(() => _previewBytes = preview);
     } finally {
       if (mounted) {
         setState(() => _previewLoading = false);
