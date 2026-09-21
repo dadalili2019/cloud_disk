@@ -87,6 +87,30 @@ build/windows/x64/runner/Release/personal_workbench.exe
 
 Windows 可执行文件已经收口为 `personal_workbench.exe`；Dart package 名称暂时保留 `cloud_disk`，避免无业务价值的大范围 import 重命名。
 
+## Stable V1 Candidate
+
+当前项目已经进入 Desktop Stable V1 Candidate 阶段。
+
+本地统一验收入口：
+
+~~~powershell
+./tool/verify_stable_v1.ps1
+~~~
+
+需要追加大规模 Search / Backup / Restore 验证：
+
+~~~powershell
+./tool/verify_stable_v1.ps1 -IncludeScale
+~~~
+
+配置真实 AI 环境后：
+
+~~~powershell
+./tool/verify_stable_v1.ps1 -IncludeAi
+~~~
+
+正式标记 Stable V1 前仍需要完成真实 AI、已有数据 Upgrade、正式 Windows Runtime Search / FTS5 和人工业务 Smoke。
+
 ## 文档
 
 统一从这里进入：
