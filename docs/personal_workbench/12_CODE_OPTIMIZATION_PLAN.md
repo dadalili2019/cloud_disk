@@ -276,7 +276,8 @@ AI 功能后面不要只验证“正常返回”。
 - Image Tools 第一轮公共基础层抽取已完成并合并。
 - Image Tools 第二轮 Preview / Watermark / Batch 公共纯逻辑整理已完成并合并。
 - Navigation Shell 第一轮拆分已完成并合并。
-- Notes Editor 已进入保存一致性加固阶段，先处理 Save State / Auto Save，再拆展示职责。
+- Notes Editor 保存一致性加固已完成并合并。
+- Notes Editor 展示职责拆分进行中。
 
 现在按这个顺序继续：
 
@@ -287,7 +288,7 @@ AI 功能后面不要只验证“正常返回”。
 4. GitHub Actions CI（第一轮已完成）
 5. AI Provider / Conversation 异常测试（第一轮已完成）
 6. Image Tools 重复逻辑整理（第一、二轮已完成）
-7. Navigation / Notes Editor（Navigation 第一轮已完成；Notes Editor Save State 进行中）
+7. Navigation / Notes Editor（Navigation 已完成；Notes Editor Save State 已完成，UI 拆分进行中）
 8. 剩余依赖 / Asset / Release 收口
 ~~~
 

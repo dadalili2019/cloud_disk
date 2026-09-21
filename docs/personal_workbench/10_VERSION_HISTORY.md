@@ -373,3 +373,14 @@ Developer 页面拆分后继续修正 State 边界：
 - 保存进行中切换 / 新建会先等待当前显式保存结束。
 - 页面关闭时仍会把最后一版 Auto Save 内容排在正在执行的写入之后。
 - 新增 Save Coordinator 单元测试。
+
+
+## 2026-09-21 Notes Editor UI Split
+
+Notes Editor 在保存一致性稳定后继续做展示职责拆分：
+
+- `workbench_notes_editor_page.dart` 保留加载、选择、新建、保存时序、未保存确认和快捷键。
+- 新增 `workbench_notes_editor_widgets.dart`。
+- Notes List、Editor Panel、Header、Editor / Preview / Split、Save State 下沉为同 library private Widget。
+- 展示 Widget 只接收状态与 callback，不访问 WorkbenchRuntime。
+- 不改变 Auto Save / Manual Save 行为。
