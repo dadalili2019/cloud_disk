@@ -392,3 +392,15 @@ Notes Editor 在保存一致性稳定后继续做展示职责拆分：
 - 新增 `workbench_runtime_composition.dart`。
 - 保持 Future singleton、Pending Restore、Search rebuild、Auto Backup 行为不变。
 - 不引入 DI framework。
+
+
+## 2026-09-21 Notes Editor Presentation Split
+
+完成 Navigation / Notes Editor 阶段的展示职责整理：
+
+- `workbench_notes_editor_page.dart` 只保留加载、选择、保存、创建、快捷键和 Runtime 编排。
+- 新增 `workbench_notes_editor_widgets.dart`。
+- Notes List、Editor Panel、Header、Editor、Preview、Save State 下沉为纯展示 Widget。
+- 使用 Dart `part / part of` 保持 private 边界。
+- Save Coordinator、Auto Save 时序和 Runtime 访问继续留在入口 State / application 层。
+- 不新增 Controller / Manager，不改变笔记业务行为。
