@@ -137,10 +137,18 @@ Image Tools 第一轮公共基础层已完成并合并。
 - 页面 setState / UI State 继续留在各页面，不做万能框架。
 - 补 Preview / Watermark / Batch 单元测试。
 
+Image Tools 第二轮已完成并合并，剩余 Failed Task / Preview Widget 暂不继续抽象。
+
+当前继续：
+
+- Navigation Shell 按 State / Topbar / Sidebar / Content Frame 拆分。
+- 保留同一 Dart library 的 private 边界，不改变路由与交互。
+- Notes Editor 下一步再按状态与展示职责评估拆分。
+
 下一批：
 
+- Notes Editor
 - Widget smoke
-- Image Tools 剩余 Failed Task / Preview Widget 评估
 
 ### 异常
 
