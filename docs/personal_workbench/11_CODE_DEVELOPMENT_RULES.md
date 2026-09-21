@@ -155,16 +155,16 @@ await load();
 - 700 行以上：默认检查是否应该拆。
 - 1000 行以上：没有明确理由就不要继续往里加。
 
-当前优先关注：
+当前已经不再把“大文件拆分”作为主线。
 
-- `global_ai_drawer.dart`
-- `workbench_home_page.dart`
-- `workbench_knowledge_page.dart`
-- `workbench_developer_page.dart`
-- Workspace Overview 页面
-- `ai_context_builder.dart`
+目前只重点观察：
 
-拆的时候按职责拆，不按“每 300 行切一个文件”。
+- `global_ai_drawer.dart` 的 Conversation / State 边界。
+- `navigation_page.dart` 的 Shell / Topbar / Sidebar 职责。
+- `workbench_notes_editor_page.dart` 的 List / Editor / Save State。
+- Image Convert / Watermark / Crop 的重复逻辑。
+
+拆的时候按职责拆，不按“每 300 行切一个文件”。如果文件虽然长，但职责仍然清楚，也可以先不动。
 
 ## 7. UI 代码
 
@@ -404,7 +404,79 @@ flutter build windows
 
 如果当前环境不能执行，要明确写“未执行”，不能默认说已经通过。
 
-## 17. 文档怎么跟代码走
+## 17. 优化和重构怎么执行
+
+以后优化默认按下面顺序：
+
+~~~text
+先确认问题
+→ 看调用链
+→ 看有没有现有测试
+→ 业务规则先补测试
+→ 再改实现
+→ Analyze / Test / Build
+→ 人工回归
+→ 更新文档
+~~~
+
+一轮只解决一个主题。
+
+例如这轮是 Search rebuild，就不要顺手改 Home UI；这轮是 Task 规则测试，就不要顺手改数据库 Schema。
+
+### 业务规则先变成测试
+
+下面这些规则不能只写在脑子里或注释里：
+
+- 一个 Workspace 只能有一个 Current Task。
+- Done Task 不再是 Current。
+- Backup 不包含敏感设置。
+- Restore 不能路径穿越。
+- AI Context 有预算上限。
+
+能自动化的，先变成测试，再继续重构。
+
+### Schema 变更
+
+以后只要改数据库 Schema：
+
+- 增加 Schema Version。
+- 写 Migration。
+- 写 Fresh DB Test。
+- 写 Old Schema Migration Test。
+- 验证已有数据不丢。
+- 同步 Data & Storage 文档。
+
+不要只在最新建库脚本里加字段。
+
+### 性能优化
+
+性能优化必须说明优化的对象。
+
+例如：
+
+~~~text
+问题：完整 Search rebuild 每条记录 delete + insert
+保护：先补 Search Repository 测试
+修改：batch + transaction
+验证：行为不变，再看真实耗时
+~~~
+
+不要直接写“性能优化”四个字，然后改一堆代码。
+
+### AI / Codex 每轮任务边界
+
+让 AI 改代码时，提示词或任务里要明确：
+
+- 本轮目标。
+- 不允许改变什么。
+- 需要看的文档。
+- 需要补什么测试。
+- 需要执行什么验证。
+- 改完要列出文件。
+
+AI 不要自行扩大范围。
+
+## 18. 文档怎么跟代码走
 
 ~~~text
 功能行为       → 02_FUNCTIONAL_SPEC.md
@@ -416,11 +488,12 @@ AI / Search    → 06_AI_SEARCH_KNOWLEDGE.md
 测试 / 验收    → 08_TESTING_ACCEPTANCE.md
 进度 / Roadmap → 09_STATUS_ROADMAP.md
 编码原则       → 11_CODE_DEVELOPMENT_RULES.md
+优化计划       → 12_CODE_OPTIMIZATION_PLAN.md
 ~~~
 
 不是每次都新增文档。优先更新现有主题文档。
 
-## 18. 提交前自己检查
+## 19. 提交前自己检查
 
 - 有没有明显重复？
 - 有没有不用的 import / class / package？
@@ -435,7 +508,7 @@ AI / Search    → 06_AI_SEARCH_KNOWLEDGE.md
 - 该补的测试补了吗？
 - 文档要不要同步？
 
-## 19. 最终希望代码是什么样
+## 20. 最终希望代码是什么样
 
 不是代码行数最少，也不是架构层数最多。
 

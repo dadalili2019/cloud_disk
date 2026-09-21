@@ -123,12 +123,18 @@ flutter build windows
 - Restore next-start apply：DB / WAL / SHM、Workspace / Knowledge / Attachment、portable settings、pending cleanup。
 - Restore preflight：损坏 settings / missing DB 不覆盖当前数据。
 
+当前开始进入业务规则测试：
+
+- Task create / update / done / current / activity。
+- Workspace create / slug unique / directory / activity。
+- Workspace rename / archive / restore / activity。
+
 下一批：
 
-1. Repository / Service unit tests。
-2. Task current constraint。
-3. Knowledge source links。
-4. Settings persistence。
+1. Task Repository Current 唯一约束。
+2. Knowledge source links。
+3. Settings persistence。
+4. Database Schema / Migration。
 5. Widget smoke tests。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。

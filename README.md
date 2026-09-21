@@ -90,6 +90,10 @@ build/windows/x64/runner/Release/cloud_disk.exe
 
 [11_CODE_DEVELOPMENT_RULES.md](docs/personal_workbench/11_CODE_DEVELOPMENT_RULES.md)
 
+后续优化顺序统一看：
+
+[12_CODE_OPTIMIZATION_PLAN.md](docs/personal_workbench/12_CODE_OPTIMIZATION_PLAN.md)
+
 ## 数据原则
 
 ~~~text
@@ -137,5 +141,6 @@ Developer 模块现在还是 Context-aware Developer Assistant，负责保存和
 - 当前进度：`09_STATUS_ROADMAP.md`
 - 历史：`10_VERSION_HISTORY.md`
 - 编码原则：`11_CODE_DEVELOPMENT_RULES.md`
+- 优化计划：`12_CODE_OPTIMIZATION_PLAN.md`
 
 历史 Phase 只放版本历史，不再拿来命名当前代码。

@@ -182,3 +182,13 @@ Developer 页面拆分后继续修正 State 边界：
 - preflight 失败时当前数据库和业务目录保持不动，并清理无效 pending。
 - 新增 staging / next-start apply 自动化测试。
 - 覆盖 Safety Backup、pending marker、DB / WAL / SHM、Workspace / Knowledge / Attachment、portable settings 和失败清理。
+
+
+## 2026-09-21 Optimization Plan / Business Rule Tests
+
+开始把后续优化方式固定下来：
+
+- 新增 `12_CODE_OPTIMIZATION_PLAN.md`，后续代码优化按固定顺序推进。
+- 编码规范补充“业务规则先测试、Schema 变更必须 Migration Test、性能优化先锁行为”。
+- Roadmap 不再以继续拆大文件为主线。
+- 开始补 Task / Workspace 业务规则测试。
