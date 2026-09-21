@@ -348,3 +348,29 @@ workbench_developer_page.dart
 后续继续按职责拆，不按行数机械切文件，也不借重构顺手改变业务行为。
 
 具体规则统一看 [11_CODE_DEVELOPMENT_RULES.md](11_CODE_DEVELOPMENT_RULES.md)。
+
+
+## 12. Notes Editor 怎么拆
+
+Notes Editor 现在保持“状态编排在入口文件、展示组件在 part 文件”的边界：
+
+~~~text
+workbench_notes_editor_page.dart
+└─ workbench_notes_editor_widgets.dart
+   ├─ Notes List Panel
+   ├─ Editor Panel / Header
+   ├─ Editor / Preview / Split
+   ├─ Note List Item
+   └─ Save State
+~~~
+
+入口文件继续负责：
+
+- load / select / create note
+- Auto Save / Manual Save 时序
+- unsaved changes 确认
+- Save Coordinator
+- Ctrl+S
+- error state
+
+展示文件只接收状态和 callback，不直接访问 Runtime / Repository，也不维护保存生命周期。
