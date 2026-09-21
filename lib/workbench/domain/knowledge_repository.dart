@@ -6,4 +6,5 @@ abstract interface class KnowledgeRepository {
   Future<List<KnowledgeModel>> getByIds(List<String> ids);
   Future<void> insert(KnowledgeModel knowledge);
   Future<void> update(KnowledgeModel knowledge);
+  Future<void> delete(String id);
 }

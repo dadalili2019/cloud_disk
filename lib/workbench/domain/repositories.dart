@@ -65,6 +65,14 @@ abstract interface class EntityLinkRepository {
     required String relationType,
     required String toType,
   });
+
+  Future<void> unlink({
+    required String fromType,
+    required String fromId,
+    required String relationType,
+    required String toType,
+    required String toId,
+  });
 }
 
 abstract interface class ActivityRepository {
