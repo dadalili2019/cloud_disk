@@ -159,23 +159,24 @@ class _CropToolPageState extends State<CropToolPage> {
       _outputDirPath = outputDir.path;
     });
 
-    var success = 0;
-    for (var i = 0; i < _pickedFiles.length; i++) {
-      final item = _pickedFiles[i];
-      final ok = await _processOne(item, outputDir);
-      if (ok) success++;
-
-      if (!mounted) return;
-      setState(() {
-        _progress = (i + 1) / _pickedFiles.length;
-        _status = '处理中 ${i + 1}/${_pickedFiles.length} · ${item.name}';
-      });
-    }
+    final result = await runImageBatch<PlatformFile>(
+      items: List<PlatformFile>.from(_pickedFiles),
+      process: (item) => _processOne(item, outputDir),
+      shouldContinue: () => mounted,
+      onProgress: (progress) {
+        setState(() {
+          _progress = progress.fraction;
+          _status =
+              '处理中 ${progress.index}/${progress.total} · ${progress.item.name}';
+        });
+      },
+    );
 
     if (!mounted) return;
     setState(() {
       _running = false;
-      _status = '处理完成：成功 $success/${_pickedFiles.length}';
+      _status =
+          '处理完成：成功 ${result.successCount}/${result.processedCount}';
     });
   }
 
