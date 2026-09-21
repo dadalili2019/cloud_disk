@@ -153,3 +153,25 @@ CI 失败时先修失败项，不要绕过 Gate 直接合并。
 大范围清理不要直接在 main 上做。
 
 代码和文档一起改，详细编码要求看 [11_CODE_DEVELOPMENT_RULES.md](11_CODE_DEVELOPMENT_RULES.md)。
+
+
+## Windows Release Startup Smoke
+
+Windows Release 构建后使用：
+
+~~~powershell
+./tool/verify_windows_release.ps1
+~~~
+
+默认检查：
+
+1. `build/windows/x64/runner/Release/personal_workbench.exe` 存在。
+2. `data/flutter_assets` 存在。
+3. 启动 `personal_workbench.exe`。
+4. 等待 8 秒。
+5. 如果进程提前退出，则 Smoke 失败。
+6. 如果进程仍在运行，则判定启动 Smoke 通过，并终止测试进程。
+
+GitHub Actions 在 main push / workflow_dispatch 的 Windows Release Build 中，会在上传 Artifact 前自动执行这一步。
+
+该 Smoke 只验证 Release 包能完成基础启动，不替代人工验证 Login、Shell、AI、Backup / Restore 等业务流程。
