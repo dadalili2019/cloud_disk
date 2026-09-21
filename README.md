@@ -72,6 +72,13 @@ flutter test
 flutter build windows
 ~~~
 
+GitHub 现在也会自动执行 CI：
+
+~~~text
+Pull Request → flutter pub get → flutter analyze → flutter test
+main push / 手工触发 → 上面质量检查通过后再 build Windows Release
+~~~
+
 Windows Release 输出仍然是：
 
 ~~~text

@@ -293,3 +293,16 @@ Developer 页面拆分后继续修正 State 边界：
 - Fresh / Migration 测试仍然真实验证其余表、索引、事务、数据保留和唯一约束。
 - FTS5 仍保留在正式 Schema 中，正式 WorkbenchDatabase.open 不变。
 - FTS 行为留给支持 FTS5 的 Runtime / 后续 Windows integration test 验证。
+
+
+## 2026-09-21 GitHub Actions CI Baseline
+
+开始把本地质量检查变成仓库自动 Gate：
+
+- 新增 Windows-first GitHub Actions。
+- Pull Request 自动执行 flutter pub get / flutter analyze / flutter test。
+- main push 和 workflow_dispatch 在质量检查通过后执行 flutter build windows --release。
+- Windows Release 作为 Artifact 保留 14 天。
+- CI 使用 Flutter 3.47.4 stable，与当前本地验证基线一致。
+- 增加 concurrency，同一分支的新 CI 会取消旧运行。
+- 实施文档删除个人 Flutter SDK 绝对路径，改为通用 flutter 命令。

@@ -7,10 +7,16 @@ Flutter 3.47.4 stable
 Windows Desktop
 ~~~
 
-本机 SDK 示例：
+确认 Flutter 环境：
 
 ~~~powershell
-D:\person\config\flutter_win\flutter_3_47\flutter_windows_3.47.4-stable\flutter\bin\flutter.bat
+flutter --version
+~~~
+
+当前 CI 和本地验证基线统一使用：
+
+~~~text
+Flutter 3.47.4 stable
 ~~~
 
 ## 2. 初始化和运行
@@ -116,14 +122,33 @@ Debug 偶尔出现 accessibility AXTree 日志，如果 UI 正常，不先当业
 
 ~~~text
 main
-→ feature/* 或 refactor/*
+→ feature/* / refactor/* / fix/* / test/*
 → 本地 Run
 → flutter analyze
 → flutter test
 → flutter build windows
 → PR
+→ GitHub Actions
 → merge
 ~~~
+
+Pull Request 自动 Gate：
+
+~~~text
+flutter pub get
+→ flutter analyze
+→ flutter test
+~~~
+
+main push / workflow_dispatch：
+
+~~~text
+质量检查
+→ flutter build windows --release
+→ 上传 Windows Release Artifact
+~~~
+
+CI 失败时先修失败项，不要绕过 Gate 直接合并。
 
 大范围清理不要直接在 main 上做。
 
