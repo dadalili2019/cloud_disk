@@ -139,19 +139,7 @@ class _CollageToolPageState extends State<CollageToolPage> {
     );
   }
 
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: FluentTheme.of(context).resources.cardBackgroundFillColorDefault,
-        ),
-        child: child,
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
