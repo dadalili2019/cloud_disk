@@ -125,87 +125,72 @@ class _WorkbenchDecisionPageState extends State<WorkbenchDecisionPage> {
     return WorkbenchSectionPage(
       title: '决策',
       actions: [
-        FilledButton(onPressed: _createDecision, child: const Text('新建决策')),
+        FilledButton(
+          onPressed: _createDecision,
+          child: const Text('新建决策'),
+        ),
       ],
-      child: FutureBuilder<List<DecisionModel>>(
+      child: WorkbenchAsyncList<DecisionModel>(
         future: _decisions,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: ProgressRing());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('加载失败：${snapshot.error}'));
-          }
-          final decisions = snapshot.data ?? const <DecisionModel>[];
-          if (decisions.isEmpty) {
-            return WorkbenchEmptyState(
-              title: '还没有决策记录',
-              description: '',
-              actionLabel: '新建决策',
-              onAction: _createDecision,
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.only(bottom: 8),
-            itemCount: decisions.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final decision = decisions[index];
-              return FutureBuilder<List<TaskModel>>(
-                future: WorkbenchRuntime.instance.then(
-                  (r) => r.decisionService.linkedTasks(decision),
-                ),
-                builder: (context, taskSnapshot) {
-                  final linked = taskSnapshot.data ?? const <TaskModel>[];
-                  final taskText = linked.map((e) => e.title).join('、');
-                  return WorkbenchCard(
-                    onTap: () => _edit(decision),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+        emptyTitle: '还没有决策记录',
+        emptyActionLabel: '新建决策',
+        onEmptyAction: _createDecision,
+        itemBuilder: (context, decision) {
+          return FutureBuilder<List<TaskModel>>(
+            future: WorkbenchRuntime.instance.then(
+              (runtime) => runtime.decisionService.linkedTasks(decision),
+            ),
+            builder: (context, taskSnapshot) {
+              final linked = taskSnapshot.data ?? const <TaskModel>[];
+              final taskText = linked.map((task) => task.title).join('、');
+
+              return WorkbenchCard(
+                onTap: () => _edit(decision),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                decision.title,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                        Expanded(
+                          child: Text(
+                            decision.title,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                             ),
-                            WorkbenchTag(label: _statusText(decision.status)),
-                          ],
+                          ),
                         ),
-                        if (taskText.isNotEmpty) ...[
-                          const SizedBox(height: 7),
-                          Text(
-                            taskText,
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              color: theme.typography.body?.color?.withValues(alpha: 0.52),
-                            ),
-                          ),
-                        ],
-                        if (decision.decisionText.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            '决定 · ${decision.decisionText}',
-                            style: const TextStyle(fontSize: 11.5),
-                          ),
-                        ],
-                        if (decision.rationale.isNotEmpty) ...[
-                          const SizedBox(height: 5),
-                          Text(
-                            '原因 · ${decision.rationale}',
-                            style: const TextStyle(fontSize: 11.5),
-                          ),
-                        ],
+                        WorkbenchTag(label: _statusText(decision.status)),
                       ],
                     ),
-                  );
-                },
+                    if (taskText.isNotEmpty) ...[
+                      const SizedBox(height: 7),
+                      Text(
+                        taskText,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: theme.typography.body?.color
+                              ?.withValues(alpha: 0.52),
+                        ),
+                      ),
+                    ],
+                    if (decision.decisionText.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        '决定 · ${decision.decisionText}',
+                        style: const TextStyle(fontSize: 11.5),
+                      ),
+                    ],
+                    if (decision.rationale.isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        '原因 · ${decision.rationale}',
+                        style: const TextStyle(fontSize: 11.5),
+                      ),
+                    ],
+                  ],
+                ),
               );
             },
           );
