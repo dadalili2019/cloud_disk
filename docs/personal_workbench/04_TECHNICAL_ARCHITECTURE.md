@@ -388,3 +388,18 @@ workbench_runtime.dart
 主文件保留 Runtime 对外字段、singleton 和启动入口；composition 文件只负责创建 Path / Database / Repository / Service 并返回 Runtime。
 
 没有引入 DI 框架，也没有改变 Service / Repository 依赖关系。
+
+
+## Issue / Resource / Decision 公共列表外壳
+
+三个实体页面只统一重复的异步列表外壳：
+
+~~~text
+WorkbenchAsyncList<T>
+├─ loading
+├─ error
+├─ empty
+└─ separated list
+~~~
+
+每个页面仍自己维护 Create / Edit、Service 调用、Entity Card 内容、状态/类型文案、Task Link 和 Drawer / Dialog，不做万能 CRUD 页面。
