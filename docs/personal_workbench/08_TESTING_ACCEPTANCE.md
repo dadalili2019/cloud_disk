@@ -182,10 +182,20 @@ main push / 手工触发
 
 GitHub Actions CI 已建立第一轮 Windows Gate。
 
+本轮继续补：
+
+- OpenAI-compatible Provider endpoint / header / prompt。
+- Timeout / network / HTTP 4xx/5xx。
+- 非法 JSON / Empty Response / Long Response。
+- Multimodal-style content array。
+- Retry History 不重复带入最后一条已持久化 User Message。
+- AI Conversation anchor / archived / title / context snapshot。
+- SQLite Thread / Message 持久化和关闭重开恢复。
+
 下一批：
 
-1. AI Provider / Conversation 异常测试。
-2. Widget smoke tests。
+1. Widget smoke tests。
+2. Image Tools 重复逻辑整理。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 

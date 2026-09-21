@@ -306,3 +306,15 @@ Developer 页面拆分后继续修正 State 边界：
 - CI 使用 Flutter 3.47.4 stable，与当前本地验证基线一致。
 - 增加 concurrency，同一分支的新 CI 会取消旧运行。
 - 实施文档删除个人 Flutter SDK 绝对路径，改为通用 flutter 命令。
+
+
+## 2026-09-21 AI Provider / Conversation Hardening
+
+开始加固 AI 失败链路：
+
+- OpenAICompatibleAIProvider 增加配置、请求组装、Timeout、Network、HTTP、Invalid JSON、Empty Response、Content Array、Long Response 测试。
+- Retry Prompt History 从 Global AI Drawer 私有方法移到 application/ai_conversation_history.dart。
+- Retry 时排除最后一条已经持久化的 User Message，避免重复带入 Prompt。
+- AIConversationService 增加 Anchor 校验、Archived 边界、首条消息自动标题、Context Reference Snapshot 测试。
+- SQLite AI Thread / Message 增加关闭数据库后重新打开的持久化恢复测试。
+- 当前不做 Global AI Drawer 大规模 State 重构，先用测试锁行为。
