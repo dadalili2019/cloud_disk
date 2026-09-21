@@ -118,23 +118,24 @@ class _WatermarkToolPageState extends State<WatermarkToolPage> {
       _outputDirPath = outputDir.path;
     });
 
-    var success = 0;
-    for (var i = 0; i < _pickedFiles.length; i++) {
-      final file = _pickedFiles[i];
-      final ok = await _processSingle(file, outputDir);
-      if (ok) success++;
-
-      if (!mounted) return;
-      setState(() {
-        _progress = (i + 1) / _pickedFiles.length;
-        _status = '处理中 ${i + 1}/${_pickedFiles.length} · ${file.name}';
-      });
-    }
+    final result = await runImageBatch<PlatformFile>(
+      items: List<PlatformFile>.from(_pickedFiles),
+      process: (file) => _processSingle(file, outputDir),
+      shouldContinue: () => mounted,
+      onProgress: (progress) {
+        setState(() {
+          _progress = progress.fraction;
+          _status =
+              '处理中 ${progress.index}/${progress.total} · ${progress.item.name}';
+        });
+      },
+    );
 
     if (!mounted) return;
     setState(() {
       _running = false;
-      _status = '处理完成：成功 $success/${_pickedFiles.length}，失败 ${_failedTasks.length}';
+      _status =
+          '处理完成：成功 ${result.successCount}/${result.processedCount}，失败 ${_failedTasks.length}';
     });
   }
 
@@ -142,7 +143,7 @@ class _WatermarkToolPageState extends State<WatermarkToolPage> {
     if (_failedTasks.isEmpty || _running) return;
 
     final outputDir = await _resolveOutputDir();
-    final retry = List<_FailedTask>.from(_failedTasks);
+    final retryItems = List<_FailedTask>.from(_failedTasks);
 
     setState(() {
       _running = true;
@@ -150,23 +151,24 @@ class _WatermarkToolPageState extends State<WatermarkToolPage> {
       _failedTasks.clear();
     });
 
-    var success = 0;
-    for (var i = 0; i < retry.length; i++) {
-      final item = retry[i];
-      final ok = await _processPath(item.path, item.name, outputDir);
-      if (ok) success++;
-
-      if (!mounted) return;
-      setState(() {
-        _progress = (i + 1) / retry.length;
-        _status = '重试 ${i + 1}/${retry.length} · ${item.name}';
-      });
-    }
+    final result = await runImageBatch<_FailedTask>(
+      items: retryItems,
+      process: (item) => _processPath(item.path, item.name, outputDir),
+      shouldContinue: () => mounted,
+      onProgress: (progress) {
+        setState(() {
+          _progress = progress.fraction;
+          _status =
+              '重试 ${progress.index}/${progress.total} · ${progress.item.name}';
+        });
+      },
+    );
 
     if (!mounted) return;
     setState(() {
       _running = false;
-      _status = '重试完成：成功 $success/${retry.length}，仍失败 ${_failedTasks.length}';
+      _status =
+          '重试完成：成功 ${result.successCount}/${result.processedCount}，仍失败 ${_failedTasks.length}';
     });
   }
 
