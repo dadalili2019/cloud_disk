@@ -226,7 +226,48 @@ Apply 前会先做 preflight：
 - preflight 失败时不覆盖当前数据库和业务目录，并清理无效 pending；
 - 真正 Apply 全部完成以后才删除 pending 标记。
 
-## 13. 数据一致性原则
+## 13. Schema / Migration 测试
+
+数据库当前 Schema Version：
+
+~~~text
+v6
+~~~
+
+自动化测试现在覆盖：
+
+~~~text
+Fresh DB → v6
+
+v1 → v6
+v2 → v6
+v3 → v6
+v4 → v6
+v5 → v6
+~~~
+
+Migration 不只检查版本号，还检查：
+
+- 旧 Workspace / Task 数据保留。
+- 对应旧版本已经存在的 Issue / Focus / Knowledge / AI Thread 数据保留。
+- 当前最新表全部存在。
+- Current Task 唯一索引仍然生效。
+- Developer Primary 唯一索引仍然生效。
+- FTS search_index 可以正常写入和查询。
+
+测试使用文件型同进程 SQLite：先创建旧版本文件，关闭后再按最新 Schema 重新打开，让真实 Migration 路径执行。
+
+正式应用继续使用 background database + WAL，测试入口不会替换正式运行方式。
+
+以后只要 Schema Version 增加：
+
+1. 新增对应 Schema 版本。
+2. 补旧版本到最新版本的 Migration Test。
+3. 补数据保留断言。
+4. 补新增表 / 索引 / 约束断言。
+5. 再允许合并。
+
+## 14. 数据一致性原则
 
 - Markdown 写入使用 atomic strategy。
 - SQLite 使用 WAL。

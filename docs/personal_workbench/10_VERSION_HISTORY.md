@@ -254,3 +254,19 @@ Developer 页面拆分后继续修正 State 边界：
 - in-memory 测试关闭 WAL，正式数据库仍保持 WAL。
 - Schema 创建和 Migration 统一通过 _schemaForVersion 映射，给下一阶段 Migration Test 做准备。
 - 避免 Task Repository 测试被 Knowledge FTS、AI、Developer 等无关后续 Schema 影响。
+
+
+## 2026-09-21 Database Schema / Migration Test Baseline
+
+开始建立长期数据库升级保护：
+
+- WorkbenchDatabase 增加 openFileForTesting，只用于文件型 Migration Test。
+- Fresh Database 自动验证当前 Schema v6。
+- 自动覆盖 v1 / v2 / v3 / v4 / v5 → v6。
+- 旧版本数据库先写入真实历史数据，再关闭并按最新版本重新打开。
+- Migration 后验证 Workspace / Task，以及对应版本已有的 Issue / Focus / Knowledge / AI Thread 数据不丢。
+- 验证 Current Task unique index。
+- 验证 Developer Primary unique index。
+- 验证 search_index FTS 可写可查。
+- 验证 user_version 最终为当前 Schema Version。
+- 正式 WorkbenchDatabase.open 仍然保持 background database + WAL，不改变运行逻辑。

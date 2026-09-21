@@ -48,13 +48,7 @@ class WorkbenchDatabase implements WorkbenchSqlExecutor {
   static Future<WorkbenchDatabase> openInMemoryForTesting({
     int targetSchemaVersion = schemaVersion,
   }) {
-    if (targetSchemaVersion < 1 || targetSchemaVersion > schemaVersion) {
-      throw ArgumentError.value(
-        targetSchemaVersion,
-        'targetSchemaVersion',
-        'must be between 1 and $schemaVersion',
-      );
-    }
+    _validateTargetSchemaVersion(targetSchemaVersion);
     return _open(
       NativeDatabase.memory(),
       _WorkbenchExecutorUser(
@@ -62,6 +56,30 @@ class WorkbenchDatabase implements WorkbenchSqlExecutor {
         enableWal: false,
       ),
     );
+  }
+
+  static Future<WorkbenchDatabase> openFileForTesting(
+    String databasePath, {
+    int targetSchemaVersion = schemaVersion,
+  }) {
+    _validateTargetSchemaVersion(targetSchemaVersion);
+    return _open(
+      NativeDatabase(File(databasePath)),
+      _WorkbenchExecutorUser(
+        targetSchemaVersion: targetSchemaVersion,
+        enableWal: false,
+      ),
+    );
+  }
+
+  static void _validateTargetSchemaVersion(int targetSchemaVersion) {
+    if (targetSchemaVersion < 1 || targetSchemaVersion > schemaVersion) {
+      throw ArgumentError.value(
+        targetSchemaVersion,
+        'targetSchemaVersion',
+        'must be between 1 and $schemaVersion',
+      );
+    }
   }
 
   static Future<WorkbenchDatabase> _open(
