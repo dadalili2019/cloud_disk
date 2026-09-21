@@ -120,10 +120,10 @@ class WorkbenchRuntime {
 
   static Future<WorkbenchRuntime>? _instance;
 
-  static Future<WorkbenchRuntime  static Future<WorkbenchRuntime> _create() => _createWorkbenchRuntime();
-utoBackup(runtime));
-    return runtime;
-  }
+  static Future<WorkbenchRuntime> get instance => _instance ??= _create();
+
+  static Future<WorkbenchRuntime> _create() => _createWorkbenchRuntime();
+
 }
 
 Future<void> _runAutoBackup(WorkbenchRuntime runtime) async {
