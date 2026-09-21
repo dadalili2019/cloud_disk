@@ -81,7 +81,7 @@ WHERE search_index MATCH ?
       test('migrates v$startVersion to current schema without losing data',
           () async {
         final tempDirectory = await Directory.systemTemp.createTemp(
-          'personal_workbench_migration_v$startVersion_',
+          'personal_workbench_migration_v${startVersion}_',
         );
         final databasePath = p.join(tempDirectory.path, 'workbench.db');
 
