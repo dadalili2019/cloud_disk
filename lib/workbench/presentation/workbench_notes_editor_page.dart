@@ -380,7 +380,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
       ),
     );
   }
-
+}
 
 enum _UnsavedChangesDecision { save, discard, cancel }
 
