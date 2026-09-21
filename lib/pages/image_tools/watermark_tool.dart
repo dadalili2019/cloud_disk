@@ -307,19 +307,7 @@ class _WatermarkToolPageState extends State<WatermarkToolPage> {
     );
   }
 
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: FluentTheme.of(context).resources.cardBackgroundFillColorDefault,
-        ),
-        child: child,
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
