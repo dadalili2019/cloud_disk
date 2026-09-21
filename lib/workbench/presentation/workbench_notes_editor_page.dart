@@ -134,6 +134,8 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
         if (decision == _UnsavedChangesDecision.save) {
           await _flushPendingSave();
           if (_dirty) return;
+        } else {
+          _saveCoordinator.reset();
         }
       }
     }
@@ -277,6 +279,7 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
       );
 
       if (result != true || !mounted) return;
+      var discardCurrentChanges = false;
       if (_dirty) {
         if (_notesSettings.autoSave) {
           await _flushPendingSave();
@@ -287,6 +290,8 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
           if (decision == _UnsavedChangesDecision.save) {
             await _flushPendingSave();
             if (_dirty) return;
+          } else {
+            discardCurrentChanges = true;
           }
         }
       }
@@ -300,6 +305,9 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
         initialContent: '# $title\n\n',
       );
       if (!mounted) return;
+      if (discardCurrentChanges) {
+        _saveCoordinator.reset();
+      }
       await _loadNotes(selectId: note.id);
     } catch (error) {
       if (!mounted) return;
