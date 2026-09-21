@@ -183,19 +183,25 @@ Backup / Restore 重点：完整灾难恢复、Manifest compatibility、Corrupte
 
 ## 6. CI
 
-GitHub Actions 最低：
+GitHub Actions 第一轮已经建立。
+
+Pull Request：
 
 ~~~text
 flutter pub get
-flutter analyze
-flutter test
+→ flutter analyze
+→ flutter test
 ~~~
 
-Windows Build 可以放 merge / release：
+main push / workflow_dispatch：
 
 ~~~text
-flutter build windows
+Analyze + Test
+→ flutter build windows --release
+→ 上传 Windows Release Artifact
 ~~~
+
+当前先保持 Windows-first，不做多平台矩阵，也不把发布流程和质量 Gate 混在一起。
 
 ## 7. Desktop Stable V1
 

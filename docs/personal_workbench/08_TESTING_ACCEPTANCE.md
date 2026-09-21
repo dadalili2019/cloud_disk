@@ -84,11 +84,27 @@ flutter analyze
 
 ## 4. 自动检查 Gate
 
+本地提交前：
+
 ~~~powershell
 flutter pub get
 flutter analyze
 flutter test
 flutter build windows
+~~~
+
+GitHub Actions：
+
+~~~text
+Pull Request
+→ flutter pub get
+→ flutter analyze
+→ flutter test
+
+main push / 手工触发
+→ Analyze + Test
+→ flutter build windows --release
+→ Windows Release Artifact
 ~~~
 
 当前已经开始把 Analyze 当成真正约束：
@@ -164,11 +180,12 @@ flutter build windows
 - Windows `flutter test` 使用宿主 Dart VM SQLite，原生 Flutter SQLite 插件不会参与；因此该环境跳过 FTS5 建表和 FTS 断言，其他 Schema / Migration / Index / Transaction 仍真实执行。
 - targetSchemaVersion 非法输入边界。
 
+GitHub Actions CI 已建立第一轮 Windows Gate。
+
 下一批：
 
-1. GitHub Actions CI。
-2. AI Provider / Conversation 异常测试。
-3. Widget smoke tests。
+1. AI Provider / Conversation 异常测试。
+2. Widget smoke tests。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 

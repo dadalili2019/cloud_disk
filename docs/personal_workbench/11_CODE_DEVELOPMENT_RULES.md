@@ -402,6 +402,8 @@ flutter test
 flutter build windows
 ~~~
 
+Pull Request 还必须等待 GitHub Actions 的 Analyze / Test Gate 通过。main / 手工 CI 会继续做 Windows Release Build。
+
 如果当前环境不能执行，要明确写“未执行”，不能默认说已经通过。
 
 ## 17. 优化和重构怎么执行
