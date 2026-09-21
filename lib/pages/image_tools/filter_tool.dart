@@ -141,13 +141,15 @@ class _FilterToolPageState extends State<FilterToolPage> {
       final decoded = img.decodeImage(bytes);
       if (decoded == null) return false;
       final out = _apply(decoded);
-      final ext = _outputFormat == ImageOutputFormat.jpg ? 'jpg' : 'png';
-      final outPath = p.join(outDir.path, '${p.basenameWithoutExtension(f.path!)}_filter.$ext');
-      if (_outputFormat == ImageOutputFormat.jpg) {
-        await File(outPath).writeAsBytes(img.encodeJpg(out, quality: _quality.round()), flush: true);
-      } else {
-        await File(outPath).writeAsBytes(img.encodePng(out, level: 6), flush: true);
-      }
+      final outPath = p.join(
+        outDir.path,
+        '${p.basenameWithoutExtension(f.path!)}_filter.${_outputFormat.extension}',
+      );
+      final outBytes = _outputFormat.encode(
+        out,
+        jpgQuality: _quality.round(),
+      );
+      await File(outPath).writeAsBytes(outBytes, flush: true);
       return true;
     } catch (_) {
       return false;
