@@ -271,15 +271,15 @@ AI 功能后面不要只验证“正常返回”。
 - Task / Workspace 业务规则测试：第一轮完成，Repository 真实数据库约束也已补。
 - Knowledge / Settings 业务规则测试：第一轮完成。
 - Knowledge 跨 Markdown / SQLite / Link / Search 的失败补偿：第一轮加固完成。
-- 下一步进入 Database Schema / Migration 测试。
+- Database Schema / Migration 第一轮测试已完成：Fresh v6 + v1~v5 → v6。
 
 现在按这个顺序继续：
 
 ~~~text
 1. Task / Workspace 业务规则测试（第一轮已完成）
 2. Knowledge / Settings 业务规则测试（第一轮已完成）
-3. Database Schema / Migration 测试（下一步；测试入口已经支持指定 targetSchemaVersion）
-4. GitHub Actions CI
+3. Database Schema / Migration 测试（第一轮已完成）
+4. GitHub Actions CI（下一步）
 5. AI Provider / Conversation 异常测试
 6. Image Tools 重复逻辑整理
 7. Navigation / Notes Editor

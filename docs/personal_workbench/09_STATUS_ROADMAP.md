@@ -119,9 +119,14 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 - Knowledge create / update 跨 Markdown、Repository、Entity Link、Search Index 增加反向补偿。
 - Task Repository 真实 SQLite Current 约束已补。
 
+本轮继续：
+
+- Fresh Schema v6 自动化测试。
+- v1~v5 到 v6 Migration 自动化测试。
+- Migration 数据保留、Index、FTS 和约束验证。
+
 下一批：
 
-- Database Schema / Migration
 - GitHub Actions CI
 - AI Provider / Conversation 异常测试
 - Widget smoke

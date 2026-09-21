@@ -153,12 +153,20 @@ flutter build windows
 - Knowledge update 在 Search Index 失败时恢复旧 Markdown / Repository / Index。
 - 补偿失败不覆盖原始业务异常。
 
+本轮继续补：
+
+- Fresh Database 直接创建当前 Schema v6。
+- v1 / v2 / v3 / v4 / v5 → v6 Migration。
+- Migration 后旧数据保留。
+- Migration 后 Current Task / Developer Primary 唯一约束仍然生效。
+- FTS search_index 在最新 Schema 下可用。
+- targetSchemaVersion 非法输入边界。
+
 下一批：
 
-1. Database Schema / Migration。
-2. GitHub Actions CI。
-3. AI Provider / Conversation 异常测试。
-4. Widget smoke tests。
+1. GitHub Actions CI。
+2. AI Provider / Conversation 异常测试。
+3. Widget smoke tests。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 
