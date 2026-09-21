@@ -344,15 +344,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
     return target;
   }
 
-  String formatImageByteSize(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    final kb = bytes / 1024;
-    if (kb < 1024) return '${kb.toStringAsFixed(1)} KB';
-    final mb = kb / 1024;
-    if (mb < 1024) return '${mb.toStringAsFixed(1)} MB';
-    final gb = mb / 1024;
-    return '${gb.toStringAsFixed(2)} GB';
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -712,7 +704,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
     );
   }
 
-  Widget imageToolCard(context, {required Widget child}) {
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
