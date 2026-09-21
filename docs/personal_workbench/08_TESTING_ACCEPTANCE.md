@@ -141,7 +141,8 @@ flutter build windows
 
 本轮继续补：
 
-- Task Repository 使用真实 SQLite 验证 Current Task 唯一索引。
+- Task Repository 使用真实 SQLite Schema 验证 Current Task 唯一索引。
+- Repository 测试通过 in-memory SQLite 运行，不依赖正式环境的 background isolate。
 - 验证 setCurrent 事务切换和失败回滚。
 - 验证 Done Task 不能成为 Current。
 
