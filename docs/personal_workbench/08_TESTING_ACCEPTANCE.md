@@ -216,10 +216,19 @@ Notes Editor 保存一致性测试已补：
 - 第二次显式保存会排在正在执行的写入之后。
 - 保存失败继续保持 dirty，不误标记为已保存。
 
-下一批：
+Notes Editor 展示职责拆分与第一批 Widget Smoke Test 已完成。
 
-1. Notes Editor List / Editor / Preview 展示职责整理。
-2. Widget smoke tests。
+当前自动化基线已覆盖：
+
+- WorkbenchCard / WorkbenchTag / WorkbenchEmptyState / WorkbenchSectionPage mount 与基础交互。
+- Notes Editor Save Coordinator 保存时序。
+- 核心 Service / Repository / Migration / AI / Search / Backup / Restore / Image Tools 规则。
+
+下一阶段测试重点：
+
+1. 真实 AI Gateway / API Key / Provider Integration。
+2. Windows Release Artifact 启动与升级 Smoke。
+3. 真实数据量 Search rebuild / Backup / Restore 验证。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 
