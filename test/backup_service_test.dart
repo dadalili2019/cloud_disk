@@ -117,6 +117,57 @@ void main() {
       expect(settings, isNot(contains('workbench.token')));
       expect(settings, isNot(contains('other.app.setting')));
     });
+
+
+    test('falls back to a locked file snapshot when VACUUM INTO is unsupported',
+        () async {
+      final source = File(paths.databasePath);
+      await source.parent.create(recursive: true);
+      await source.writeAsBytes([9, 8, 7, 6], flush: true);
+
+      final executor = _LegacySnapshotSqlExecutor(journalMode: 'delete');
+      final service = BackupService(
+        paths: paths,
+        database: executor,
+      );
+
+      final result = await service.createManualBackup();
+
+      expect(await result.file.exists(), isTrue);
+      expect(executor.beginImmediateCount, 1);
+      expect(executor.rollbackCount, 1);
+
+      final archive = ZipDecoder().decodeBytes(
+        await result.file.readAsBytes(),
+        verify: true,
+      );
+      final databaseEntry = archive.files.singleWhere(
+        (entry) => entry.name == 'data/workbench.db',
+      );
+      expect(_bytes(databaseEntry), [9, 8, 7, 6]);
+    });
+
+    test('does not use unsafe file-copy fallback for WAL databases', () async {
+      final source = File(paths.databasePath);
+      await source.parent.create(recursive: true);
+      await source.writeAsBytes([1, 2, 3], flush: true);
+
+      final service = BackupService(
+        paths: paths,
+        database: _LegacySnapshotSqlExecutor(journalMode: 'wal'),
+      );
+
+      await expectLater(
+        service.createManualBackup(),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains('Refusing an unsafe file-copy snapshot'),
+          ),
+        ),
+      );
+    });
   });
 }
 
@@ -156,6 +207,65 @@ class _SnapshotSqlExecutor implements WorkbenchSqlExecutor {
 
   @override
   Future<List<Map<String, Object?>>> select(
+    String statement, [
+    List<Object?> args = const [],
+  ]) => throw UnimplementedError();
+
+  @override
+  Future<int> update(
+    String statement, [
+    List<Object?> args = const [],
+  ]) => throw UnimplementedError();
+}
+
+
+class _LegacySnapshotSqlExecutor implements WorkbenchSqlExecutor {
+  _LegacySnapshotSqlExecutor({required this.journalMode});
+
+  final String journalMode;
+  int beginImmediateCount = 0;
+  int rollbackCount = 0;
+
+  @override
+  Future<void> custom(
+    String statement, [
+    List<Object?> args = const [],
+  ]) async {
+    if (statement.startsWith('VACUUM INTO')) {
+      throw StateError('near "INTO": syntax error');
+    }
+    if (statement == 'BEGIN IMMEDIATE') {
+      beginImmediateCount += 1;
+      return;
+    }
+    if (statement == 'ROLLBACK') {
+      rollbackCount += 1;
+      return;
+    }
+    throw StateError('Unexpected SQL: $statement');
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> select(
+    String statement, [
+    List<Object?> args = const [],
+  ]) async {
+    if (statement == 'PRAGMA journal_mode') {
+      return [
+        {'journal_mode': journalMode},
+      ];
+    }
+    throw StateError('Unexpected SQL: $statement');
+  }
+
+  @override
+  Future<int> delete(
+    String statement, [
+    List<Object?> args = const [],
+  ]) => throw UnimplementedError();
+
+  @override
+  Future<int> insert(
     String statement, [
     List<Object?> args = const [],
   ]) => throw UnimplementedError();
