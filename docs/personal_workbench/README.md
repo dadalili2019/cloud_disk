@@ -17,6 +17,7 @@
 9. [09_STATUS_ROADMAP.md](09_STATUS_ROADMAP.md) — 现在做到哪里，接下来优先处理什么。
 10. [10_VERSION_HISTORY.md](10_VERSION_HISTORY.md) — 以前 Phase 1–7、v1.4 和后续结构整理记录。
 11. [11_CODE_DEVELOPMENT_RULES.md](11_CODE_DEVELOPMENT_RULES.md) — 后面人工写代码或者让 AI 写代码，都按这里的方式来。
+12. [12_CODE_OPTIMIZATION_PLAN.md](12_CODE_OPTIMIZATION_PLAN.md) — 后续代码优化、测试补强、性能和工程收口按这份计划推进。
 
 ## 当前基线
 

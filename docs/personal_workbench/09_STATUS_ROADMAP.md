@@ -20,6 +20,8 @@
 
 下一阶段重点是：**把代码、测试、异常和性能做扎实。**
 
+后续执行顺序统一以 [12_CODE_OPTIMIZATION_PLAN.md](12_CODE_OPTIMIZATION_PLAN.md) 为主，不再临时想到哪里改到哪里。
+
 ## 2. 当前代码清理
 
 本轮已经开始处理：
@@ -93,11 +95,17 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 - Restore settings preflight / sanitize。
 - Pending Restore 失败边界保护。
 
+当前开始：
+
+- TaskService 业务规则测试。
+- WorkspaceAdminService rename / archive / restore 测试。
+
 下一批：
 
-- Service / Repository tests
-- Task current constraint / Knowledge source links
+- Task Repository Current 唯一约束
+- Knowledge source links
 - Settings persistence
+- Database Schema / Migration
 - Widget smoke
 
 ### 异常
