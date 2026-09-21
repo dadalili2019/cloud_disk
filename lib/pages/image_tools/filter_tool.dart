@@ -154,7 +154,7 @@ class _FilterToolPageState extends State<FilterToolPage> {
     }
   }
 
-  Widget imageToolCard(context, {required Widget child}) {
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
