@@ -1,6 +1,6 @@
 part of 'workbench_runtime.dart';
 
-  Future<WorkbenchRuntime> _createWorkbenchRuntime() async {
+Future<WorkbenchRuntime> _createWorkbenchRuntime() async {
   final paths = await AppPaths.create();
   final restored = await RestoreService.applyPendingRestoreIfPresent(paths);
   final database = await WorkbenchDatabase.open(paths.databasePath);
@@ -168,7 +168,7 @@ part of 'workbench_runtime.dart';
 
   if (restored) {
     await searchService.rebuildIndex();
-}
+  }
 
   final runtime = WorkbenchRuntime._(
     paths: paths,
