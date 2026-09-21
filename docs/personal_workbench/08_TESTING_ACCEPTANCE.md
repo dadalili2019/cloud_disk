@@ -129,12 +129,22 @@ flutter build windows
 - Workspace create / slug unique / directory / activity。
 - Workspace rename / archive / restore / activity。
 
+本轮继续补：
+
+- Knowledge create / update / Markdown / Search Index。
+- Knowledge derived_from source links / applies_to Task。
+- Knowledge 文件名冲突和 create 失败后的 Markdown 清理。
+- Settings defaults / persistence / enum fallback。
+- AI timeout、Backup retention 边界。
+- Session API Key 只保存在内存，不进入 SharedPreferences。
+- Last Active Location 白名单。
+
 下一批：
 
 1. Task Repository Current 唯一约束。
-2. Knowledge source links。
-3. Settings persistence。
-4. Database Schema / Migration。
+2. Knowledge 跨 Markdown / SQLite / Link / Search 的失败补偿。
+3. Database Schema / Migration。
+4. GitHub Actions CI。
 5. Widget smoke tests。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。

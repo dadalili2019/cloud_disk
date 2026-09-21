@@ -192,3 +192,18 @@ Developer 页面拆分后继续修正 State 边界：
 - 编码规范补充“业务规则先测试、Schema 变更必须 Migration Test、性能优化先锁行为”。
 - Roadmap 不再以继续拆大文件为主线。
 - 开始补 Task / Workspace 业务规则测试。
+
+
+## 2026-09-21 Knowledge / Settings Rule Tests
+
+继续按优化计划补业务规则保护：
+
+- KnowledgeService 增加 create / update / Markdown / Search Index 测试。
+- 覆盖 derived_from source links 和 applies_to Task。
+- 覆盖 Knowledge 文件名冲突。
+- 覆盖 create Repository 失败时 Markdown 清理。
+- WorkbenchSettingsService 增加默认值和持久化测试。
+- 覆盖 AI timeout / Backup retention 边界。
+- 覆盖 Session API Key 不进入 SharedPreferences。
+- 覆盖 Last Active Location 白名单和非法 enum fallback。
+- 同时识别 Knowledge 跨 Markdown / SQLite / Link / Search 的失败补偿需要单独加固，本轮不顺手扩大改动。
