@@ -348,3 +348,27 @@ workbench_developer_page.dart
 后续继续按职责拆，不按行数机械切文件，也不借重构顺手改变业务行为。
 
 具体规则统一看 [11_CODE_DEVELOPMENT_RULES.md](11_CODE_DEVELOPMENT_RULES.md)。
+
+
+## Issue / Resource / Decision 公共列表外壳
+
+三个实体页面只统一重复的异步列表外壳：
+
+~~~text
+WorkbenchAsyncList<T>
+├─ loading
+├─ error
+├─ empty
+└─ separated list
+~~~
+
+每个页面仍自己维护：
+
+- Create / Edit
+- Service 调用
+- Entity Card 内容
+- Status / Type / Severity 文案
+- Task Link
+- Drawer / Dialog
+
+不做万能 CRUD 页面。
