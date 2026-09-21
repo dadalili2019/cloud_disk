@@ -392,3 +392,11 @@ Notes Editor 在保存一致性稳定后继续做展示职责拆分：
 - 新增 `workbench_runtime_composition.dart`。
 - 保持 Future singleton、Pending Restore、Search rebuild、Auto Backup 行为不变。
 - 不引入 DI framework。
+
+
+## 2026-09-21 Entity Async List UI
+
+- `WorkbenchAsyncList<T>` 统一 loading / error / empty / list shell。
+- Issue / Resource / Decision 接入公共外壳。
+- 各自 CRUD、卡片内容、Task Link 与 Drawer 继续留在业务页面。
+- 不引入通用 CRUD framework。
