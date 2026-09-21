@@ -126,7 +126,7 @@ void main() {
     test('long first user message uses bounded default title', () async {
       final thread = _thread(title: '');
       threads.byId[thread.id] = thread;
-      final content = 'abcdefghijklmnopqrstuvwxyz0123456789---tail';
+      const content = 'abcdefghijklmnopqrstuvwxyz0123456789---tail';
 
       await service.addUserMessage(
         thread: thread,
