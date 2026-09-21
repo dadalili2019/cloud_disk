@@ -221,3 +221,39 @@ Windows Release 构建后使用：
 GitHub Actions 在 main push / workflow_dispatch 的 Windows Release Build 中，会在上传 Artifact 前自动执行这一步。
 
 该 Smoke 只验证 Release 包能完成基础启动，不替代人工验证 Login、Shell、AI、Backup / Restore 等业务流程。
+
+## Synthetic Scale Verification
+
+Search / Backup / Restore 的合成数据规模验证放在：
+
+~~~text
+test/manual/workbench_scale_verification_test.dart
+~~~
+
+默认普通 `flutter test` 会跳过，不拖慢日常 CI。
+
+执行示例：
+
+~~~powershell
+flutter test test/manual/workbench_scale_verification_test.dart --dart-define=WORKBENCH_SCALE_VERIFY=true --dart-define=WORKBENCH_SCALE_WORKSPACES=10 --dart-define=WORKBENCH_SCALE_TASKS_PER_WORKSPACE=1000 --dart-define=WORKBENCH_SCALE_NOTES_PER_WORKSPACE=200 --dart-define=WORKBENCH_SCALE_NOTE_BODY_BYTES=4096
+~~~
+
+验证使用系统临时目录，不读取或修改真实 Personal Workbench 数据。
+
+覆盖：
+
+- SQLite 合成 Workspace / Task / Note 数据写入。
+- 正式 Repository 查询。
+- 正式 SearchService 的 Workspace 并发收集与 Markdown 读取。
+- Search entry 组装数量。
+- 正式 BackupService 的数据库快照、Markdown 和 ZIP。
+- 正式 RestoreService 的 validate / safety backup / stage / apply。
+- Restore 后数据库行数与 Markdown 文件恢复。
+
+输出 Seed / Search collection / Backup / Restore stage / Restore apply 耗时与 Backup size。
+
+### Windows Host FTS5 边界
+
+Windows `flutter test` 运行在宿主 Dart VM，和正式 Flutter Windows 应用的 SQLite Runtime 不同。当前宿主验证不把 FTS5 建表/查询结果冒充为正式 Runtime 结果。
+
+因此这里重点测 SearchService 数据收集和 Markdown IO。FTS5 最终落库与查询仍通过正式 Windows App / Release Runtime 验证。
