@@ -148,9 +148,44 @@ class BackupService {
   Future<void> _createDatabaseSnapshot(File target) async {
     if (await target.exists()) await target.delete();
     final escaped = target.path.replaceAll("'", "''");
-    await database.custom("VACUUM INTO '$escaped'");
+
+    try {
+      await database.custom("VACUUM INTO '$escaped'");
+    } catch (error) {
+      if (!_isVacuumIntoUnsupported(error)) rethrow;
+      await _createLegacyDatabaseSnapshot(target);
+    }
+
     if (!await target.exists()) {
       throw StateError('Database snapshot was not created.');
+    }
+  }
+
+  Future<void> _createLegacyDatabaseSnapshot(File target) async {
+    final source = File(paths.databasePath);
+    if (!await source.exists()) {
+      throw StateError(
+        'Database snapshot fallback requires a file-backed database.',
+      );
+    }
+
+    final journalRows = await database.select('PRAGMA journal_mode');
+    final journalMode = journalRows.isEmpty
+        ? ''
+        : '${journalRows.first['journal_mode'] ?? ''}'.toLowerCase();
+
+    if (journalMode == 'wal') {
+      throw StateError(
+        'This SQLite runtime does not support VACUUM INTO while the '
+        'database is using WAL. Refusing an unsafe file-copy snapshot.',
+      );
+    }
+
+    await database.custom('BEGIN IMMEDIATE');
+    try {
+      await source.copy(target.path);
+    } finally {
+      await database.custom('ROLLBACK');
     }
   }
 
@@ -223,4 +258,12 @@ Future<void> _zipDirectory(Directory source, File output) async {
 String _timestamp(DateTime value) {
   String two(int number) => number.toString().padLeft(2, '0');
   return '${value.year}${two(value.month)}${two(value.day)}_${two(value.hour)}${two(value.minute)}${two(value.second)}';
+}
+
+
+bool _isVacuumIntoUnsupported(Object error) {
+  final message = error.toString().toLowerCase();
+  return message.contains('near "into": syntax error') ||
+      message.contains("near 'into': syntax error") ||
+      (message.contains('vacuum into') && message.contains('syntax'));
 }
