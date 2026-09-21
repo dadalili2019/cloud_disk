@@ -58,10 +58,10 @@ flutter build windows
 当前输出：
 
 ~~~text
-build/windows/x64/runner/Release/cloud_disk.exe
+build/windows/x64/runner/Release/personal_workbench.exe
 ~~~
 
-可执行文件名字暂时保留历史仓库名字。正式发版前如果要改 package / executable 名称，单独处理。
+Windows Release 可执行文件统一为 `personal_workbench.exe`。Dart package / 仓库名继续保留 `cloud_disk`，它属于内部代码标识，不影响产品展示与发布文件名。
 
 ## 5. AI 配置
 
