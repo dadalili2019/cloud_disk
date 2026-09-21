@@ -150,96 +150,83 @@ class _WorkbenchResourcePageState extends State<WorkbenchResourcePage> {
     return WorkbenchSectionPage(
       title: '资源',
       actions: [
-        FilledButton(onPressed: _createResource, child: const Text('新建资源')),
+        FilledButton(
+          onPressed: _createResource,
+          child: const Text('新建资源'),
+        ),
       ],
-      child: FutureBuilder<List<ResourceModel>>(
+      child: WorkbenchAsyncList<ResourceModel>(
         future: _resources,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: ProgressRing());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('加载失败：${snapshot.error}'));
-          }
-          final resources = snapshot.data ?? const <ResourceModel>[];
-          if (resources.isEmpty) {
-            return WorkbenchEmptyState(
-              title: '还没有资源',
-              description: '',
-              actionLabel: '新建资源',
-              onAction: _createResource,
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.only(bottom: 8),
-            itemCount: resources.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final resource = resources[index];
-              return FutureBuilder<List<TaskModel>>(
-                future: WorkbenchRuntime.instance.then(
-                  (r) => r.resourceService.linkedTasks(resource),
-                ),
-                builder: (context, taskSnapshot) {
-                  final linked = taskSnapshot.data ?? const <TaskModel>[];
-                  final taskText = linked.map((e) => e.title).join('、');
-                  return WorkbenchCard(
-                    onTap: () => _edit(resource),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+        emptyTitle: '还没有资源',
+        emptyActionLabel: '新建资源',
+        onEmptyAction: _createResource,
+        itemBuilder: (context, resource) {
+          return FutureBuilder<List<TaskModel>>(
+            future: WorkbenchRuntime.instance.then(
+              (runtime) => runtime.resourceService.linkedTasks(resource),
+            ),
+            builder: (context, taskSnapshot) {
+              final linked = taskSnapshot.data ?? const <TaskModel>[];
+              final taskText = linked.map((task) => task.title).join('、');
+
+              return WorkbenchCard(
+                onTap: () => _edit(resource),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                resource.name,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                        Expanded(
+                          child: Text(
+                            resource.name,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                             ),
-                            if (resource.isPinned)
-                              const Padding(
-                                padding: EdgeInsets.only(right: 8),
-                                child: Icon(FluentIcons.pinned, size: 12),
-                              ),
-                            WorkbenchTag(label: _typeText(resource.resourceType)),
-                          ],
+                          ),
                         ),
-                        if (taskText.isNotEmpty) ...[
-                          const SizedBox(height: 7),
-                          Text(
-                            taskText,
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              color: theme.typography.body?.color?.withValues(alpha: 0.52),
-                            ),
+                        if (resource.isPinned)
+                          const Padding(
+                            padding: EdgeInsets.only(right: 8),
+                            child: Icon(FluentIcons.pinned, size: 12),
                           ),
-                        ],
-                        if (resource.uri.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            resource.uri,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 11.5),
-                          ),
-                        ],
-                        if (resource.description.isNotEmpty) ...[
-                          const SizedBox(height: 5),
-                          Text(
-                            resource.description,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 11.5),
-                          ),
-                        ],
+                        WorkbenchTag(
+                          label: _typeText(resource.resourceType),
+                        ),
                       ],
                     ),
-                  );
-                },
+                    if (taskText.isNotEmpty) ...[
+                      const SizedBox(height: 7),
+                      Text(
+                        taskText,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: theme.typography.body?.color
+                              ?.withValues(alpha: 0.52),
+                        ),
+                      ),
+                    ],
+                    if (resource.uri.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        resource.uri,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 11.5),
+                      ),
+                    ],
+                    if (resource.description.isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        resource.description,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 11.5),
+                      ),
+                    ],
+                  ],
+                ),
               );
             },
           );
