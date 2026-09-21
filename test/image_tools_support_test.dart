@@ -119,7 +119,7 @@ void main() {
 
     test('text watermark draws content for configured text', () {
       final source = img.Image(width: 240, height: 120);
-      img.fill(source, color: img.ColorRgb8(255, 255, 255));
+      img.fill(source, color: img.ColorRgba8(255, 255, 255, 255));
       final before = img.encodePng(source);
 
       final result = applyTextWatermark(
