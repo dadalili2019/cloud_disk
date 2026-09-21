@@ -80,26 +80,14 @@ class _CropToolPageState extends State<CropToolPage> {
     setState(() => _previewLoading = true);
 
     try {
-      final bytes = await File(path).readAsBytes();
-      final decoded = img.decodeImage(bytes);
+      final decoded = await readImageFile(path);
       if (decoded == null) return;
 
-      var target = _applyTransforms(decoded);
-      const maxPreviewEdge = 560;
-      final maxSide = target.width > target.height ? target.width : target.height;
-      if (maxSide > maxPreviewEdge) {
-        final ratio = maxPreviewEdge / maxSide;
-        target = img.copyResize(
-          target,
-          width: (target.width * ratio).round(),
-          height: (target.height * ratio).round(),
-          interpolation: img.Interpolation.average,
-        );
-      }
+      final target = resizeImageForPreview(_applyTransforms(decoded));
+      final preview = encodeImagePreviewPng(target);
 
-      final out = Uint8List.fromList(img.encodePng(target, level: 4));
       if (!mounted) return;
-      setState(() => _previewBytes = out);
+      setState(() => _previewBytes = preview);
     } finally {
       if (mounted) {
         setState(() => _previewLoading = false);
