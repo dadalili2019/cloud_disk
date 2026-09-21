@@ -465,7 +465,7 @@ class WorkbenchAsyncList<T> extends StatelessWidget {
           return Center(child: Text('加载失败：${snapshot.error}'));
         }
 
-        final items = snapshot.data ?? const [];
+        final items = snapshot.data ?? <T>[];
         if (items.isEmpty) {
           return WorkbenchEmptyState(
             title: emptyTitle,
