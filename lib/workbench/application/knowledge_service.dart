@@ -104,7 +104,7 @@ class KnowledgeService {
       }
       await _index(item, markdown);
     } catch (_) {
-      await store.deleteIfExists(relativePath);
+      await _rollbackCreate(item, sources);
       rethrow;
     }
     return item;
@@ -137,10 +137,16 @@ class KnowledgeService {
       archivedAt: item.archivedAt,
     );
 
-    await store.writeAtomic(updated.filePath, markdown);
-    await knowledge.update(updated);
-    await _index(updated, markdown);
-    return updated;
+    final previousMarkdown = await store.read(item.filePath);
+    try {
+      await store.writeAtomic(updated.filePath, markdown);
+      await knowledge.update(updated);
+      await _index(updated, markdown);
+      return updated;
+    } catch (_) {
+      await _rollbackUpdate(item, previousMarkdown);
+      rethrow;
+    }
   }
 
   Future<void> attachToTask(String knowledgeId, String taskId) {
@@ -153,6 +159,50 @@ class KnowledgeService {
       toId: taskId,
       createdAt: DateTime.now().toUtc(),
     );
+  }
+
+  Future<void> _rollbackCreate(
+    KnowledgeModel item,
+    List<KnowledgeSourceRef> sources,
+  ) async {
+    await _bestEffort(
+      () => searchIndex.remove(
+        entityType: 'knowledge',
+        entityId: item.id,
+      ),
+    );
+    for (final source in sources.reversed) {
+      await _bestEffort(
+        () => links.unlink(
+          fromType: 'knowledge',
+          fromId: item.id,
+          relationType: 'derived_from',
+          toType: source.entityType,
+          toId: source.entityId,
+        ),
+      );
+    }
+    await _bestEffort(() => knowledge.delete(item.id));
+    await _bestEffort(() => store.deleteIfExists(item.filePath));
+  }
+
+  Future<void> _rollbackUpdate(
+    KnowledgeModel original,
+    String previousMarkdown,
+  ) async {
+    await _bestEffort(
+      () => store.writeAtomic(original.filePath, previousMarkdown),
+    );
+    await _bestEffort(() => knowledge.update(original));
+    await _bestEffort(() => _index(original, previousMarkdown));
+  }
+
+  Future<void> _bestEffort(Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (_) {
+      // Preserve the original mutation failure for the caller.
+    }
   }
 
   Future<void> _index(KnowledgeModel item, String markdown) {

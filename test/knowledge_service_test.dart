@@ -118,6 +118,49 @@ void main() {
       expect(await store.read(item.filePath), '# New');
     });
 
+    test('create compensates data when source link fails', () async {
+      links.failOnLinkNumber = 2;
+
+      await expectLater(
+        service.create(
+          title: 'Rollback Links',
+          markdown: '# Temporary',
+          sources: const [
+            KnowledgeSourceRef(entityType: 'note', entityId: 'note-1'),
+            KnowledgeSourceRef(entityType: 'task', entityId: 'task-1'),
+          ],
+        ),
+        throwsA(isA<StateError>()),
+      );
+
+      final attempted = knowledge.insertAttempts.single;
+      expect(knowledge.deletedIds, contains(attempted.id));
+      expect(search.removals, contains(attempted.id));
+      expect(links.unlinkCalls, hasLength(2));
+      expect(await store.exists(attempted.filePath), isFalse);
+    });
+
+    test('create compensates data when search indexing fails', () async {
+      search.failNextReplace = true;
+
+      await expectLater(
+        service.create(
+          title: 'Rollback Search',
+          markdown: '# Temporary',
+          sources: const [
+            KnowledgeSourceRef(entityType: 'decision', entityId: 'decision-1'),
+          ],
+        ),
+        throwsA(isA<StateError>()),
+      );
+
+      final attempted = knowledge.insertAttempts.single;
+      expect(knowledge.deletedIds, contains(attempted.id));
+      expect(search.removals, contains(attempted.id));
+      expect(links.unlinkCalls, hasLength(1));
+      expect(await store.exists(attempted.filePath), isFalse);
+    });
+
     test('create removes markdown when repository insert fails', () async {
       knowledge.failInsert = true;
 
@@ -178,6 +221,35 @@ void main() {
       );
     });
 
+    test('update restores previous state when search indexing fails', () async {
+      final original = _knowledge();
+      await store.writeAtomic(original.filePath, '# Old Content');
+      knowledge.inserted.add(original);
+      search.failNextReplace = true;
+
+      await expectLater(
+        service.update(
+          item: original,
+          title: 'Changed',
+          category: 'Changed',
+          summary: 'Changed Summary',
+          useWhen: 'Changed Use',
+          markdown: '# New Content',
+          isPinned: true,
+        ),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(await store.read(original.filePath), '# Old Content');
+      expect(knowledge.updated.last, original);
+      expect(search.replacements.last.entityId, original.id);
+      expect(search.replacements.last.title, original.title);
+      expect(
+        search.replacements.last.body,
+        'Summary\n\nUse\n\n# Old Content',
+      );
+    });
+
     test('sources resolves derived_from links for supported entity types', () async {
       final item = _knowledge();
       links.toIds['knowledge|knowledge-1|derived_from|note'] = ['note-1'];
@@ -232,6 +304,7 @@ class _KnowledgeRepository implements KnowledgeRepository {
   final List<KnowledgeModel> inserted = [];
   final List<KnowledgeModel> insertAttempts = [];
   final List<KnowledgeModel> updated = [];
+  final List<String> deletedIds = [];
   bool failInsert = false;
 
   @override
@@ -265,6 +338,12 @@ class _KnowledgeRepository implements KnowledgeRepository {
   @override
   Future<void> update(KnowledgeModel item) async {
     updated.add(item);
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    deletedIds.add(id);
+    inserted.removeWhere((item) => item.id == id);
   }
 }
 
@@ -300,8 +379,10 @@ class _ListToCall {
 
 class _EntityLinkRepository implements EntityLinkRepository {
   final List<_LinkCall> linkCalls = [];
+  final List<_LinkCall> unlinkCalls = [];
   final List<_ListToCall> listToCalls = [];
   final Map<String, List<String>> toIds = {};
+  int? failOnLinkNumber;
 
   @override
   Future<void> link({
@@ -313,6 +394,10 @@ class _EntityLinkRepository implements EntityLinkRepository {
     required String toId,
     required DateTime createdAt,
   }) async {
+    final callNumber = linkCalls.length + 1;
+    if (failOnLinkNumber == callNumber) {
+      throw StateError('link failed');
+    }
     linkCalls.add(
       _LinkCall(
         fromType: fromType,
@@ -351,6 +436,25 @@ class _EntityLinkRepository implements EntityLinkRepository {
             '$fromType|$fromId|$relationType|$toType'] ??
         const [];
   }
+
+  @override
+  Future<void> unlink({
+    required String fromType,
+    required String fromId,
+    required String relationType,
+    required String toType,
+    required String toId,
+  }) async {
+    unlinkCalls.add(
+      _LinkCall(
+        fromType: fromType,
+        fromId: fromId,
+        relationType: relationType,
+        toType: toType,
+        toId: toId,
+      ),
+    );
+  }
 }
 
 class _Replacement {
@@ -369,6 +473,8 @@ class _Replacement {
 
 class _SearchIndexRepository implements SearchIndexRepository {
   final List<_Replacement> replacements = [];
+  final List<String> removals = [];
+  bool failNextReplace = false;
 
   @override
   Future<void> clear() async {}
@@ -384,6 +490,10 @@ class _SearchIndexRepository implements SearchIndexRepository {
     required String title,
     required String body,
   }) async {
+    if (failNextReplace) {
+      failNextReplace = false;
+      throw StateError('search replace failed');
+    }
     replacements.add(
       _Replacement(
         entityType: entityType,
@@ -398,7 +508,9 @@ class _SearchIndexRepository implements SearchIndexRepository {
   Future<void> remove({
     required String entityType,
     required String entityId,
-  }) async {}
+  }) async {
+    removals.add(entityId);
+  }
 
   @override
   Future<List<SearchResultModel>> search(
