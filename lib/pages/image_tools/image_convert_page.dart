@@ -15,8 +15,6 @@ class ImageToolsPage extends StatefulWidget {
   State<ImageToolsPage> createState() => _ImageToolsPageState();
 }
 
-enum _WatermarkPosition { topLeft, topRight, bottomLeft, bottomRight, center }
-
 class _FailedTask {
   const _FailedTask({required this.name, required this.path, required this.reason});
 
@@ -34,7 +32,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
   bool _resizeEnabled = false;
   bool _grayscaleEnabled = false;
   bool _watermarkEnabled = false;
-  _WatermarkPosition _watermarkPosition = _WatermarkPosition.bottomRight;
+  ImageWatermarkPosition _watermarkPosition = ImageWatermarkPosition.bottomRight;
   double _watermarkOpacity = 0.78;
   int _watermarkFontSize = 24;
   int _wmR = 20;
@@ -105,36 +103,22 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
       return;
     }
 
-    final first = _pickedFiles.first;
-    final path = first.path;
+    final path = _pickedFiles.first.path;
     if (path == null) return;
 
     if (!mounted) return;
     setState(() => _previewLoading = true);
 
     try {
-      final bytes = await File(path).readAsBytes();
-      final decoded = img.decodeImage(bytes);
+      final decoded = await readImageFile(path);
       if (decoded == null) return;
 
-      var target = decoded;
-      const maxPreviewEdge = 560;
-      final maxSide = target.width > target.height ? target.width : target.height;
-      if (maxSide > maxPreviewEdge) {
-        final ratio = maxPreviewEdge / maxSide;
-        target = img.copyResize(
-          target,
-          width: (target.width * ratio).round(),
-          height: (target.height * ratio).round(),
-          interpolation: img.Interpolation.average,
-        );
-      }
-
+      var target = resizeImageForPreview(decoded);
       target = _applyTransforms(target);
-      final out = Uint8List.fromList(img.encodePng(target, level: 4));
+      final preview = encodeImagePreviewPng(target);
 
       if (!mounted) return;
-      setState(() => _previewBytes = out);
+      setState(() => _previewBytes = preview);
     } finally {
       if (mounted) {
         setState(() => _previewLoading = false);
@@ -154,24 +138,24 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
       _outputDirPath = outputDir.path;
     });
 
-    var success = 0;
-
-    for (var i = 0; i < _pickedFiles.length; i++) {
-      final f = _pickedFiles[i];
-      final ok = await _processSingleFile(f, outputDir);
-      if (ok) success++;
-
-      if (!mounted) return;
-      setState(() {
-        _progress = (i + 1) / _pickedFiles.length;
-        _status = '处理中 ${i + 1}/${_pickedFiles.length} · ${f.name}';
-      });
-    }
+    final result = await runImageBatch<PlatformFile>(
+      items: List<PlatformFile>.from(_pickedFiles),
+      process: (file) => _processSingleFile(file, outputDir),
+      shouldContinue: () => mounted,
+      onProgress: (progress) {
+        setState(() {
+          _progress = progress.fraction;
+          _status =
+              '处理中 ${progress.index}/${progress.total} · ${progress.item.name}';
+        });
+      },
+    );
 
     if (!mounted) return;
     setState(() {
       _running = false;
-      _status = '处理完成：成功 $success/${_pickedFiles.length}，失败 ${_failedTasks.length}';
+      _status =
+          '处理完成：成功 ${result.successCount}/${result.processedCount}，失败 ${_failedTasks.length}';
     });
   }
 
@@ -188,23 +172,24 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
       _status = '开始重试失败项...';
     });
 
-    var success = 0;
-    for (var i = 0; i < retryItems.length; i++) {
-      final t = retryItems[i];
-      final ok = await _processFilePath(t.path, t.name, outputDir);
-      if (ok) success++;
-
-      if (!mounted) return;
-      setState(() {
-        _progress = (i + 1) / retryItems.length;
-        _status = '重试 ${i + 1}/${retryItems.length} · ${t.name}';
-      });
-    }
+    final result = await runImageBatch<_FailedTask>(
+      items: retryItems,
+      process: (item) => _processFilePath(item.path, item.name, outputDir),
+      shouldContinue: () => mounted,
+      onProgress: (progress) {
+        setState(() {
+          _progress = progress.fraction;
+          _status =
+              '重试 ${progress.index}/${progress.total} · ${progress.item.name}';
+        });
+      },
+    );
 
     if (!mounted) return;
     setState(() {
       _running = false;
-      _status = '重试完成：成功 $success/${retryItems.length}，仍失败 ${_failedTasks.length}';
+      _status =
+          '重试完成：成功 ${result.successCount}/${result.processedCount}，仍失败 ${_failedTasks.length}';
     });
   }
 
@@ -257,12 +242,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
 
   
 
-  img.BitmapFont _fontBySize(int size) {
-    if (size <= 14) return img.arial14;
-    if (size <= 24) return img.arial24;
-    if (size <= 48) return img.arial48;
-    return img.arial24;
-  }
+  
 
   img.Image _applyTransforms(img.Image source) {
     var target = source;
@@ -280,54 +260,19 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
       target = img.grayscale(target);
     }
 
-    if (_watermarkEnabled && _watermarkController.text.trim().isNotEmpty) {
-      final text = _watermarkController.text.trim();
-      final padding = (target.width * 0.015).clamp(8.0, 24.0).round();
-      final estimatedW = ((text.length * _watermarkFontSize) * 0.6).round();
-      final estimatedH = (_watermarkFontSize * 1.2).round();
-      int x = padding;
-      int y = padding;
-
-      switch (_watermarkPosition) {
-        case _WatermarkPosition.topLeft:
-          x = padding;
-          y = padding;
-          break;
-        case _WatermarkPosition.topRight:
-          x = (target.width - estimatedW - padding).clamp(0, target.width);
-          y = padding;
-          break;
-        case _WatermarkPosition.bottomLeft:
-          x = padding;
-          y = (target.height - estimatedH - padding).clamp(0, target.height);
-          break;
-        case _WatermarkPosition.bottomRight:
-          x = (target.width - estimatedW - padding).clamp(0, target.width);
-          y = (target.height - estimatedH - padding).clamp(0, target.height);
-          break;
-        case _WatermarkPosition.center:
-          x = ((target.width - estimatedW) / 2).round().clamp(0, target.width);
-          y = ((target.height - estimatedH) / 2).round().clamp(0, target.height);
-          break;
-      }
-
-      final alpha = (_watermarkOpacity * 255).round().clamp(30, 255);
-      final foreground = img.ColorRgba8(_wmR, _wmG, _wmB, alpha);
-      final brightness = (_wmR + _wmG + _wmB) / 3;
-      final shadow = brightness < 128
-          ? img.ColorRgba8(255, 255, 255, (alpha * 0.35).round().clamp(20, 180))
-          : img.ColorRgba8(0, 0, 0, (alpha * 0.45).round().clamp(20, 200));
-
-      final font = _fontBySize(_watermarkFontSize);
-      img.drawString(
+    if (_watermarkEnabled) {
+      target = applyTextWatermark(
         target,
-        text,
-        font: font,
-        x: (x + 1).clamp(0, target.width),
-        y: (y + 1).clamp(0, target.height),
-        color: shadow,
+        ImageTextWatermarkOptions(
+          text: _watermarkController.text,
+          position: _watermarkPosition,
+          opacity: _watermarkOpacity,
+          fontSize: _watermarkFontSize,
+          red: _wmR,
+          green: _wmG,
+          blue: _wmB,
+        ),
       );
-      img.drawString(target, text, font: font, x: x, y: y, color: foreground);
     }
     return target;
   }
@@ -478,14 +423,14 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                     children: [
                       const Text('位置：'),
                       const SizedBox(width: 8),
-                      ComboBox<_WatermarkPosition>(
+                      ComboBox<ImageWatermarkPosition>(
                         value: _watermarkPosition,
                         items: const [
-                          ComboBoxItem(value: _WatermarkPosition.topLeft, child: Text('左上')),
-                          ComboBoxItem(value: _WatermarkPosition.topRight, child: Text('右上')),
-                          ComboBoxItem(value: _WatermarkPosition.bottomLeft, child: Text('左下')),
-                          ComboBoxItem(value: _WatermarkPosition.bottomRight, child: Text('右下')),
-                          ComboBoxItem(value: _WatermarkPosition.center, child: Text('居中')),
+                          ComboBoxItem(value: ImageWatermarkPosition.topLeft, child: Text('左上')),
+                          ComboBoxItem(value: ImageWatermarkPosition.topRight, child: Text('右上')),
+                          ComboBoxItem(value: ImageWatermarkPosition.bottomLeft, child: Text('左下')),
+                          ComboBoxItem(value: ImageWatermarkPosition.bottomRight, child: Text('右下')),
+                          ComboBoxItem(value: ImageWatermarkPosition.center, child: Text('居中')),
                         ],
                         onChanged: _running
                             ? null

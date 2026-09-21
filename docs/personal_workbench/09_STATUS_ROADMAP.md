@@ -127,18 +127,20 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 
 AI Provider / Conversation 第一轮异常测试已完成并合并。
 
+Image Tools 第一轮公共基础层已完成并合并。
+
 当前继续：
 
-- Image Tools 抽取共享图片选择逻辑。
-- Image Tools 抽取共享输出目录逻辑。
-- Image Tools 统一 JPG / PNG 输出格式与编码。
-- Image Tools 统一 Card / File Size 等基础 helper。
-- 增加 Image Tools 公共基础能力单元测试。
+- Preview 文件读取 / decode / resize / PNG encode 公共化。
+- Watermark position / font / foreground / shadow 纯算法公共化。
+- Image Convert / Watermark / Crop / Filter Batch Loop 公共化。
+- 页面 setState / UI State 继续留在各页面，不做万能框架。
+- 补 Preview / Watermark / Batch 单元测试。
 
 下一批：
 
-- Image Tools Preview / Watermark / Run-Retry 继续去重
 - Widget smoke
+- Image Tools 剩余 Failed Task / Preview Widget 评估
 
 ### 异常
 

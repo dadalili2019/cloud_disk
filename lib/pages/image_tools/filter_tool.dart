@@ -80,24 +80,20 @@ class _FilterToolPageState extends State<FilterToolPage> {
       setState(() => _previewBytes = null);
       return;
     }
+
     final path = _pickedFiles.first.path;
     if (path == null) return;
 
     setState(() => _previewLoading = true);
     try {
-      final bytes = await File(path).readAsBytes();
-      final decoded = img.decodeImage(bytes);
+      final decoded = await readImageFile(path);
       if (decoded == null) return;
-      var out = _apply(decoded);
-      const maxEdge = 560;
-      final maxSide = out.width > out.height ? out.width : out.height;
-      if (maxSide > maxEdge) {
-        final ratio = maxEdge / maxSide;
-        out = img.copyResize(out, width: (out.width * ratio).round(), height: (out.height * ratio).round());
-      }
-      final png = Uint8List.fromList(img.encodePng(out, level: 4));
+
+      final target = resizeImageForPreview(_apply(decoded));
+      final preview = encodeImagePreviewPng(target);
+
       if (!mounted) return;
-      setState(() => _previewBytes = png);
+      setState(() => _previewBytes = preview);
     } finally {
       if (mounted) {
         setState(() => _previewLoading = false);
@@ -107,30 +103,32 @@ class _FilterToolPageState extends State<FilterToolPage> {
 
   Future<void> _runProcess() async {
     if (_pickedFiles.isEmpty || _running) return;
-    final outDir = await _resolveOutputDir();
+
+    final outputDir = await _resolveOutputDir();
     setState(() {
       _running = true;
       _progress = 0;
-      _outputDirPath = outDir.path;
+      _outputDirPath = outputDir.path;
     });
 
-    var success = 0;
-    for (var i = 0; i < _pickedFiles.length; i++) {
-      final f = _pickedFiles[i];
-      final ok = await _processOne(f, outDir);
-      if (ok) success++;
-
-      if (!mounted) return;
-      setState(() {
-        _progress = (i + 1) / _pickedFiles.length;
-        _status = '处理中 ${i + 1}/${_pickedFiles.length} · ${f.name}';
-      });
-    }
+    final result = await runImageBatch<PlatformFile>(
+      items: List<PlatformFile>.from(_pickedFiles),
+      process: (item) => _processOne(item, outputDir),
+      shouldContinue: () => mounted,
+      onProgress: (progress) {
+        setState(() {
+          _progress = progress.fraction;
+          _status =
+              '处理中 ${progress.index}/${progress.total} · ${progress.item.name}';
+        });
+      },
+    );
 
     if (!mounted) return;
     setState(() {
       _running = false;
-      _status = '处理完成：成功 $success/${_pickedFiles.length}';
+      _status =
+          '处理完成：成功 ${result.successCount}/${result.processedCount}';
     });
   }
 
