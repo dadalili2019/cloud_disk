@@ -227,7 +227,7 @@ Notes Editor 展示职责拆分与第一批 Widget Smoke Test 已完成。
 下一阶段测试重点：
 
 1. 真实 AI Gateway / API Key / Provider Integration。
-2. Windows Release Artifact 启动与升级 Smoke。
+2. Windows Release Artifact 启动 Smoke 已自动化；继续补人工 Upgrade Smoke。
 3. 真实数据量 Search rebuild / Backup / Restore 验证。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
