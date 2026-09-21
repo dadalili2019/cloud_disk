@@ -207,3 +207,15 @@ Developer 页面拆分后继续修正 State 边界：
 - 覆盖 Session API Key 不进入 SharedPreferences。
 - 覆盖 Last Active Location 白名单和非法 enum fallback。
 - 同时识别 Knowledge 跨 Markdown / SQLite / Link / Search 的失败补偿需要单独加固，本轮不顺手扩大改动。
+
+
+## 2026-09-21 Task Repository Current Constraint
+
+继续把 Task 规则下沉到真实数据库验证：
+
+- 新增 SqliteTaskRepository 真实 SQLite 测试。
+- 覆盖同 Workspace Current Task 唯一索引。
+- 覆盖 setCurrent 事务切换和 todo → doing。
+- 覆盖 setCurrent 失败后的事务回滚。
+- 覆盖 Done Task 不能成为 Current。
+- 覆盖历史 done + current 脏状态的 normalize。

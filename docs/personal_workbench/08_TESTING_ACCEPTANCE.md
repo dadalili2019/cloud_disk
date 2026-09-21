@@ -139,13 +139,18 @@ flutter build windows
 - Session API Key 只保存在内存，不进入 SharedPreferences。
 - Last Active Location 白名单。
 
+本轮继续补：
+
+- Task Repository 使用真实 SQLite 验证 Current Task 唯一索引。
+- 验证 setCurrent 事务切换和失败回滚。
+- 验证 Done Task 不能成为 Current。
+
 下一批：
 
-1. Task Repository Current 唯一约束。
-2. Knowledge 跨 Markdown / SQLite / Link / Search 的失败补偿。
-3. Database Schema / Migration。
-4. GitHub Actions CI。
-5. Widget smoke tests。
+1. Knowledge 跨 Markdown / SQLite / Link / Search 的失败补偿。
+2. Database Schema / Migration。
+3. GitHub Actions CI。
+4. Widget smoke tests。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 

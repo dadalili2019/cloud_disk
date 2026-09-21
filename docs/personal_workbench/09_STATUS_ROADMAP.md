@@ -110,9 +110,12 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 
 - Knowledge create / update 跨 Markdown、SQLite、Entity Link、Search Index 时的失败补偿还需要独立加固。
 
+本轮继续：
+
+- Task Repository 用真实 SQLite 锁 Current Task 唯一约束、事务切换和失败回滚。
+
 下一批：
 
-- Task Repository Current 唯一约束
 - Knowledge 跨存储一致性加固
 - Database Schema / Migration
 - GitHub Actions CI
