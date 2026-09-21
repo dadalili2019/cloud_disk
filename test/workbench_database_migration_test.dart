@@ -32,7 +32,7 @@ void main() {
           'decisions',
           'focus_sessions',
           'knowledge',
-          'search_index',
+          if (!Platform.isWindows) 'search_index',
           'ai_threads',
           'ai_messages',
           'developer_projects',
@@ -53,26 +53,28 @@ void main() {
         ]),
       );
 
-      await database!.insert(
-        '''
+      if (!Platform.isWindows) {
+        await database!.insert(
+          '''
 INSERT INTO search_index (
   entity_type, entity_id, workspace_id, title, body
 ) VALUES (?, ?, ?, ?, ?)
 ''',
-        ['knowledge', 'knowledge-1', '', '迁移测试', '数据库 migration'],
-      );
-      final searchRows = await database!.select(
-        '''
+          ['knowledge', 'knowledge-1', '', '迁移测试', '数据库 migration'],
+        );
+        final searchRows = await database!.select(
+          '''
 SELECT entity_id
 FROM search_index
 WHERE search_index MATCH ?
 ''',
-        ['migration'],
-      );
-      expect(
-        searchRows.map((row) => row['entity_id']),
-        contains('knowledge-1'),
-      );
+          ['migration'],
+        );
+        expect(
+          searchRows.map((row) => row['entity_id']),
+          contains('knowledge-1'),
+        );
+      }
     });
 
     for (var startVersion = 1;
@@ -127,7 +129,9 @@ WHERE search_index MATCH ?
           );
 
           final objects = await _schemaObjects(database!);
-          expect(objects.tables, contains('search_index'));
+          if (!Platform.isWindows) {
+            expect(objects.tables, contains('search_index'));
+          }
           expect(objects.tables, contains('ai_threads'));
           expect(objects.tables, contains('developer_projects'));
           expect(

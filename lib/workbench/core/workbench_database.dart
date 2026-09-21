@@ -54,6 +54,7 @@ class WorkbenchDatabase implements WorkbenchSqlExecutor {
       _WorkbenchExecutorUser(
         targetSchemaVersion: targetSchemaVersion,
         enableWal: false,
+        enableFts5: !Platform.isWindows,
       ),
     );
   }
@@ -71,6 +72,7 @@ class WorkbenchDatabase implements WorkbenchSqlExecutor {
       _WorkbenchExecutorUser(
         targetSchemaVersion: targetSchemaVersion,
         enableWal: false,
+        enableFts5: !Platform.isWindows,
       ),
     );
   }
@@ -182,10 +184,12 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
   _WorkbenchExecutorUser({
     this.targetSchemaVersion = WorkbenchDatabase.schemaVersion,
     this.enableWal = true,
+    this.enableFts5 = true,
   });
 
   final int targetSchemaVersion;
   final bool enableWal;
+  final bool enableFts5;
 
   @override
   int get schemaVersion => targetSchemaVersion;
@@ -257,6 +261,12 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
     await tx.ensureOpen(this);
     try {
       for (final statement in statements) {
+        if (!enableFts5 &&
+            statement.trimLeft().startsWith(
+              'CREATE VIRTUAL TABLE IF NOT EXISTS search_index USING fts5',
+            )) {
+          continue;
+        }
         await tx.runCustom(statement);
       }
       await tx.send();

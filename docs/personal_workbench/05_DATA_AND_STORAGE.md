@@ -253,7 +253,8 @@ Migration 不只检查版本号，还检查：
 - 当前最新表全部存在。
 - Current Task 唯一索引仍然生效。
 - Developer Primary 唯一索引仍然生效。
-- FTS search_index 可以正常写入和查询。
+- FTS search_index 可以正常写入和查询（在支持 FTS5 的 SQLite Runtime 下）。
+- Windows `flutter test` 属于宿主 Dart VM 测试，不等同于实际 Flutter Windows Runtime；该环境不把 FTS5 插件能力作为 Migration 单元测试前置条件。
 
 测试使用文件型同进程 SQLite：先创建旧版本文件，关闭后再按最新 Schema 重新打开，让真实 Migration 路径执行。
 
