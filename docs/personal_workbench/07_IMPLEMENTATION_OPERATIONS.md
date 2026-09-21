@@ -257,3 +257,57 @@ flutter test test/manual/workbench_scale_verification_test.dart --dart-define=WO
 Windows `flutter test` 运行在宿主 Dart VM，和正式 Flutter Windows 应用的 SQLite Runtime 不同。当前宿主验证不把 FTS5 建表/查询结果冒充为正式 Runtime 结果。
 
 因此这里重点测 SearchService 数据收集和 Markdown IO。FTS5 最终落库与查询仍通过正式 Windows App / Release Runtime 验证。
+
+
+## Stable V1 Candidate Unified Verification
+
+本地最终验收统一使用：
+
+~~~powershell
+./tool/verify_stable_v1.ps1
+~~~
+
+默认执行：
+
+~~~text
+flutter --version
+→ flutter pub get
+→ flutter analyze
+→ flutter test
+→ lightweight Scale Smoke
+→ enable Windows desktop
+→ flutter build windows --release
+→ Windows Release Startup Smoke
+~~~
+
+需要追加大规模合成数据验证：
+
+~~~powershell
+./tool/verify_stable_v1.ps1 -IncludeScale
+~~~
+
+需要同时验证真实 AI Gateway：
+
+~~~powershell
+./tool/verify_stable_v1.ps1 -IncludeAi
+~~~
+
+同时验证 Scale + AI：
+
+~~~powershell
+./tool/verify_stable_v1.ps1 -IncludeScale -IncludeAi
+~~~
+
+AI 模式不会写入或打印 API Key；运行前仍使用现有 WORKBENCH_AI_* 环境变量。
+
+该脚本通过只代表自动化 Gate 通过。标记 Desktop Stable V1 前仍必须人工完成：
+
+- 使用真实 Windows Release 包启动。
+- 使用已有数据升级启动，确认原数据存在。
+- Workspace / Task / Notes 基础 CRUD。
+- Note Auto Save / Ctrl+S / 切换未保存保护。
+- Search 中文 / 数字 / 重建。
+- AI Drawer 真实发送 / Retry / History / Restart Recovery。
+- Manual Backup。
+- Restore 到测试副本并重启恢复。
+- Tray / Resize / Settings / Tools 基础 Smoke。

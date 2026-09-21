@@ -157,7 +157,32 @@ Analyze + Test
 
 ## 7. Desktop Stable V1
 
-上面完成以后，再标记：
+当前进入：
+
+~~~text
+Personal Workbench Desktop Stable V1 Candidate
+~~~
+
+已经具备：
+
+- AI Real Environment Verification 命令入口。
+- Search / Backup / Restore 合成数据 Scale Verification。
+- PR 轻量 Scale Smoke。
+- Windows Release Build。
+- Windows Release Startup Smoke。
+- Stable V1 本地统一验收脚本。
+
+还不能直接标记 Stable V1，因为真实外部环境与人工业务链路不能由单元测试代替。
+
+最终剩余：
+
+1. 真实 AI Gateway 验证并记录结果。
+2. 大规模 Scale 参数执行并记录耗时。
+3. Windows Release 使用已有数据做 Upgrade Smoke。
+4. 正式 Windows Runtime Search / FTS5 验证。
+5. 完整人工 Desktop Smoke Regression。
+
+以上完成后，再把状态改为：
 
 ~~~text
 Personal Workbench Desktop Stable V1
