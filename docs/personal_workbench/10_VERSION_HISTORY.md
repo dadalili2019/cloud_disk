@@ -333,3 +333,17 @@ Developer 页面拆分后继续修正 State 边界：
 - Image Convert / Watermark / Crop / Filter / Collage / Dedupe 接入共享基础能力。
 - 新增公共基础能力单元测试。
 - 本轮不改变各工具的图像处理算法、参数和交互流程。
+
+
+## 2026-09-21 Image Tools Shared Foundation - Step 2
+
+继续整理 Image Tools 重复逻辑：
+
+- Preview 的文件读取、decode、等比缩放和 PNG 编码下沉到共享 helper。
+- Image Convert / Watermark / Crop / Filter 保留各自 transform 顺序，只复用稳定 Preview 基础能力。
+- 文字 Watermark 的位置、字体、前景色、阴影绘制下沉为纯算法。
+- Image Convert 和 Watermark 共用同一套 Watermark 绘制逻辑。
+- Batch Runner 统一逐项执行、success count、progress 和中途停止。
+- Image Convert / Watermark Retry 继续保留各自 failed item 语义，但复用 Batch Runner。
+- 页面 State / setState 继续留在页面内部，不引入万能 Image Tool Controller。
+- 新增 Preview / Watermark / Batch 单元测试。
