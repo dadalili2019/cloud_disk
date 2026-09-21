@@ -6,6 +6,8 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 
+import 'image_tools_support.dart';
+
 class ImageToolsPage extends StatefulWidget {
   const ImageToolsPage({super.key});
 
@@ -13,7 +15,6 @@ class ImageToolsPage extends StatefulWidget {
   State<ImageToolsPage> createState() => _ImageToolsPageState();
 }
 
-enum _OutputFormat { jpg, png }
 enum _WatermarkPosition { topLeft, topRight, bottomLeft, bottomRight, center }
 
 class _FailedTask {
@@ -28,7 +29,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
   final List<PlatformFile> _pickedFiles = [];
   final List<_FailedTask> _failedTasks = [];
 
-  _OutputFormat _outputFormat = _OutputFormat.jpg;
+  ImageOutputFormat _outputFormat = ImageOutputFormat.jpg;
   double _quality = 82;
   bool _resizeEnabled = false;
   bool _grayscaleEnabled = false;
@@ -59,14 +60,9 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
   }
 
   Future<void> _pickImages() async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
-      type: FileType.custom,
-      allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp', 'bmp'],
-    );
-    if (result == null) return;
+    final files = await pickImageFiles();
+    if (files == null) return;
 
-    final files = result.files.where((e) => e.path != null).toList();
     final bytesTotal = await _sumOriginalSize(files);
 
     setState(() {
@@ -97,11 +93,9 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
   }
 
   Future<void> _pickOutputDir() async {
-    final picked = await FilePicker.platform.getDirectoryPath(dialogTitle: '选择输出目录');
-    if (picked == null || picked.isEmpty) return;
-    setState(() {
-      _outputDirPath = picked;
-    });
+    final picked = await pickImageOutputDirectory();
+    if (picked == null) return;
+    setState(() => _outputDirPath = picked);
   }
 
   Future<void> _refreshPreview() async {
@@ -214,22 +208,12 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
     });
   }
 
-  Future<Directory> _resolveOutputDir() async {
-    if (_outputDirPath != null && _outputDirPath!.isNotEmpty) {
-      final custom = Directory(_outputDirPath!);
-      if (!custom.existsSync()) {
-        custom.createSync(recursive: true);
-      }
-      return custom;
-    }
-
-    final firstPath = _pickedFiles.first.path!;
-    final sourceDir = Directory(p.dirname(firstPath));
-    final outputDir = Directory(p.join(sourceDir.path, 'offline_image_tools_output'));
-    if (!outputDir.existsSync()) {
-      outputDir.createSync(recursive: true);
-    }
-    return outputDir;
+  Future<Directory> _resolveOutputDir() {
+    return resolveImageOutputDirectory(
+      selectedPath: _outputDirPath,
+      sourcePath: _pickedFiles.first.path!,
+      defaultFolderName: 'offline_image_tools_output',
+    );
   }
 
   Future<bool> _processSingleFile(PlatformFile file, Directory outputDir) async {
@@ -259,10 +243,10 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
 
       Uint8List outBytes;
       switch (_outputFormat) {
-        case _OutputFormat.jpg:
+        case ImageOutputFormat.jpg:
           outBytes = Uint8List.fromList(img.encodeJpg(target, quality: _quality.round()));
           break;
-        case _OutputFormat.png:
+        case ImageOutputFormat.png:
           outBytes = Uint8List.fromList(img.encodePng(target, level: 6));
           break;
       }
@@ -276,11 +260,11 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
     }
   }
 
-  String _extFor(_OutputFormat f) {
+  String _extFor(ImageOutputFormat f) {
     switch (f) {
-      case _OutputFormat.jpg:
+      case ImageOutputFormat.jpg:
         return 'jpg';
-      case _OutputFormat.png:
+      case ImageOutputFormat.png:
         return 'png';
     }
   }
@@ -360,7 +344,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
     return target;
   }
 
-  String _formatSize(int bytes) {
+  String formatImageByteSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     final kb = bytes / 1024;
     if (kb < 1024) return '${kb.toStringAsFixed(1)} KB';
@@ -381,7 +365,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
       content: ListView(
         padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
         children: [
-          _card(
+          imageToolCard(context, 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -436,7 +420,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
               ],
             ),
           ),
-          _card(
+          imageToolCard(context, 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -446,11 +430,11 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                   children: [
                     const Text('输出格式：'),
                     const SizedBox(width: 8),
-                    ComboBox<_OutputFormat>(
+                    ComboBox<ImageOutputFormat>(
                       value: _outputFormat,
                       items: const [
-                        ComboBoxItem(value: _OutputFormat.jpg, child: Text('JPG')),
-                        ComboBoxItem(value: _OutputFormat.png, child: Text('PNG')),
+                        ComboBoxItem(value: ImageOutputFormat.jpg, child: Text('JPG')),
+                        ComboBoxItem(value: ImageOutputFormat.png, child: Text('PNG')),
                       ],
                       onChanged: _running ? null : (v) => setState(() => _outputFormat = v!),
                     ),
@@ -663,7 +647,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
               ],
             ),
           ),
-          _card(
+          imageToolCard(context, 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -690,7 +674,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
                 InfoLabel(
                   label: '体积对比',
                   child: Text(
-                    '原始：${_formatSize(_originalBytesTotal)}  →  输出：${_formatSize(_outputBytesTotal)}  （节省 ${_formatSize(savedBytes > 0 ? savedBytes : 0)}，$savedRatio%）',
+                    '原始：${formatImageByteSize(_originalBytesTotal)}  →  输出：${formatImageByteSize(_outputBytesTotal)}  （节省 ${formatImageByteSize(savedBytes > 0 ? savedBytes : 0)}，$savedRatio%）',
                   ),
                 ),
                 if (_outputDirPath != null) ...[
@@ -701,7 +685,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
             ),
           ),
           if (_failedTasks.isNotEmpty)
-            _card(
+            imageToolCard(context, 
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -728,7 +712,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
     );
   }
 
-  Widget _card({required Widget child}) {
+  Widget imageToolCard(context, {required Widget child}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
