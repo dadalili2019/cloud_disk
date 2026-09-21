@@ -227,6 +227,7 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
         throw StateError('No Workbench schema registered for v$version.');
     }
   }
+
   Future<void> _createSchema(
     QueryExecutor executor,
     List<String> statements,
