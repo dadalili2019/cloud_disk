@@ -2,6 +2,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/theme_controller.dart';
+import '../application/ai_conversation_history.dart';
 import '../application/ai_prompt_builder.dart';
 import '../core/ai_context_models.dart';
 import '../core/ai_conversation_models.dart';
@@ -556,23 +557,6 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
     });
   }
 
-  List<AIConversationTurn> _historyForPrompt({String? excludeTrailingUser}) {
-    final source = _messages
-        .where((item) => item.role == 'user' || item.role == 'assistant')
-        .toList(growable: false);
-    var end = source.length;
-    if (excludeTrailingUser != null &&
-        source.isNotEmpty &&
-        source.last.role == 'user' &&
-        source.last.content.trim() == excludeTrailingUser.trim()) {
-      end--;
-    }
-    return source
-        .take(end)
-        .map((item) => AIConversationTurn(role: item.role, content: item.content))
-        .toList(growable: false);
-  }
-
   Future<void> _send() async {
     final runtime = _runtime;
     final message = _messageController.text.trim();
@@ -596,7 +580,7 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       final prompt = runtime.aiPromptBuilder.build(
         context: context,
         userMessage: message,
-        history: _historyForPrompt(),
+        history: buildAIConversationHistory(_messages),
       );
 
       thread ??= await runtime.aiConversationService.createThread(
@@ -673,7 +657,10 @@ class _GlobalAiDrawerState extends State<GlobalAiDrawer> {
       final prompt = runtime.aiPromptBuilder.build(
         context: context,
         userMessage: message,
-        history: _historyForPrompt(excludeTrailingUser: message),
+        history: buildAIConversationHistory(
+          _messages,
+          excludeTrailingUser: message,
+        ),
       );
       final response = await runtime.aiProvider.complete(prompt);
       await runtime.aiConversationService.addAssistantMessage(
