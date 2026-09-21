@@ -52,123 +52,50 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 
 ## 3. Desktop Hardening
 
+第一轮 Desktop Hardening 已完成。
+
 ### 结构
 
 已完成：
 
-- Workspace 历史聚合页面删除。
-- Workspace 当前 V2 命名清理。
-- Workspace Overview 拆成 Frame / Navigation / Overview Content。
-- Settings 拆成 Page / Sections / Navigation / Appearance / Components。
+- Workspace / Settings / Home / Knowledge / Developer 第一轮职责拆分。
+- Global AI Drawer 第一阶段 UI helper / formatter 拆分。
+- Navigation Shell 按 State / Topbar / Sidebar / Content Frame 拆分。
+- Notes Editor 保存一致性加固。
+- Notes Editor Notes List / Editor / Preview / Save State 展示职责拆分。
+- Workbench Runtime Composition 下沉，不引入 DI Framework。
+- Issue / Resource / Decision 共用 `WorkbenchAsyncList<T>` 的 loading / error / empty / list shell。
+- Image Tools 两轮公共逻辑整理。
 
-下一批优先处理：
+暂不继续：
 
-- Global AI Drawer 已完成第一阶段：UI helper / formatter 拆分。
-- Home 页面已按 Focus / Panels / Support 拆分，保留原 UI 和加载逻辑。
-- Knowledge 页面已按 Cards / Editor / Support 拆分，保留原搜索和沉淀逻辑。
-- Developer 页面已按 Actions / Sections / Support 拆分，保留原 CRUD 和展示逻辑。
-- 下一步继续判断 Global AI Conversation State 是否值得抽离，先不强拆。
-- 同时开始把重点转向 Service / Repository / Search / Backup / AI Context 自动化测试。
+- Global AI Drawer 第二阶段没有明确维护痛点，先不强拆。
+- Image Tools Failed Task / Preview Widget 暂不继续抽象。
+- Issue / Resource / Decision 不做万能 CRUD Framework。
 
-原则是按职责拆，不机械拆。
+### 测试与质量 Gate
 
-### 测试
+已完成：
 
-已开始：
+- Task / Workspace / Knowledge / Settings 业务规则测试。
+- Search / Backup / Restore 关键异常和恢复测试。
+- Database Fresh Schema 与 v1~v5 → v6 Migration 测试。
+- AI Provider / Conversation 异常测试。
+- Image Tools 纯逻辑测试。
+- Notes Editor Save Coordinator 测试。
+- Workbench 基础 Widget Smoke Test。
+- GitHub Actions PR Analyze / Test Gate。
 
-- AI Context Budget 单元测试。
-- SearchService rebuild / freshness / concurrency / query forwarding 测试。
+### 工程收口
 
-继续完成：
+已完成：
 
-- Search Repository FTS / LIKE fallback / filter / limit 测试。
-- Restore archive manifest / schema / path safety / corrupted ZIP 测试。
+- Windows 产品名统一为 Personal Workbench。
+- Windows executable 统一为 `personal_workbench.exe`。
+- Repository / Dart package 继续保留 `cloud_disk`，避免无业务价值的大范围 import 重命名。
+- 依赖 / Asset 第一轮审计不做无证据删除；后续只有确认未引用时再清理。
 
-继续完成：
-
-- Backup portable settings / manifest ZIP 测试。
-- Search rebuild batch / transaction 路径测试。
-
-继续完成：
-
-- Restore staging / next-start apply 自动化测试。
-- Restore settings preflight / sanitize。
-- Pending Restore 失败边界保护。
-
-当前开始：
-
-- TaskService 业务规则测试。
-- WorkspaceService create / slug unique / directory / activity 测试。
-- WorkspaceAdminService rename / archive / restore 测试。
-
-当前继续：
-
-- KnowledgeService Markdown / source links / Search Index 规则测试。
-- WorkbenchSettingsService 默认值 / persistence / secret boundary 测试。
-
-已识别但不和本轮混改：
-
-- Knowledge create / update 跨 Markdown、SQLite、Entity Link、Search Index 时的失败补偿还需要独立加固。
-
-本轮继续：
-
-- Task Repository 用真实 SQLite 锁 Current Task 唯一约束、事务切换和失败回滚。
-
-本轮继续：
-
-- Knowledge create / update 跨 Markdown、Repository、Entity Link、Search Index 增加反向补偿。
-- Task Repository 真实 SQLite Current 约束已补。
-
-本轮继续：
-
-- Fresh Schema v6 自动化测试。
-- v1~v5 到 v6 Migration 自动化测试。
-- Migration 数据保留、Index、FTS 和约束验证。
-
-AI Provider / Conversation 第一轮异常测试已完成并合并。
-
-Image Tools 第一轮公共基础层已完成并合并。
-
-当前继续：
-
-- Preview 文件读取 / decode / resize / PNG encode 公共化。
-- Watermark position / font / foreground / shadow 纯算法公共化。
-- Image Convert / Watermark / Crop / Filter Batch Loop 公共化。
-- 页面 setState / UI State 继续留在各页面，不做万能框架。
-- 补 Preview / Watermark / Batch 单元测试。
-
-Image Tools 第二轮已完成并合并，剩余 Failed Task / Preview Widget 暂不继续抽象。
-
-Navigation Shell 第一轮拆分已完成并合并。
-
-Notes Editor 保存一致性已完成并合并。
-
-当前继续：
-
-- Notes Editor UI 按入口状态编排 / Notes List / Editor / Preview / Save State 拆分。
-- 保存时序和 Runtime 访问继续留在入口 State，不下沉到展示 Widget。
-- 不引入新的 Controller / Manager 层。
-
-下一批：
-
-- Widget smoke
-- 依赖 / Asset / Release 收口
-
-### 异常
-
-- 页面加载失败
-- SQLite 异常
-- 文件写入异常
-- Search rebuild 异常
-- AI timeout / HTTP error / empty response
-
-### 性能
-
-- 避免重复 IO 和重复查询。
-- 大列表避免无意义全量 rebuild。
-- Search rebuild 看真实数据量表现。
-- AI Context 不重复读取不需要的 Markdown。
-- 图片工具避免长期阻塞 UI isolate。
+后续主线不再是持续重构，而是进入真实环境验证与 Release 验收。
 
 ## 4. AI Real Environment Verification
 

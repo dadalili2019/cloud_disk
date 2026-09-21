@@ -264,35 +264,61 @@ AI 功能后面不要只验证“正常返回”。
 - 删除掉确认无用的旧代码。
 - 没有为了“以后可能有用”保留第二套实现。
 
-## 8. 当前近期执行顺序
+## 8. 当前阶段收口
 
-当前进度：
+本轮 Desktop Hardening / Code Optimization 主线已经完成第一轮收口。
 
-- Task / Workspace 业务规则测试：第一轮完成，Repository 真实数据库约束也已补。
-- Knowledge / Settings 业务规则测试：第一轮完成。
-- Knowledge 跨 Markdown / SQLite / Link / Search 的失败补偿：第一轮加固完成。
-- Database Schema / Migration 第一轮测试已完成：Fresh v6 + v1~v5 → v6。
-- AI Provider / Conversation 异常测试第一轮已完成并合并。
-- Image Tools 第一轮公共基础层抽取已完成并合并。
-- Image Tools 第二轮 Preview / Watermark / Batch 公共纯逻辑整理已完成并合并。
-- Navigation Shell 第一轮拆分已完成并合并。
-- Notes Editor 保存一致性加固已完成并合并。
-- Notes Editor 展示职责拆分进行中。
+已完成：
 
-现在按这个顺序继续：
+- Task / Workspace 业务规则测试。
+- Knowledge / Settings 业务规则测试。
+- Knowledge 跨 Markdown / SQLite / Link / Search 的失败补偿。
+- Database Fresh Schema / v1~v5 → v6 Migration 测试。
+- GitHub Actions Analyze / Test Gate。
+- AI Provider / Conversation 异常链路测试。
+- Image Tools 公共基础、Preview、Watermark、Batch 逻辑整理。
+- Navigation Shell 职责拆分。
+- Notes Editor 保存一致性加固。
+- Notes Editor Notes List / Editor / Preview / Save State 展示职责拆分。
+- Widget Smoke Test 基线。
+- Windows Release 产品命名收口为 Personal Workbench / personal_workbench.exe。
+- Workbench Runtime Composition 下沉。
+- Issue / Resource / Decision 共用异步列表外壳。
+- 依赖 / Asset / Release 第一轮审计收口。
+
+本轮明确不继续做：
+
+- 不为了减少文件行数继续拆 Global AI Drawer。
+- 不继续抽象 Image Tools Failed Task / Preview Widget。
+- 不把 Issue / Resource / Decision 做成万能 CRUD Framework。
+- 不做大范围 Dart package 重命名；仓库和 package 继续保留 cloud_disk。
+- 没有明确无用证据的依赖和 Asset 不做破坏性删除。
+
+后续优化不再按“继续重构”推进，而是只在真实问题出现时插入：
 
 ~~~text
-1. Task / Workspace 业务规则测试（第一轮已完成）
-2. Knowledge / Settings 业务规则测试（第一轮已完成）
-3. Database Schema / Migration 测试（第一轮已完成）
-4. GitHub Actions CI（第一轮已完成）
-5. AI Provider / Conversation 异常测试（第一轮已完成）
-6. Image Tools 重复逻辑整理（第一、二轮已完成）
-7. Navigation / Notes Editor（Navigation 已完成；Notes Editor Save State 已完成，UI 拆分进行中）
-8. 剩余依赖 / Asset / Release 收口
+真实 Bug / 数据安全
+→ 优先修
+
+真实性能热点
+→ 测量后优化
+
+新 Schema
+→ Migration + Test
+
+真实 AI Gateway / Release 环境
+→ Integration / Smoke Verification
+
+明确重复或维护困难
+→ 再做局部重构
 ~~~
 
-如果中途发现明确 Bug、数据安全问题或严重性能问题，可以插队，但要在 Roadmap 里写清楚为什么。
+下一阶段重点转为：
+
+1. AI Real Environment Verification。
+2. 真实数据量下 Search / Backup / Restore 性能与恢复验证。
+3. Windows Release Artifact 安装 / 启动 / Upgrade Smoke。
+4. 完成上述真实环境验收后，再标记 Desktop Stable V1。
 
 ## 9. 和其他文档的关系
 

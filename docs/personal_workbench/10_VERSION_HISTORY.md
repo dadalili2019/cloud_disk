@@ -400,3 +400,20 @@ Notes Editor 在保存一致性稳定后继续做展示职责拆分：
 - Issue / Resource / Decision 接入公共外壳。
 - 各自 CRUD、卡片内容、Task Link 与 Drawer 继续留在业务页面。
 - 不引入通用 CRUD framework。
+
+
+## 2026-09-21 Desktop Hardening Closeout
+
+第一轮 Personal Workbench 代码优化主线完成收口：
+
+- Navigation / Notes Editor 阶段完成。
+- Widget Smoke Test 基线已建立。
+- Windows Release 产品命名统一为 Personal Workbench / personal_workbench.exe。
+- Workbench Runtime Composition 已从主 Runtime 文件下沉。
+- Issue / Resource / Decision 只统一异步列表外壳，不引入万能 CRUD Framework。
+- Global AI Drawer 第二阶段在没有明确维护痛点前暂不继续强拆。
+- Image Tools Failed Task / Preview Widget 暂不继续抽象。
+- 依赖与 Asset 第一轮审计遵循“确认无用才删除”，本轮不做无证据的破坏性清理。
+- 优化计划从“持续重构”切换为“真实问题驱动维护”。
+
+下一阶段转向 AI 真实环境、真实数据量和 Windows Release 验收。
