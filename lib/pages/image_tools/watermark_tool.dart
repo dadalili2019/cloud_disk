@@ -203,15 +203,14 @@ class _WatermarkToolPageState extends State<WatermarkToolPage> {
       }
 
       final target = _applyWatermark(decoded);
-      final ext = _outputFormat == ImageOutputFormat.jpg ? 'jpg' : 'png';
-      final outPath = p.join(outputDir.path, '${p.basenameWithoutExtension(path)}_wm.$ext');
-
-      Uint8List out;
-      if (_outputFormat == ImageOutputFormat.jpg) {
-        out = Uint8List.fromList(img.encodeJpg(target, quality: _quality.round()));
-      } else {
-        out = Uint8List.fromList(img.encodePng(target, level: 6));
-      }
+      final outPath = p.join(
+        outputDir.path,
+        '${p.basenameWithoutExtension(path)}_wm.${_outputFormat.extension}',
+      );
+      final out = _outputFormat.encode(
+        target,
+        jpgQuality: _quality.round(),
+      );
       await File(outPath).writeAsBytes(out, flush: true);
       return true;
     } catch (e) {
