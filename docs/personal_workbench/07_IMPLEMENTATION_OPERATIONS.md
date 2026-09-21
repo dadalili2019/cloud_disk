@@ -200,3 +200,24 @@ RESULT: PASS
 ~~~
 
 失败时返回非 0 exit code，并输出正式 Provider 的 Timeout / Network / HTTP / JSON / Empty Response 错误信息。
+
+## Windows Release Startup Smoke
+
+Windows Release 构建后使用：
+
+~~~powershell
+./tool/verify_windows_release.ps1
+~~~
+
+默认检查：
+
+1. `build/windows/x64/runner/Release/personal_workbench.exe` 存在。
+2. `data/flutter_assets` 存在。
+3. 启动 `personal_workbench.exe`。
+4. 等待 8 秒。
+5. 如果进程提前退出，则 Smoke 失败。
+6. 如果进程仍在运行，则判定启动 Smoke 通过，并终止测试进程。
+
+GitHub Actions 在 main push / workflow_dispatch 的 Windows Release Build 中，会在上传 Artifact 前自动执行这一步。
+
+该 Smoke 只验证 Release 包能完成基础启动，不替代人工验证 Login、Shell、AI、Backup / Restore 等业务流程。

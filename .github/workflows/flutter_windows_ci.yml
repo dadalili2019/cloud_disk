@@ -72,6 +72,10 @@ jobs:
       - name: Build Windows release
         run: flutter build windows --release
 
+      - name: Smoke Windows release
+        shell: powershell
+        run: ./tool/verify_windows_release.ps1
+
       - name: Upload Windows release
         uses: actions/upload-artifact@v4
         with:
