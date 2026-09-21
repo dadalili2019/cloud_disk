@@ -199,95 +199,77 @@ class _WorkbenchIssuePageState extends State<WorkbenchIssuePage> {
           child: const Text('新建问题'),
         ),
       ],
-      child: FutureBuilder<List<IssueModel>>(
+      child: WorkbenchAsyncList<IssueModel>(
         future: _issues,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: ProgressRing());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('加载失败：${snapshot.error}'));
-          }
+        emptyTitle: '当前没有问题',
+        emptyActionLabel: '新建问题',
+        onEmptyAction: _createIssue,
+        itemBuilder: (context, issue) {
+          return FutureBuilder<List<TaskModel>>(
+            future: WorkbenchRuntime.instance.then(
+              (runtime) => runtime.issueService.linkedTasks(issue),
+            ),
+            builder: (context, linkSnapshot) {
+              final linkedTasks = linkSnapshot.data ?? const <TaskModel>[];
+              final linkedTaskText =
+                  linkedTasks.map((task) => task.title).join('、');
 
-          final issues = snapshot.data ?? const <IssueModel>[];
-          if (issues.isEmpty) {
-            return WorkbenchEmptyState(
-              title: '当前没有问题',
-              description: '',
-              actionLabel: '新建问题',
-              onAction: _createIssue,
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.only(bottom: 8),
-            itemCount: issues.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final issue = issues[index];
-              return FutureBuilder<List<TaskModel>>(
-                future: WorkbenchRuntime.instance.then(
-                  (runtime) => runtime.issueService.linkedTasks(issue),
-                ),
-                builder: (context, linkSnapshot) {
-                  final linkedTasks = linkSnapshot.data ?? const <TaskModel>[];
-                  final linkedTaskText = linkedTasks.map((task) => task.title).join('、');
-
-                  return WorkbenchCard(
-                    onTap: () => _editIssue(issue),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              return WorkbenchCard(
+                onTap: () => _editIssue(issue),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                issue.title,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                        Expanded(
+                          child: Text(
+                            issue.title,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                             ),
-                            WorkbenchTag(
-                              label: _severityText(issue.severity),
-                            ),
-                            const SizedBox(width: 6),
-                            WorkbenchTag(label: _statusText(issue.status)),
-                          ],
+                          ),
                         ),
-                        if (linkedTaskText.isNotEmpty) ...[
-                          const SizedBox(height: 7),
-                          Text(
-                            linkedTaskText,
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              color: theme.typography.body?.color?.withValues(alpha: 0.52),
-                            ),
-                          ),
-                        ],
-                        if (issue.impact.isNotEmpty) ...[
-                          const SizedBox(height: 9),
-                          Text('影响 · ${issue.impact}',
-                              style: const TextStyle(fontSize: 11.5)),
-                        ],
-                        if (issue.hypothesis.isNotEmpty) ...[
-                          const SizedBox(height: 5),
-                          Text('当前假设 · ${issue.hypothesis}',
-                              style: const TextStyle(fontSize: 11.5)),
-                        ],
-                        if (issue.nextInvestigationStep.isNotEmpty) ...[
-                          const SizedBox(height: 5),
-                          Text(
-                            '下一步调查 · ${issue.nextInvestigationStep}',
-                            style: const TextStyle(fontSize: 11.5),
-                          ),
-                        ],
+                        WorkbenchTag(label: _severityText(issue.severity)),
+                        const SizedBox(width: 6),
+                        WorkbenchTag(label: _statusText(issue.status)),
                       ],
                     ),
-                  );
-                },
+                    if (linkedTaskText.isNotEmpty) ...[
+                      const SizedBox(height: 7),
+                      Text(
+                        linkedTaskText,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: theme.typography.body?.color
+                              ?.withValues(alpha: 0.52),
+                        ),
+                      ),
+                    ],
+                    if (issue.impact.isNotEmpty) ...[
+                      const SizedBox(height: 9),
+                      Text(
+                        '影响 · ${issue.impact}',
+                        style: const TextStyle(fontSize: 11.5),
+                      ),
+                    ],
+                    if (issue.hypothesis.isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        '当前假设 · ${issue.hypothesis}',
+                        style: const TextStyle(fontSize: 11.5),
+                      ),
+                    ],
+                    if (issue.nextInvestigationStep.isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        '下一步调查 · ${issue.nextInvestigationStep}',
+                        style: const TextStyle(fontSize: 11.5),
+                      ),
+                    ],
+                  ],
+                ),
               );
             },
           );
