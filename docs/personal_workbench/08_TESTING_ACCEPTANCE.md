@@ -226,9 +226,10 @@ Notes Editor 展示职责拆分与第一批 Widget Smoke Test 已完成。
 
 下一阶段测试重点：
 
-1. 真实 AI Gateway / API Key / Provider Integration。
-2. Windows Release Artifact 启动 Smoke 已自动化；继续补人工 Upgrade Smoke。
-3. 合成数据量 Search / Backup / Restore 手工验证入口已建立；PR CI 额外执行一个轻量 Scale Smoke，大规模参数仍手工执行并记录结果。
+1. Windows Release Artifact 启动 Smoke 已自动化；继续完成 Existing Data Upgrade Smoke。
+2. 合成数据量 Search / Backup / Restore 手工验证入口已建立；PR CI 额外执行一个轻量 Scale Smoke，大规模参数仍手工执行并记录结果。
+3. 正式 Windows Runtime Search / FTS5 与 Backup / Restore 做最后人工验收。
+4. 真实 AI Gateway 参数接入 Deferred，不阻塞当前 Stable V1。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 
@@ -258,13 +259,14 @@ Notes Editor 展示职责拆分与第一批 Widget Smoke Test 已完成。
 最终标记 Stable V1 前必须补齐真实结果：
 
 - [ ] `verify_stable_v1.ps1` 默认 Gate 通过。
+- [ ] Windows Release Package Verification 通过并生成 SHA-256 manifest。
 - [ ] 大规模 `-IncludeScale` 验证完成并记录耗时。
-- [ ] 真实 AI Gateway `-IncludeAi` 验证通过。
 - [ ] Windows Release 使用已有用户数据升级启动正常。
 - [ ] Login / Shell / Workspace / Task / Notes 人工 Smoke。
 - [ ] Search 正式 Windows Runtime FTS5 查询正常。
-- [ ] AI Send / Retry / History / Restart Recovery 正常。
 - [ ] Backup / Restore 人工灾难恢复链路验证正常。
 - [ ] Tray / Resize / Settings / Tools 人工 Smoke 正常。
+
+AI Provider / Context / Conversation 代码与自动化测试已保留；真实 AI Gateway 参数接入当前为 Deferred，不作为 Stable V1 阻塞项。
 
 没有执行的项目必须保留未勾选，不能根据单元测试推断为通过。
