@@ -192,10 +192,17 @@ GitHub Actions CI 已建立第一轮 Windows Gate。
 - AI Conversation anchor / archived / title / context snapshot。
 - SQLite Thread / Message 持久化和关闭重开恢复。
 
+Image Tools 第一轮公共基础测试已补：
+
+- JPG / PNG 输出格式与编码。
+- 文件大小格式化。
+- 默认输出目录创建。
+- 自定义输出目录创建。
+
 下一批：
 
 1. Widget smoke tests。
-2. Image Tools 重复逻辑整理。
+2. Image Tools Preview / Watermark / Run-Retry 进一步去重。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 
