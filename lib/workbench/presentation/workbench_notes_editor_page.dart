@@ -124,6 +124,9 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
 
   Future<void> _selectNote(NoteModel note) async {
     if (_selected?.id == note.id) return;
+    if (_saving) {
+      await _flushPendingSave();
+    }
     if (_dirty) {
       if (_notesSettings.autoSave) {
         await _flushPendingSave();
@@ -279,6 +282,9 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
       );
 
       if (result != true || !mounted) return;
+      if (_saving) {
+        await _flushPendingSave();
+      }
       var discardCurrentChanges = false;
       if (_dirty) {
         if (_notesSettings.autoSave) {
