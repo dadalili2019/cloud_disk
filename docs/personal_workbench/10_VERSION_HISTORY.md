@@ -417,3 +417,14 @@ Notes Editor 在保存一致性稳定后继续做展示职责拆分：
 - 优化计划从“持续重构”切换为“真实问题驱动维护”。
 
 下一阶段转向 AI 真实环境、真实数据量和 Windows Release 验收。
+
+
+## 2026-09-21 Stable V1 Candidate Verification Entry
+
+进入 Desktop Stable V1 Candidate：
+
+- 新增 `tool/verify_stable_v1.ps1`，统一 Analyze / Test / Windows Release Build / Startup Smoke。
+- 可用 `-IncludeScale` 追加 Search / Backup / Restore 合成数据规模验证。
+- 可用 `-IncludeAi` 追加真实 AI Provider 验证。
+- AI Credential 继续只来自现有 WORKBENCH_AI_* 配置，不写入仓库、不打印值。
+- 自动化 Gate 与最终人工业务 Smoke 分开，避免把单元测试结果冒充真实环境验收。
