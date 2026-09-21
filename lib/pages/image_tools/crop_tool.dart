@@ -6,6 +6,8 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 
+import 'image_tools_support.dart';
+
 class CropToolPage extends StatefulWidget {
   const CropToolPage({super.key});
 
@@ -13,13 +15,12 @@ class CropToolPage extends StatefulWidget {
   State<CropToolPage> createState() => _CropToolPageState();
 }
 
-enum _OutputFormat { jpg, png }
 enum _CropRatio { original, square, r4x3, r16x9, r3x4, r9x16 }
 
 class _CropToolPageState extends State<CropToolPage> {
   final List<PlatformFile> _pickedFiles = [];
 
-  _OutputFormat _outputFormat = _OutputFormat.jpg;
+  ImageOutputFormat _outputFormat = ImageOutputFormat.jpg;
   _CropRatio _cropRatio = _CropRatio.original;
   double _quality = 88;
 
@@ -39,43 +40,30 @@ class _CropToolPageState extends State<CropToolPage> {
   String _status = '请选择图片开始处理';
 
   Future<void> _pickImages() async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
-      type: FileType.custom,
-      allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp', 'bmp'],
-    );
-    if (result == null) return;
+    final files = await pickImageFiles();
+    if (files == null) return;
 
     setState(() {
       _pickedFiles
         ..clear()
-        ..addAll(result.files.where((e) => e.path != null));
+        ..addAll(files);
       _status = '已选择 ${_pickedFiles.length} 张图片';
     });
     _refreshPreview();
   }
 
   Future<void> _pickOutputDir() async {
-    final picked = await FilePicker.platform.getDirectoryPath(dialogTitle: '选择输出目录');
-    if (picked == null || picked.isEmpty) return;
+    final picked = await pickImageOutputDirectory();
+    if (picked == null) return;
     setState(() => _outputDirPath = picked);
   }
 
-  Future<Directory> _resolveOutputDir() async {
-    if (_outputDirPath != null && _outputDirPath!.isNotEmpty) {
-      final custom = Directory(_outputDirPath!);
-      if (!custom.existsSync()) {
-        custom.createSync(recursive: true);
-      }
-      return custom;
-    }
-
-    final source = Directory(p.dirname(_pickedFiles.first.path!));
-    final output = Directory(p.join(source.path, 'offline_crop_output'));
-    if (!output.existsSync()) {
-      output.createSync(recursive: true);
-    }
-    return output;
+  Future<Directory> _resolveOutputDir() {
+    return resolveImageOutputDirectory(
+      selectedPath: _outputDirPath,
+      sourcePath: _pickedFiles.first.path!,
+      defaultFolderName: 'offline_crop_output',
+    );
   }
 
   Future<void> _refreshPreview() async {
@@ -211,15 +199,14 @@ class _CropToolPageState extends State<CropToolPage> {
       if (decoded == null) return false;
 
       final transformed = _applyTransforms(decoded);
-      final ext = _outputFormat == _OutputFormat.jpg ? 'jpg' : 'png';
-      final outPath = p.join(outputDir.path, '${p.basenameWithoutExtension(file.path!)}_crop.$ext');
-
-      final Uint8List outBytes;
-      if (_outputFormat == _OutputFormat.jpg) {
-        outBytes = Uint8List.fromList(img.encodeJpg(transformed, quality: _quality.round()));
-      } else {
-        outBytes = Uint8List.fromList(img.encodePng(transformed, level: 6));
-      }
+      final outPath = p.join(
+        outputDir.path,
+        '${p.basenameWithoutExtension(file.path!)}_crop.${_outputFormat.extension}',
+      );
+      final outBytes = _outputFormat.encode(
+        transformed,
+        jpgQuality: _quality.round(),
+      );
       await File(outPath).writeAsBytes(outBytes, flush: true);
       return true;
     } catch (_) {
@@ -261,7 +248,7 @@ class _CropToolPageState extends State<CropToolPage> {
       content: ListView(
         padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
         children: [
-          _card(
+          imageToolCard(context, 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -299,7 +286,7 @@ class _CropToolPageState extends State<CropToolPage> {
               ],
             ),
           ),
-          _card(
+          imageToolCard(context, 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -393,7 +380,7 @@ class _CropToolPageState extends State<CropToolPage> {
               ],
             ),
           ),
-          _card(
+          imageToolCard(context, 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -403,11 +390,11 @@ class _CropToolPageState extends State<CropToolPage> {
                   children: [
                     const Text('输出格式：'),
                     const SizedBox(width: 8),
-                    ComboBox<_OutputFormat>(
+                    ComboBox<ImageOutputFormat>(
                       value: _outputFormat,
                       items: const [
-                        ComboBoxItem(value: _OutputFormat.jpg, child: Text('JPG')),
-                        ComboBoxItem(value: _OutputFormat.png, child: Text('PNG')),
+                        ComboBoxItem(value: ImageOutputFormat.jpg, child: Text('JPG')),
+                        ComboBoxItem(value: ImageOutputFormat.png, child: Text('PNG')),
                       ],
                       onChanged: _running ? null : (v) => setState(() => _outputFormat = v!),
                     ),
@@ -453,17 +440,5 @@ class _CropToolPageState extends State<CropToolPage> {
     );
   }
 
-  Widget _card({required Widget child}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: FluentTheme.of(context).resources.cardBackgroundFillColorDefault,
-        ),
-        child: child,
-      ),
-    );
-  }
+
 }

@@ -1,7 +1,8 @@
 ﻿import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+
+import 'image_tools_support.dart';
 
 class DedupeToolPage extends StatefulWidget {
   const DedupeToolPage({super.key});
@@ -25,17 +26,13 @@ class _DedupeToolPageState extends State<DedupeToolPage> {
   int _wastedBytes = 0;
 
   Future<void> _pickImages() async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
-      type: FileType.custom,
-      allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp', 'bmp'],
-    );
-    if (result == null) return;
+    final files = await pickImageFiles();
+    if (files == null) return;
 
     setState(() {
       _imagePaths
         ..clear()
-        ..addAll(result.files.where((e) => e.path != null).map((e) => e.path!));
+        ..addAll(files.map((file) => file.path!));
       _duplicateGroups.clear();
       _wastedBytes = 0;
       _status = '已选择 ${_imagePaths.length} 张图片';
@@ -126,29 +123,9 @@ class _DedupeToolPageState extends State<DedupeToolPage> {
     return sum;
   }
 
-  String _formatSize(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    final kb = bytes / 1024;
-    if (kb < 1024) return '${kb.toStringAsFixed(1)} KB';
-    final mb = kb / 1024;
-    if (mb < 1024) return '${mb.toStringAsFixed(1)} MB';
-    final gb = mb / 1024;
-    return '${gb.toStringAsFixed(2)} GB';
-  }
+  
 
-  Widget _card({required Widget child}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: FluentTheme.of(context).resources.cardBackgroundFillColorDefault,
-        ),
-        child: child,
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +133,7 @@ class _DedupeToolPageState extends State<DedupeToolPage> {
       content: ListView(
         padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
         children: [
-          _card(
+          imageToolCard(context, 
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('1. 选择图片', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
@@ -167,7 +144,7 @@ class _DedupeToolPageState extends State<DedupeToolPage> {
               ]),
             ]),
           ),
-          _card(
+          imageToolCard(context, 
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('2. 扫描重复', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
@@ -175,11 +152,11 @@ class _DedupeToolPageState extends State<DedupeToolPage> {
               const SizedBox(height: 10),
               Text(_status),
               const SizedBox(height: 6),
-              Text('可回收空间（估算）：${_formatSize(_wastedBytes)}'),
+              Text('可回收空间（估算）：${formatImageByteSize(_wastedBytes)}'),
             ]),
           ),
           if (_duplicateGroups.isNotEmpty)
-            _card(
+            imageToolCard(context, 
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('3. 重复分组（${_duplicateGroups.length} 组）', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 10),
@@ -194,7 +171,7 @@ class _DedupeToolPageState extends State<DedupeToolPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('组 ${i + 1} · ${g.length} 个文件 · 单文件 ${_formatSize(g.first.size)}'),
+                            Text('组 ${i + 1} · ${g.length} 个文件 · 单文件 ${formatImageByteSize(g.first.size)}'),
                             const SizedBox(height: 4),
                             ...g.map((e) => Text('• ${e.path}', overflow: TextOverflow.ellipsis)),
                           ],
