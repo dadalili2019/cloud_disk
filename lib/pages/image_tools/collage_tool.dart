@@ -5,6 +5,8 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 
+import 'image_tools_support.dart';
+
 class CollageToolPage extends StatefulWidget {
   const CollageToolPage({super.key});
 
@@ -27,17 +29,13 @@ class _CollageToolPageState extends State<CollageToolPage> {
   bool _running = false;
 
   Future<void> _pickImages() async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
-      type: FileType.custom,
-      allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp', 'bmp'],
-    );
-    if (result == null) return;
+    final files = await pickImageFiles();
+    if (files == null) return;
 
     setState(() {
       _pickedFiles
         ..clear()
-        ..addAll(result.files.where((e) => e.path != null));
+        ..addAll(files);
       _status = '已选择 ${_pickedFiles.length} 张图片';
     });
   }
@@ -141,7 +139,7 @@ class _CollageToolPageState extends State<CollageToolPage> {
     );
   }
 
-  Widget _card({required Widget child}) {
+  Widget imageToolCard(context, {required Widget child}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
@@ -161,7 +159,7 @@ class _CollageToolPageState extends State<CollageToolPage> {
       content: ListView(
         padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
         children: [
-          _card(
+          imageToolCard(context, 
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('1. 选择图片', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
@@ -172,7 +170,7 @@ class _CollageToolPageState extends State<CollageToolPage> {
               ]),
             ]),
           ),
-          _card(
+          imageToolCard(context, 
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('2. 布局参数', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
@@ -232,7 +230,7 @@ class _CollageToolPageState extends State<CollageToolPage> {
               ]),
             ]),
           ),
-          _card(
+          imageToolCard(context, 
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('3. 生成', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
