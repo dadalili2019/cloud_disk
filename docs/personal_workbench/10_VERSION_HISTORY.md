@@ -347,3 +347,15 @@ Developer 页面拆分后继续修正 State 边界：
 - Image Convert / Watermark Retry 继续保留各自 failed item 语义，但复用 Batch Runner。
 - 页面 State / setState 继续留在页面内部，不引入万能 Image Tool Controller。
 - 新增 Preview / Watermark / Batch 单元测试。
+
+
+## 2026-09-21 Navigation Shell Split - Step 1
+
+开始进入 Navigation / Notes Editor 阶段：
+
+- `navigation_page.dart` 从约 780 行收敛为约 237 行。
+- 主文件只保留 NavigationPage State、路由跳转、当前工作区加载与切换。
+- Topbar、Shell Colors、Shell Button 抽到 `navigation_shell_topbar.dart`。
+- Sidebar、Nav Item、Content Frame 抽到 `navigation_shell_sidebar.dart`。
+- 使用 Dart `part / part of` 保持 private Widget 和 helper 的封装边界。
+- 不改变现有路由、选中状态、AI Drawer、窗口按钮和工作区切换行为。
