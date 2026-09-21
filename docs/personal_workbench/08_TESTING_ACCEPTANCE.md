@@ -126,6 +126,7 @@ flutter build windows
 当前开始进入业务规则测试：
 
 - Task create / update / done / current / activity。
+- Workspace create / slug unique / directory / activity。
 - Workspace rename / archive / restore / activity。
 
 下一批：

@@ -107,6 +107,7 @@ WorkspaceModel _workspace({
 }
 
 class _WorkspaceRepository implements WorkspaceRepository {
+  final List<WorkspaceModel> inserted = [];
   final List<WorkspaceModel> updated = [];
 
   @override
@@ -123,7 +124,7 @@ class _WorkspaceRepository implements WorkspaceRepository {
 
   @override
   Future<void> insert(WorkspaceModel workspace) async {
-    throw UnimplementedError();
+    inserted.add(workspace);
   }
 
   @override

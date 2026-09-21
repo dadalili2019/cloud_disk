@@ -98,6 +98,7 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 当前开始：
 
 - TaskService 业务规则测试。
+- WorkspaceService create / slug unique / directory / activity 测试。
 - WorkspaceAdminService rename / archive / restore 测试。
 
 下一批：
