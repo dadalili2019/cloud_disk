@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "cloud_disk" "\0"
+            VALUE "CompanyName", "Personal Workbench" "\0"
+            VALUE "FileDescription", "Personal Workbench" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "cloud_disk" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2024 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "cloud_disk.exe" "\0"
-            VALUE "ProductName", "cloud_disk" "\0"
+            VALUE "InternalName", "personal_workbench" "\0"
+            VALUE "LegalCopyright", "Personal Workbench" "\0"
+            VALUE "OriginalFilename", "personal_workbench.exe" "\0"
+            VALUE "ProductName", "Personal Workbench" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
