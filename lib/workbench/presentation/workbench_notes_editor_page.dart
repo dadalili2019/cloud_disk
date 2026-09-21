@@ -4,6 +4,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../../theme/theme_controller.dart';
+import '../application/notes_editor_save_coordinator.dart';
 import '../core/models.dart';
 import '../core/workbench_settings.dart';
 import '../workbench_runtime.dart';
@@ -25,15 +26,18 @@ class WorkbenchNotesEditorPage extends StatefulWidget {
 
 class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
   final TextEditingController _editor = TextEditingController();
+  final NotesEditorSaveCoordinator _saveCoordinator =
+      NotesEditorSaveCoordinator();
   Timer? _saveDebounce;
   List<NoteModel> _notes = const [];
   List<TaskModel> _linkedTasks = const [];
   NoteModel? _selected;
   NotesSettings _notesSettings = const NotesSettings();
   bool _loading = true;
-  bool _saving = false;
-  bool _dirty = false;
   String? _error;
+
+  bool get _dirty => _saveCoordinator.dirty;
+  bool get _saving => _saveCoordinator.saving;
 
   @override
   void initState() {
@@ -48,16 +52,26 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
     final note = _selected;
     final content = _editor.text;
     if (_notesSettings.autoSave && _dirty && note != null) {
-      unawaited(
-        WorkbenchRuntime.instance.then(
-          (runtime) => runtime.noteService.saveContent(note, content),
-        ),
-      );
+      unawaited(_persistOnDispose(note, content));
     }
     _editor
       ..removeListener(_scheduleSave)
       ..dispose();
     super.dispose();
+  }
+
+  Future<void> _persistOnDispose(NoteModel note, String content) async {
+    try {
+      await _saveCoordinator.flush(
+        persist: (_) async {
+          final runtime = await WorkbenchRuntime.instance;
+          await runtime.noteService.saveContent(note, content);
+        },
+        repeatWhileDirty: false,
+      );
+    } catch (_) {
+      // Dispose 阶段已经没有可展示的 UI；正式保存错误仍由编辑态流程展示。
+    }
   }
 
   Future<void> _loadNotes({String? selectId}) async {
@@ -105,13 +119,23 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
     _editor.text = value;
     _editor.selection = TextSelection.collapsed(offset: value.length);
     _editor.addListener(_scheduleSave);
-    _dirty = false;
+    _saveCoordinator.reset();
   }
 
   Future<void> _selectNote(NoteModel note) async {
     if (_selected?.id == note.id) return;
-    if (_notesSettings.autoSave) {
-      await _flushPendingSave();
+    if (_dirty) {
+      if (_notesSettings.autoSave) {
+        await _flushPendingSave();
+        if (_dirty) return;
+      } else {
+        final decision = await _confirmUnsavedChanges();
+        if (!mounted || decision == _UnsavedChangesDecision.cancel) return;
+        if (decision == _UnsavedChangesDecision.save) {
+          await _flushPendingSave();
+          if (_dirty) return;
+        }
+      }
     }
 
     final runtime = await WorkbenchRuntime.instance;
@@ -131,20 +155,17 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
 
   void _scheduleSave() {
     if (_selected == null) return;
-    _dirty = true;
+    _saveCoordinator.markEdited();
     _saveDebounce?.cancel();
 
     if (!_notesSettings.autoSave) {
       if (mounted) {
-        setState(() {
-          _saving = false;
-          _error = null;
-        });
+        setState(() => _error = null);
       }
       return;
     }
 
-    if (mounted) setState(() => _saving = true);
+    if (mounted) setState(() {});
     _saveDebounce = Timer(
       const Duration(milliseconds: 650),
       _flushPendingSave,
@@ -152,31 +173,67 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
   }
 
   Future<void> _flushPendingSave() async {
-    final note = _selected;
-    if (!_dirty || note == null) {
-      if (mounted) setState(() => _saving = false);
+    if (!_dirty || _selected == null) {
+      if (mounted) setState(() {});
       return;
     }
 
     _saveDebounce?.cancel();
-    final markdown = _editor.text;
+    final operation = _saveCoordinator.flush(
+      persist: (_) async {
+        final note = _selected;
+        if (note == null) return;
+        final markdown = _editor.text;
+        final runtime = await WorkbenchRuntime.instance;
+        await runtime.noteService.saveContent(note, markdown);
+      },
+      repeatWhileDirty: _notesSettings.autoSave,
+    );
+
+    if (mounted) setState(() {});
 
     try {
-      final runtime = await WorkbenchRuntime.instance;
-      await runtime.noteService.saveContent(note, markdown);
+      await operation;
       if (!mounted) return;
-      setState(() {
-        _dirty = false;
-        _saving = false;
-        _error = null;
-      });
+      setState(() => _error = null);
     } catch (error) {
       if (!mounted) return;
-      setState(() {
-        _saving = false;
-        _error = error.toString();
-      });
+      setState(() => _error = error.toString());
     }
+  }
+
+  Future<_UnsavedChangesDecision> _confirmUnsavedChanges() async {
+    final result = await showDialog<_UnsavedChangesDecision>(
+      context: context,
+      builder: (dialogContext) => ContentDialog(
+        title: const Text('当前笔记尚未保存'),
+        content: const Text('切换笔记前，要保存当前修改吗？'),
+        actions: [
+          Button(
+            onPressed: () => Navigator.pop(
+              dialogContext,
+              _UnsavedChangesDecision.cancel,
+            ),
+            child: const Text('取消'),
+          ),
+          Button(
+            onPressed: () => Navigator.pop(
+              dialogContext,
+              _UnsavedChangesDecision.discard,
+            ),
+            child: const Text('放弃修改'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(
+              dialogContext,
+              _UnsavedChangesDecision.save,
+            ),
+            child: const Text('保存并切换'),
+          ),
+        ],
+      ),
+    );
+    return result ?? _UnsavedChangesDecision.cancel;
   }
 
   Future<void> _createNote() async {
@@ -220,7 +277,19 @@ class _WorkbenchNotesEditorPageState extends State<WorkbenchNotesEditorPage> {
       );
 
       if (result != true || !mounted) return;
-      if (_notesSettings.autoSave) await _flushPendingSave();
+      if (_dirty) {
+        if (_notesSettings.autoSave) {
+          await _flushPendingSave();
+          if (_dirty) return;
+        } else {
+          final decision = await _confirmUnsavedChanges();
+          if (!mounted || decision == _UnsavedChangesDecision.cancel) return;
+          if (decision == _UnsavedChangesDecision.save) {
+            await _flushPendingSave();
+            if (_dirty) return;
+          }
+        }
+      }
 
       final title = titleController.text.trim();
       final runtime = await WorkbenchRuntime.instance;
@@ -628,6 +697,8 @@ class _SaveState extends StatelessWidget {
     );
   }
 }
+
+enum _UnsavedChangesDecision { save, discard, cancel }
 
 Future<void> _showError(BuildContext context, Object error) {
   return showDialog<void>(
