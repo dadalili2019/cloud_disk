@@ -208,10 +208,18 @@ Image Tools 第二轮公共逻辑测试已补：
 - Batch success / failure / progress。
 - Batch 中途停止。
 
+Notes Editor 保存一致性测试已补：
+
+- Save Coordinator reset / dirty state。
+- 手动保存期间继续编辑，旧保存完成后仍保持 dirty。
+- Auto Save 串行写入，保存期间继续编辑会继续写入最新 revision。
+- 第二次显式保存会排在正在执行的写入之后。
+- 保存失败继续保持 dirty，不误标记为已保存。
+
 下一批：
 
-1. Widget smoke tests。
-2. Image Tools 剩余 Failed Task / Preview Widget 是否值得继续整理。
+1. Notes Editor List / Editor / Preview 展示职责整理。
+2. Widget smoke tests。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 
