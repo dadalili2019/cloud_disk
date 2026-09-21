@@ -141,18 +141,18 @@ Image Tools 第二轮已完成并合并，剩余 Failed Task / Preview Widget �
 
 Navigation Shell 第一轮拆分已完成并合并。
 
+Notes Editor 保存一致性已完成并合并。
+
 当前继续：
 
-- Notes Editor 先加固 Save State / Auto Save 一致性，不先机械拆 UI。
-- Auto Save 写入串行化，避免旧内容晚写回覆盖新内容。
-- 手动保存模式切换笔记时保护未保存修改。
-- 保存中的切换 / 新建先等待当前显式保存完成。
-- 保存一致性稳定后，再整理 Notes List / Editor / Preview 展示职责。
+- Notes Editor UI 按入口状态编排 / Notes List / Editor / Preview / Save State 拆分。
+- 保存时序和 Runtime 访问继续留在入口 State，不下沉到展示 Widget。
+- 不引入新的 Controller / Manager 层。
 
 下一批：
 
-- Notes Editor UI 职责整理
 - Widget smoke
+- 依赖 / Asset / Release 收口
 
 ### 异常
 
