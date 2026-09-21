@@ -47,6 +47,7 @@ jobs:
         run: |
           $files = @(
             './tool/verify_windows_release.ps1',
+            './tool/verify_release_package.ps1',
             './tool/verify_stable_v1.ps1'
           )
           foreach ($file in $files) {
@@ -101,6 +102,10 @@ jobs:
 
       - name: Build Windows release
         run: flutter build windows --release
+
+      - name: Verify Windows release package
+        shell: powershell
+        run: ./tool/verify_release_package.ps1
 
       - name: Smoke Windows release
         shell: powershell

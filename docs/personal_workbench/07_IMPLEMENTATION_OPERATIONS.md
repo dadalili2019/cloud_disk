@@ -65,6 +65,8 @@ Windows Release 可执行文件统一为 `personal_workbench.exe`。Dart package
 
 ## 5. AI 配置
 
+当前 V1 发布不依赖真实 AI Gateway 参数。AI Provider / Context / Conversation 代码与自动化测试保留，真实参数接入状态为 Deferred，后续配置时再执行 Real Environment Verification。
+
 Settings → AI：
 
 - Provider
@@ -277,6 +279,7 @@ flutter --version
 → lightweight Scale Smoke
 → enable Windows desktop
 → flutter build windows --release
+→ Windows Release Package Verification
 → Windows Release Startup Smoke
 ~~~
 
@@ -286,16 +289,10 @@ flutter --version
 ./tool/verify_stable_v1.ps1 -IncludeScale
 ~~~
 
-需要同时验证真实 AI Gateway：
+真实 AI Gateway 为可选后续验证，不阻塞当前 Desktop Stable V1：
 
 ~~~powershell
 ./tool/verify_stable_v1.ps1 -IncludeAi
-~~~
-
-同时验证 Scale + AI：
-
-~~~powershell
-./tool/verify_stable_v1.ps1 -IncludeScale -IncludeAi
 ~~~
 
 AI 模式不会写入或打印 API Key；运行前仍使用现有 WORKBENCH_AI_* 环境变量。
@@ -307,7 +304,73 @@ AI 模式不会写入或打印 API Key；运行前仍使用现有 WORKBENCH_AI_*
 - Workspace / Task / Notes 基础 CRUD。
 - Note Auto Save / Ctrl+S / 切换未保存保护。
 - Search 中文 / 数字 / 重建。
-- AI Drawer 真实发送 / Retry / History / Restart Recovery。
 - Manual Backup。
 - Restore 到测试副本并重启恢复。
 - Tray / Resize / Settings / Tools 基础 Smoke。
+
+
+## Windows Release Package Verification
+
+Release Build 后执行：
+
+~~~powershell
+./tool/verify_release_package.ps1
+~~~
+
+自动检查：
+
+- `personal_workbench.exe`
+- `flutter_windows.dll`
+- `data/icudtl.dat`
+- `data/flutter_assets` 存在且非空
+- Release 目录至少包含实际文件
+
+验证通过后会在 Release 目录生成：
+
+~~~text
+release_manifest.sha256.txt
+~~~
+
+该文件记录 Release 包内文件的 SHA-256，可用于后续确认发布包是否缺文件或被修改。
+
+GitHub Actions 会在 Startup Smoke 前自动执行 Package Verification，验证通过后再上传 Artifact。
+
+## Existing Data Upgrade Smoke
+
+该步骤必须在真实 Windows 环境使用已有数据验证，不能由单元测试代替。
+
+建议流程：
+
+~~~text
+当前版本正常退出
+→ 先做 Manual Backup
+→ 保存一份现有数据副本
+→ 使用最新 Release 启动
+→ 等待数据库 Migration / Runtime 初始化
+→ 检查 Workspace / Task / Notes / Knowledge / Settings
+→ 关闭应用
+→ 再启动一次
+→ 再次确认数据存在
+~~~
+
+如果升级启动失败，不继续覆盖或删除旧数据，先保留原数据和 Backup ZIP 再排查。
+
+## Final Non-AI Desktop V1 Smoke
+
+当前 V1 最终人工验收只保留非 AI 项：
+
+- Login / Shell / Sidebar Route
+- Workspace Create / Rename / Archive / Restore / Switch
+- Task CRUD / Current / Done / Progress
+- Notes Create / Auto Save / Ctrl+S / Unsaved Switch Protection
+- Issue / Resource / Decision
+- Knowledge Create / Edit / Distill
+- Search 中文 / 数字 / Entity Filter / Rebuild
+- Focus Start / Finish
+- Developer Project / Command / Snippet
+- Manual Backup / Restore / Restart
+- Settings / Theme / Notes Settings
+- Tray / Resize
+- Tools 基础打开与返回
+
+真实 AI 参数和 AI Gateway 验证 Deferred，不阻塞本次 Stable V1。

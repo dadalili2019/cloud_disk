@@ -428,3 +428,17 @@ Notes Editor 在保存一致性稳定后继续做展示职责拆分：
 - 可用 `-IncludeAi` 追加真实 AI Provider 验证。
 - AI Credential 继续只来自现有 WORKBENCH_AI_* 配置，不写入仓库、不打印值。
 - 自动化 Gate 与最终人工业务 Smoke 分开，避免把单元测试结果冒充真实环境验收。
+
+
+## 2026-09-21 Stable V1 Release Closeout
+
+继续收口 Desktop Stable V1 Candidate：
+
+- AI 真实 Gateway 参数接入调整为 Deferred，不再作为 Stable V1 阻塞项。
+- 新增 `tool/verify_release_package.ps1`。
+- Windows Release 自动检查 personal_workbench.exe / flutter_windows.dll / icudtl.dat / flutter_assets。
+- Release 验证通过后生成 `release_manifest.sha256.txt`。
+- GitHub Actions 在 Startup Smoke 前执行 Release Package Verification。
+- Stable V1 统一脚本同步加入 Release Package Verification。
+- 明确 Existing Data Upgrade Smoke 与最终非 AI Desktop Smoke 流程。
+- 后续剩余工作集中为 Scale / Upgrade / Windows Runtime Search / Backup-Restore / 人工 Smoke。

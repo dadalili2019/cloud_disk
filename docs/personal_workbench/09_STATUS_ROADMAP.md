@@ -99,18 +99,15 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 
 ## 4. AI Real Environment Verification
 
+AI Provider / Context Builder / Conversation / Retry / History 的代码与自动化测试已保留。
+
+真实 AI Gateway 参数当前状态：
+
 ~~~text
-Provider Config
-→ Test Connection
-→ Global AI
-→ Context Builder
-→ Provider
-→ Markdown Result
-→ Conversation Persistence
-→ Restart Recovery
+Deferred
 ~~~
 
-验证真实 Gateway、API Key、Timeout、HTTP error、Empty response、Long response。
+后续有真实 Base URL / Model / API Key 时，再执行 Real Environment Verification。该项不阻塞当前 Desktop Stable V1。
 
 ## 5. Search / Backup / Restore Hardening
 
@@ -165,22 +162,25 @@ Personal Workbench Desktop Stable V1 Candidate
 
 已经具备：
 
-- AI Real Environment Verification 命令入口。
 - Search / Backup / Restore 合成数据 Scale Verification。
 - PR 轻量 Scale Smoke。
 - Windows Release Build。
+- Windows Release Package Verification。
 - Windows Release Startup Smoke。
 - Stable V1 本地统一验收脚本。
+- AI Real Environment Verification 命令入口已保留，但真实参数 Deferred。
 
 还不能直接标记 Stable V1，因为真实外部环境与人工业务链路不能由单元测试代替。
 
 最终剩余：
 
-1. 真实 AI Gateway 验证并记录结果。
-2. 大规模 Scale 参数执行并记录耗时。
-3. Windows Release 使用已有数据做 Upgrade Smoke。
-4. 正式 Windows Runtime Search / FTS5 验证。
+1. 大规模 Scale 参数执行并记录耗时。
+2. Windows Release 使用已有数据做 Upgrade Smoke。
+3. 正式 Windows Runtime Search / FTS5 验证。
+4. Backup / Restore 人工恢复演练。
 5. 完整人工 Desktop Smoke Regression。
+
+真实 AI Gateway 参数接入 Deferred，不阻塞本次 Stable V1。
 
 以上完成后，再把状态改为：
 
