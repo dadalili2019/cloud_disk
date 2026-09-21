@@ -281,3 +281,15 @@ Developer 页面拆分后继续修正 State 边界：
 - 仅在 Windows 且确认是 errno 32 的文件占用时，清理失败不再把 Migration Test 判为失败。
 - 其他 PathAccessException 仍然继续抛出。
 - 正式数据库 open / WAL / background isolate 不变。
+
+
+## 2026-09-21 Migration Test FTS5 Host Boundary
+
+继续收口 Windows 下数据库测试边界：
+
+- v4 Schema 的 search_index 使用 SQLite FTS5。
+- Windows `flutter test` 跑在宿主 Dart VM，不会加载 Flutter 原生 sqlite3 插件运行时。
+- 测试专用数据库入口在 Windows Host Test 下跳过 FTS5 虚拟表创建。
+- Fresh / Migration 测试仍然真实验证其余表、索引、事务、数据保留和唯一约束。
+- FTS5 仍保留在正式 Schema 中，正式 WorkbenchDatabase.open 不变。
+- FTS 行为留给支持 FTS5 的 Runtime / 后续 Windows integration test 验证。

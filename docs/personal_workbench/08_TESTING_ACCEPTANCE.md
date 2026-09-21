@@ -160,7 +160,8 @@ flutter build windows
 - v1 / v2 / v3 / v4 / v5 → v6 Migration。
 - Migration 后旧数据保留。
 - Migration 后 Current Task / Developer Primary 唯一约束仍然生效。
-- FTS search_index 在最新 Schema 下可用。
+- FTS search_index 在支持 FTS5 的 SQLite Runtime 下可用。
+- Windows `flutter test` 使用宿主 Dart VM SQLite，原生 Flutter SQLite 插件不会参与；因此该环境跳过 FTS5 建表和 FTS 断言，其他 Schema / Migration / Index / Transaction 仍真实执行。
 - targetSchemaVersion 非法输入边界。
 
 下一批：
