@@ -373,3 +373,11 @@ Developer 页面拆分后继续修正 State 边界：
 - 保存进行中切换 / 新建会先等待当前显式保存结束。
 - 页面关闭时仍会把最后一版 Auto Save 内容排在正在执行的写入之后。
 - 新增 Save Coordinator 单元测试。
+
+
+## 2026-09-21 Entity Async List UI
+
+- `WorkbenchAsyncList<T>` 统一 loading / error / empty / list shell。
+- Issue / Resource / Decision 接入公共外壳。
+- 各自 CRUD、卡片内容、Task Link 与 Drawer 继续留在业务页面。
+- 不引入通用 CRUD framework。
