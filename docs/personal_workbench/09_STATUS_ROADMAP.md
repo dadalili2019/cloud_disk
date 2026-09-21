@@ -125,17 +125,20 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 - v1~v5 到 v6 Migration 自动化测试。
 - Migration 数据保留、Index、FTS 和约束验证。
 
+AI Provider / Conversation 第一轮异常测试已完成并合并。
+
 当前继续：
 
-- AI Provider Timeout / HTTP / JSON / Empty / Long Response 测试。
-- Retry History 规则测试。
-- Conversation Service anchor / archived / snapshot 测试。
-- SQLite Conversation 重启恢复测试。
+- Image Tools 抽取共享图片选择逻辑。
+- Image Tools 抽取共享输出目录逻辑。
+- Image Tools 统一 JPG / PNG 输出格式与编码。
+- Image Tools 统一 Card / File Size 等基础 helper。
+- 增加 Image Tools 公共基础能力单元测试。
 
 下一批：
 
+- Image Tools Preview / Watermark / Run-Retry 继续去重
 - Widget smoke
-- Image Tools 重复逻辑整理
 
 ### 异常
 
