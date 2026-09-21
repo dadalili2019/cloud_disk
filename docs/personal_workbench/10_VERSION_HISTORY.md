@@ -373,3 +373,11 @@ Developer 页面拆分后继续修正 State 边界：
 - 保存进行中切换 / 新建会先等待当前显式保存结束。
 - 页面关闭时仍会把最后一版 Auto Save 内容排在正在执行的写入之后。
 - 新增 Save Coordinator 单元测试。
+
+
+## 2026-09-21 Runtime Composition Split
+
+- `WorkbenchRuntime` 主文件不再承载整段 Repository / Service 组装。
+- 新增 `workbench_runtime_composition.dart`。
+- 保持 Future singleton、Pending Restore、Search rebuild、Auto Backup 行为不变。
+- 不引入 DI framework。
