@@ -139,15 +139,19 @@ Image Tools 第一轮公共基础层已完成并合并。
 
 Image Tools 第二轮已完成并合并，剩余 Failed Task / Preview Widget 暂不继续抽象。
 
+Navigation Shell 第一轮拆分已完成并合并。
+
 当前继续：
 
-- Navigation Shell 按 State / Topbar / Sidebar / Content Frame 拆分。
-- 保留同一 Dart library 的 private 边界，不改变路由与交互。
-- Notes Editor 下一步再按状态与展示职责评估拆分。
+- Notes Editor 先加固 Save State / Auto Save 一致性，不先机械拆 UI。
+- Auto Save 写入串行化，避免旧内容晚写回覆盖新内容。
+- 手动保存模式切换笔记时保护未保存修改。
+- 保存中的切换 / 新建先等待当前显式保存完成。
+- 保存一致性稳定后，再整理 Notes List / Editor / Preview 展示职责。
 
 下一批：
 
-- Notes Editor
+- Notes Editor UI 职责整理
 - Widget smoke
 
 ### 异常
