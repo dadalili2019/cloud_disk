@@ -116,6 +116,8 @@ Provider Config
 
 Search 重点：即时同步、重建性能、中文 relevance、大数据量。
 
+合成数据量手工验证入口已建立，可在临时目录验证 Repository / Markdown / Search collection / Backup / Restore，不污染真实数据。
+
 完整 Search Rebuild 已完成第一轮性能优化：
 
 - Workspace 之间并发收集。
