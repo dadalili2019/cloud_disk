@@ -78,6 +78,14 @@ INSERT INTO knowledge (
   }
 
   @override
+  Future<void> delete(String id) async {
+    await db.delete(
+      'DELETE FROM knowledge WHERE id = ?',
+      [id],
+    );
+  }
+
+  @override
   Future<void> update(KnowledgeModel knowledge) async {
     final count = await db.update(
       '''

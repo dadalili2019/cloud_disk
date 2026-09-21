@@ -371,6 +371,24 @@ ORDER BY created_at DESC
     );
     return rows.map((row) => row['to_id']! as String).toList();
   }
+
+  @override
+  Future<void> unlink({
+    required String fromType,
+    required String fromId,
+    required String relationType,
+    required String toType,
+    required String toId,
+  }) async {
+    await db.delete(
+      '''
+DELETE FROM entity_links
+WHERE from_type = ? AND from_id = ? AND relation_type = ?
+  AND to_type = ? AND to_id = ?
+''',
+      [fromType, fromId, relationType, toType, toId],
+    );
+  }
 }
 
 class SqliteActivityRepository implements ActivityRepository {
