@@ -441,7 +441,7 @@ class _CropToolPageState extends State<CropToolPage> {
     );
   }
 
-  Widget imageToolCard(context, {required Widget child}) {
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
