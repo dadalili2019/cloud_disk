@@ -42,10 +42,18 @@ Invoke-Step "Test" {
   flutter test
 }
 
+Invoke-Step "Scale verification smoke" {
+  flutter test test/manual/workbench_scale_verification_test.dart --dart-define=WORKBENCH_SCALE_VERIFY=true --dart-define=WORKBENCH_SCALE_WORKSPACES=1 --dart-define=WORKBENCH_SCALE_TASKS_PER_WORKSPACE=10 --dart-define=WORKBENCH_SCALE_NOTES_PER_WORKSPACE=3 --dart-define=WORKBENCH_SCALE_NOTE_BODY_BYTES=512
+}
+
 if ($IncludeScale) {
   Invoke-Step "Scale verification" {
     flutter test test/manual/workbench_scale_verification_test.dart --dart-define=WORKBENCH_SCALE_VERIFY=true --dart-define=WORKBENCH_SCALE_WORKSPACES=$ScaleWorkspaces --dart-define=WORKBENCH_SCALE_TASKS_PER_WORKSPACE=$ScaleTasksPerWorkspace --dart-define=WORKBENCH_SCALE_NOTES_PER_WORKSPACE=$ScaleNotesPerWorkspace --dart-define=WORKBENCH_SCALE_NOTE_BODY_BYTES=$ScaleNoteBodyBytes
   }
+}
+
+Invoke-Step "Enable Windows desktop" {
+  flutter config --enable-windows-desktop
 }
 
 Invoke-Step "Build Windows release" {
