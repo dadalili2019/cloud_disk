@@ -384,3 +384,11 @@ Notes Editor 在保存一致性稳定后继续做展示职责拆分：
 - Notes List、Editor Panel、Header、Editor / Preview / Split、Save State 下沉为同 library private Widget。
 - 展示 Widget 只接收状态与 callback，不访问 WorkbenchRuntime。
 - 不改变 Auto Save / Manual Save 行为。
+
+
+## 2026-09-21 Runtime Composition Split
+
+- `WorkbenchRuntime` 主文件不再承载整段 Repository / Service 组装。
+- 新增 `workbench_runtime_composition.dart`。
+- 保持 Future singleton、Pending Restore、Search rebuild、Auto Backup 行为不变。
+- 不引入 DI framework。
