@@ -274,7 +274,8 @@ AI 功能后面不要只验证“正常返回”。
 - Database Schema / Migration 第一轮测试已完成：Fresh v6 + v1~v5 → v6。
 - AI Provider / Conversation 异常测试第一轮已完成并合并。
 - Image Tools 第一轮公共基础层抽取已完成并合并。
-- Image Tools 第二轮 Preview / Watermark / Batch 公共纯逻辑整理进行中。
+- Image Tools 第二轮 Preview / Watermark / Batch 公共纯逻辑整理已完成并合并。
+- Navigation / Notes Editor 阶段已开始，先处理 Navigation Shell。
 
 现在按这个顺序继续：
 
@@ -284,8 +285,8 @@ AI 功能后面不要只验证“正常返回”。
 3. Database Schema / Migration 测试（第一轮已完成）
 4. GitHub Actions CI（第一轮已完成）
 5. AI Provider / Conversation 异常测试（第一轮已完成）
-6. Image Tools 重复逻辑整理（第一轮已完成，第二轮进行中）
-7. Navigation / Notes Editor
+6. Image Tools 重复逻辑整理（第一、二轮已完成）
+7. Navigation / Notes Editor（Navigation 第一轮进行中）
 8. 剩余依赖 / Asset / Release 收口
 ~~~
 
