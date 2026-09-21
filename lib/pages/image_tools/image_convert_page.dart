@@ -238,18 +238,13 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
       target = _applyTransforms(target);
 
       final base = p.basenameWithoutExtension(path);
-      final ext = _extFor(_outputFormat);
+      final ext = _outputFormat.extension;
       final outputPath = p.join(outputDir.path, '${base}_offline.$ext');
 
-      Uint8List outBytes;
-      switch (_outputFormat) {
-        case ImageOutputFormat.jpg:
-          outBytes = Uint8List.fromList(img.encodeJpg(target, quality: _quality.round()));
-          break;
-        case ImageOutputFormat.png:
-          outBytes = Uint8List.fromList(img.encodePng(target, level: 6));
-          break;
-      }
+      final outBytes = _outputFormat.encode(
+        target,
+        jpgQuality: _quality.round(),
+      );
 
       await File(outputPath).writeAsBytes(outBytes, flush: true);
       _outputBytesTotal += outBytes.length;
@@ -260,14 +255,7 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
     }
   }
 
-  String _extFor(ImageOutputFormat f) {
-    switch (f) {
-      case ImageOutputFormat.jpg:
-        return 'jpg';
-      case ImageOutputFormat.png:
-        return 'png';
-    }
-  }
+  
 
   img.BitmapFont _fontBySize(int size) {
     if (size <= 14) return img.arial14;
