@@ -40,6 +40,7 @@ extension ImageOutputFormatX on ImageOutputFormat {
   }
 }
 
+/// Immutable text-watermark parameters shared by Image Convert and Watermark.
 class ImageTextWatermarkOptions {
   const ImageTextWatermarkOptions({
     required this.text,
@@ -254,6 +255,7 @@ img.BitmapFont imageFontForSize(int size) {
   return img.arial24;
 }
 
+/// Runs sequential image work while reporting progress without owning UI state.
 Future<ImageBatchResult> runImageBatch<T>({
   required List<T> items,
   required Future<bool> Function(T item) process,
