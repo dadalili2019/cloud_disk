@@ -27,7 +27,9 @@
 - 主产品代码已经从早期 cloud disk 代码中独立出来
 - 当前目录以 `app / pages / router / theme / widgets / workbench` 为主
 - 历史 DTO、DBHelper、旧网盘页面不再属于 Personal Workbench
-- 当前进入 Desktop Hardening 和代码整理阶段
+- 第一轮 Desktop Hardening / 代码优化已完成
+- 当前处于 Desktop Stable V1 Candidate 发布验收阶段
+- AI 真实 Gateway 参数接入 Deferred，不阻塞当前 V1
 
 ## 维护原则
 
