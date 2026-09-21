@@ -318,3 +318,18 @@ Developer 页面拆分后继续修正 State 边界：
 - AIConversationService 增加 Anchor 校验、Archived 边界、首条消息自动标题、Context Reference Snapshot 测试。
 - SQLite AI Thread / Message 增加关闭数据库后重新打开的持久化恢复测试。
 - 当前不做 Global AI Drawer 大规模 State 重构，先用测试锁行为。
+
+
+## 2026-09-21 Image Tools Shared Foundation - Step 1
+
+开始整理 Image Tools 重复基础逻辑：
+
+- 新增 `image_tools_support.dart`。
+- 统一图片文件选择与支持扩展名。
+- 统一输出目录选择与默认目录创建。
+- 统一 JPG / PNG 输出格式、扩展名和编码。
+- 统一文件大小格式化。
+- 统一图片工具 Card 容器。
+- Image Convert / Watermark / Crop / Filter / Collage / Dedupe 接入共享基础能力。
+- 新增公共基础能力单元测试。
+- 本轮不改变各工具的图像处理算法、参数和交互流程。
