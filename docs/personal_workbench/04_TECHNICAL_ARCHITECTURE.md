@@ -374,3 +374,17 @@ workbench_notes_editor_page.dart
 - error state
 
 展示文件只接收状态和 callback，不直接访问 Runtime / Repository，也不维护保存生命周期。
+
+
+## Runtime Composition 收口
+
+`WorkbenchRuntime` 继续作为唯一 Runtime 入口，但 Repository / Service 的具体组装已下沉到：
+
+~~~text
+workbench_runtime.dart
+└─ workbench_runtime_composition.dart
+~~~
+
+主文件保留 Runtime 对外字段、singleton 和启动入口；composition 文件只负责创建 Path / Database / Repository / Service 并返回 Runtime。
+
+没有引入 DI 框架，也没有改变 Service / Repository 依赖关系。
