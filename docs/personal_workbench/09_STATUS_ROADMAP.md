@@ -87,10 +87,16 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 - Backup portable settings / manifest ZIP 测试。
 - Search rebuild batch / transaction 路径测试。
 
+继续完成：
+
+- Restore staging / next-start apply 自动化测试。
+- Restore settings preflight / sanitize。
+- Pending Restore 失败边界保护。
+
 下一批：
 
-- Restore staging / next-start apply tests
 - Service / Repository tests
+- Task current constraint / Knowledge source links
 - Settings persistence
 - Widget smoke
 

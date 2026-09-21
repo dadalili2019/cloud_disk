@@ -204,6 +204,7 @@ RestoreService
   ├─ validate
   ├─ safety backup
   ├─ stage .pending_restore
+  ├─ settings preflight / sanitize
   └─ next-start apply
 ~~~
 
@@ -216,6 +217,14 @@ PersonalWorkbench/.pending_restore/
 ~~~
 
 只有在下一次 Runtime 初始化、数据库打开之前应用。
+
+Apply 前会先做 preflight：
+
+- pending database 必须存在；
+- settings.json 如果存在，必须先完成 JSON / portable value 校验；
+- 敏感 key 会在 staging 时过滤，不保留到 pending settings；
+- preflight 失败时不覆盖当前数据库和业务目录，并清理无效 pending；
+- 真正 Apply 全部完成以后才删除 pending 标记。
 
 ## 13. 数据一致性原则
 

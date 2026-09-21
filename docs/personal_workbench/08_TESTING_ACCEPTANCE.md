@@ -71,15 +71,14 @@
 
 ## 3. 当前验证基线
 
-2026-09-20 当前本地验证结果：
+当前已确认的静态检查基线：
 
 ~~~text
 flutter analyze
 → No issues found
-
-flutter test
-→ 4 tests passed
 ~~~
+
+测试套件已经持续扩展，不再在文档里写死测试数量。每次核心改动合并后，以本地 `flutter test` 实际结果为准。
 
 `flutter build windows` 继续作为合并和发布前必须执行的 Gate，不在没有真实执行结果时写成“已通过”。
 
@@ -118,14 +117,19 @@ flutter build windows
 - Search 完整 rebuild：Service 组装 Entry、Repository 批量写入、100 条分批。
 - Backup ZIP：manifest、数据库快照、Markdown / Attachment、portable settings、敏感配置排除。
 
+本轮继续补：
+
+- Restore staging：Safety Backup、允许路径、pending marker、settings sanitize。
+- Restore next-start apply：DB / WAL / SHM、Workspace / Knowledge / Attachment、portable settings、pending cleanup。
+- Restore preflight：损坏 settings / missing DB 不覆盖当前数据。
+
 下一批：
 
-1. Restore staging / next-start apply。
-2. Repository / Service unit tests。
-3. Task current constraint。
-4. Knowledge source links。
-5. Settings persistence。
-6. Widget smoke tests。
+1. Repository / Service unit tests。
+2. Task current constraint。
+3. Knowledge source links。
+4. Settings persistence。
+5. Widget smoke tests。
 
 测试必须可重复，不依赖个人电脑绝对路径、手工准备文件、固定账号或某个外网服务永远可用。
 
