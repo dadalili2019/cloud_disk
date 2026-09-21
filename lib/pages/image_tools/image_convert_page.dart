@@ -138,24 +138,24 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
       _outputDirPath = outputDir.path;
     });
 
-    var success = 0;
-
-    for (var i = 0; i < _pickedFiles.length; i++) {
-      final f = _pickedFiles[i];
-      final ok = await _processSingleFile(f, outputDir);
-      if (ok) success++;
-
-      if (!mounted) return;
-      setState(() {
-        _progress = (i + 1) / _pickedFiles.length;
-        _status = '处理中 ${i + 1}/${_pickedFiles.length} · ${f.name}';
-      });
-    }
+    final result = await runImageBatch<PlatformFile>(
+      items: List<PlatformFile>.from(_pickedFiles),
+      process: (file) => _processSingleFile(file, outputDir),
+      shouldContinue: () => mounted,
+      onProgress: (progress) {
+        setState(() {
+          _progress = progress.fraction;
+          _status =
+              '处理中 ${progress.index}/${progress.total} · ${progress.item.name}';
+        });
+      },
+    );
 
     if (!mounted) return;
     setState(() {
       _running = false;
-      _status = '处理完成：成功 $success/${_pickedFiles.length}，失败 ${_failedTasks.length}';
+      _status =
+          '处理完成：成功 ${result.successCount}/${result.processedCount}，失败 ${_failedTasks.length}';
     });
   }
 
@@ -172,23 +172,24 @@ class _ImageToolsPageState extends State<ImageToolsPage> {
       _status = '开始重试失败项...';
     });
 
-    var success = 0;
-    for (var i = 0; i < retryItems.length; i++) {
-      final t = retryItems[i];
-      final ok = await _processFilePath(t.path, t.name, outputDir);
-      if (ok) success++;
-
-      if (!mounted) return;
-      setState(() {
-        _progress = (i + 1) / retryItems.length;
-        _status = '重试 ${i + 1}/${retryItems.length} · ${t.name}';
-      });
-    }
+    final result = await runImageBatch<_FailedTask>(
+      items: retryItems,
+      process: (item) => _processFilePath(item.path, item.name, outputDir),
+      shouldContinue: () => mounted,
+      onProgress: (progress) {
+        setState(() {
+          _progress = progress.fraction;
+          _status =
+              '重试 ${progress.index}/${progress.total} · ${progress.item.name}';
+        });
+      },
+    );
 
     if (!mounted) return;
     setState(() {
       _running = false;
-      _status = '重试完成：成功 $success/${retryItems.length}，仍失败 ${_failedTasks.length}';
+      _status =
+          '重试完成：成功 ${result.successCount}/${result.processedCount}，仍失败 ${_failedTasks.length}';
     });
   }
 
