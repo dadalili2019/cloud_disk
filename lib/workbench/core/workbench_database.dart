@@ -41,15 +41,33 @@ class WorkbenchDatabase implements WorkbenchSqlExecutor {
   static Future<WorkbenchDatabase> open(String databasePath) {
     return _open(
       NativeDatabase.createInBackground(File(databasePath)),
+      _WorkbenchExecutorUser(),
     );
   }
 
-  static Future<WorkbenchDatabase> openInMemoryForTesting() {
-    return _open(NativeDatabase.memory());
+  static Future<WorkbenchDatabase> openInMemoryForTesting({
+    int targetSchemaVersion = schemaVersion,
+  }) {
+    if (targetSchemaVersion < 1 || targetSchemaVersion > schemaVersion) {
+      throw ArgumentError.value(
+        targetSchemaVersion,
+        'targetSchemaVersion',
+        'must be between 1 and $schemaVersion',
+      );
+    }
+    return _open(
+      NativeDatabase.memory(),
+      _WorkbenchExecutorUser(
+        targetSchemaVersion: targetSchemaVersion,
+        enableWal: false,
+      ),
+    );
   }
 
-  static Future<WorkbenchDatabase> _open(QueryExecutor executor) async {
-    final user = _WorkbenchExecutorUser();
+  static Future<WorkbenchDatabase> _open(
+    QueryExecutor executor,
+    _WorkbenchExecutorUser user,
+  ) async {
     await executor.ensureOpen(user);
     return WorkbenchDatabase._(executor, user);
   }
@@ -140,8 +158,16 @@ class _TransactionSession implements WorkbenchSqlExecutor {
 }
 
 class _WorkbenchExecutorUser extends QueryExecutorUser {
+  _WorkbenchExecutorUser({
+    this.targetSchemaVersion = WorkbenchDatabase.schemaVersion,
+    this.enableWal = true,
+  });
+
+  final int targetSchemaVersion;
+  final bool enableWal;
+
   @override
-  int get schemaVersion => WorkbenchDatabase.schemaVersion;
+  int get schemaVersion => targetSchemaVersion;
 
   @override
   Future<void> beforeOpen(
@@ -151,16 +177,15 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
     await executor.ensureOpen(this);
     await executor.runCustom('PRAGMA foreign_keys = ON');
     await executor.runCustom('PRAGMA busy_timeout = 5000');
-    await executor.runCustom('PRAGMA journal_mode = WAL');
+    if (enableWal) {
+      await executor.runCustom('PRAGMA journal_mode = WAL');
+    }
 
     final from = details.versionBefore;
     if (from == null) {
-      await _createSchema(executor, _schemaV1);
-      await _createSchema(executor, _schemaV2);
-      await _createSchema(executor, _schemaV3);
-      await _createSchema(executor, _schemaV4);
-      await _createSchema(executor, _schemaV5);
-      await _createSchema(executor, _schemaV6);
+      for (var version = 1; version <= schemaVersion; version++) {
+        await _createSchema(executor, _schemaForVersion(version));
+      }
       return;
     }
 
@@ -178,34 +203,30 @@ class _WorkbenchExecutorUser extends QueryExecutorUser {
   Future<void> _migrate(QueryExecutor executor, int from, int to) async {
     var version = from;
     while (version < to) {
-      switch (version) {
-        case 0:
-          await _createSchema(executor, _schemaV1);
-          break;
-        case 1:
-          await _createSchema(executor, _schemaV2);
-          break;
-        case 2:
-          await _createSchema(executor, _schemaV3);
-          break;
-        case 3:
-          await _createSchema(executor, _schemaV4);
-          break;
-        case 4:
-          await _createSchema(executor, _schemaV5);
-          break;
-        case 5:
-          await _createSchema(executor, _schemaV6);
-          break;
-        default:
-          throw StateError(
-            'No Workbench migration registered for $version -> ${version + 1}.',
-          );
-      }
-      version++;
+      final nextVersion = version + 1;
+      await _createSchema(executor, _schemaForVersion(nextVersion));
+      version = nextVersion;
     }
   }
 
+  List<String> _schemaForVersion(int version) {
+    switch (version) {
+      case 1:
+        return _schemaV1;
+      case 2:
+        return _schemaV2;
+      case 3:
+        return _schemaV3;
+      case 4:
+        return _schemaV4;
+      case 5:
+        return _schemaV5;
+      case 6:
+        return _schemaV6;
+      default:
+        throw StateError('No Workbench schema registered for v$version.');
+    }
+  }
   Future<void> _createSchema(
     QueryExecutor executor,
     List<String> statements,

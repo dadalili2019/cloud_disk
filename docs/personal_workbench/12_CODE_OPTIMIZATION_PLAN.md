@@ -278,7 +278,7 @@ AI 功能后面不要只验证“正常返回”。
 ~~~text
 1. Task / Workspace 业务规则测试（第一轮已完成）
 2. Knowledge / Settings 业务规则测试（第一轮已完成）
-3. Database Schema / Migration 测试（下一步）
+3. Database Schema / Migration 测试（下一步；测试入口已经支持指定 targetSchemaVersion）
 4. GitHub Actions CI
 5. AI Provider / Conversation 异常测试
 6. Image Tools 重复逻辑整理

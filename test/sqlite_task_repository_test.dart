@@ -10,8 +10,9 @@ void main() {
     late SqliteTaskRepository tasks;
 
     setUp(() async {
-      final openedDatabase =
-          await WorkbenchDatabase.openInMemoryForTesting();
+      final openedDatabase = await WorkbenchDatabase.openInMemoryForTesting(
+        targetSchemaVersion: 1,
+      );
       database = openedDatabase;
       workspaces = SqliteWorkspaceRepository(openedDatabase);
       tasks = SqliteTaskRepository(openedDatabase);

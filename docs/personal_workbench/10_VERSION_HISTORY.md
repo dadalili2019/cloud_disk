@@ -242,3 +242,15 @@ Developer 页面拆分后继续修正 State 边界：
 - Repository 测试不再额外依赖 Drift background isolate 和临时数据库文件。
 - sqlite_task_repository_test 的 tearDown 改为数据库成功初始化后才 close，避免 setup 失败后再抛 LateInitializationError。
 - 测试目标保持不变：仍然验证真实 SQLite Schema、Index、Transaction 和 Repository 行为。
+
+
+## 2026-09-21 Test Schema Version Boundary
+
+继续修正 Repository 测试边界：
+
+- WorkbenchDatabase.openInMemoryForTesting 增加 targetSchemaVersion。
+- 测试数据库默认仍可创建当前最新 Schema。
+- Task Repository 测试只创建 Schema v1，因为 Current Task、Workspace 和对应唯一索引都属于 v1。
+- in-memory 测试关闭 WAL，正式数据库仍保持 WAL。
+- Schema 创建和 Migration 统一通过 _schemaForVersion 映射，给下一阶段 Migration Test 做准备。
+- 避免 Task Repository 测试被 Knowledge FTS、AI、Developer 等无关后续 Schema 影响。
