@@ -241,3 +241,30 @@ Notes Editor 展示职责拆分与第一批 Widget Smoke Test 已完成。
 - Global Shell 路由高亮正常。
 - System Tray 文案已经是 Personal Workbench。
 - 已删除的旧 cloud disk route 不再被引用。
+
+
+## 7. Desktop Stable V1 Candidate Gate
+
+当前状态为 **Stable V1 Candidate**，不是已经完成 Stable V1。
+
+自动化 Gate：
+
+- PR Analyze / Test。
+- PR 轻量 Scale Smoke。
+- main Windows Release Build。
+- main Windows Release Startup Smoke。
+- Stable V1 本地统一脚本：`tool/verify_stable_v1.ps1`。
+
+最终标记 Stable V1 前必须补齐真实结果：
+
+- [ ] `verify_stable_v1.ps1` 默认 Gate 通过。
+- [ ] 大规模 `-IncludeScale` 验证完成并记录耗时。
+- [ ] 真实 AI Gateway `-IncludeAi` 验证通过。
+- [ ] Windows Release 使用已有用户数据升级启动正常。
+- [ ] Login / Shell / Workspace / Task / Notes 人工 Smoke。
+- [ ] Search 正式 Windows Runtime FTS5 查询正常。
+- [ ] AI Send / Retry / History / Restart Recovery 正常。
+- [ ] Backup / Restore 人工灾难恢复链路验证正常。
+- [ ] Tray / Resize / Settings / Tools 人工 Smoke 正常。
+
+没有执行的项目必须保留未勾选，不能根据单元测试推断为通过。
