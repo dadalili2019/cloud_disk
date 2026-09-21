@@ -348,3 +348,17 @@ workbench_developer_page.dart
 后续继续按职责拆，不按行数机械切文件，也不借重构顺手改变业务行为。
 
 具体规则统一看 [11_CODE_DEVELOPMENT_RULES.md](11_CODE_DEVELOPMENT_RULES.md)。
+
+
+## Runtime Composition 收口
+
+`WorkbenchRuntime` 继续作为唯一 Runtime 入口，但 Repository / Service 的具体组装已下沉到：
+
+~~~text
+workbench_runtime.dart
+└─ workbench_runtime_composition.dart
+~~~
+
+主文件保留 Runtime 对外字段、singleton 和启动入口；composition 文件只负责创建 Path / Database / Repository / Service 并返回 Runtime。
+
+没有引入 DI 框架，也没有改变 Service / Repository 依赖关系。
