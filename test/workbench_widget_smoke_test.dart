@@ -41,7 +41,7 @@ void main() {
     expect(find.text('Create the first note.'), findsOneWidget);
 
     await tester.tap(find.text('Create'));
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
 
     expect(pressed, isTrue);
   });
