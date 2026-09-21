@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 
 import '../../theme/theme_controller.dart';
 import '../application/ai_conversation_history.dart';
-import '../application/ai_prompt_builder.dart';
 import '../core/ai_context_models.dart';
 import '../core/ai_conversation_models.dart';
 import '../core/models.dart';
