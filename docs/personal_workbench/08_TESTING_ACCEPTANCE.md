@@ -143,6 +143,7 @@ flutter build windows
 
 - Task Repository 使用真实 SQLite Schema 验证 Current Task 唯一索引。
 - Repository 测试通过 in-memory SQLite 运行，不依赖正式环境的 background isolate。
+- 文件型 Migration Test 关闭 prepared statement cache，减少 Windows 临时数据库文件句柄延迟释放。
 - Task Repository 测试只初始化它真实依赖的 Schema v1，不被 Knowledge / AI / Developer 等后续 Schema 干扰。
 - 验证 setCurrent 事务切换和失败回滚。
 - 验证 Done Task 不能成为 Current。

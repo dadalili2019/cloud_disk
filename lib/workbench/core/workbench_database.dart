@@ -64,7 +64,10 @@ class WorkbenchDatabase implements WorkbenchSqlExecutor {
   }) {
     _validateTargetSchemaVersion(targetSchemaVersion);
     return _open(
-      NativeDatabase(File(databasePath)),
+      NativeDatabase(
+        File(databasePath),
+        cachePreparedStatements: false,
+      ),
       _WorkbenchExecutorUser(
         targetSchemaVersion: targetSchemaVersion,
         enableWal: false,
