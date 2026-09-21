@@ -103,30 +103,32 @@ class _FilterToolPageState extends State<FilterToolPage> {
 
   Future<void> _runProcess() async {
     if (_pickedFiles.isEmpty || _running) return;
-    final outDir = await _resolveOutputDir();
+
+    final outputDir = await _resolveOutputDir();
     setState(() {
       _running = true;
       _progress = 0;
-      _outputDirPath = outDir.path;
+      _outputDirPath = outputDir.path;
     });
 
-    var success = 0;
-    for (var i = 0; i < _pickedFiles.length; i++) {
-      final f = _pickedFiles[i];
-      final ok = await _processOne(f, outDir);
-      if (ok) success++;
-
-      if (!mounted) return;
-      setState(() {
-        _progress = (i + 1) / _pickedFiles.length;
-        _status = '处理中 ${i + 1}/${_pickedFiles.length} · ${f.name}';
-      });
-    }
+    final result = await runImageBatch<PlatformFile>(
+      items: List<PlatformFile>.from(_pickedFiles),
+      process: (item) => _processOne(item, outputDir),
+      shouldContinue: () => mounted,
+      onProgress: (progress) {
+        setState(() {
+          _progress = progress.fraction;
+          _status =
+              '处理中 ${progress.index}/${progress.total} · ${progress.item.name}';
+        });
+      },
+    );
 
     if (!mounted) return;
     setState(() {
       _running = false;
-      _status = '处理完成：成功 $success/${_pickedFiles.length}';
+      _status =
+          '处理完成：成功 ${result.successCount}/${result.processedCount}';
     });
   }
 
