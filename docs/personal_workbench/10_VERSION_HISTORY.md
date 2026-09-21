@@ -384,3 +384,11 @@ Notes Editor 在保存一致性稳定后继续做展示职责拆分：
 - Notes List、Editor Panel、Header、Editor / Preview / Split、Save State 下沉为同 library private Widget。
 - 展示 Widget 只接收状态与 callback，不访问 WorkbenchRuntime。
 - 不改变 Auto Save / Manual Save 行为。
+
+
+## 2026-09-21 Entity Async List UI
+
+- `WorkbenchAsyncList<T>` 统一 loading / error / empty / list shell。
+- Issue / Resource / Decision 接入公共外壳。
+- 各自 CRUD、卡片内容、Task Link 与 Drawer 继续留在业务页面。
+- 不引入通用 CRUD framework。
