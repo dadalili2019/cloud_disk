@@ -359,3 +359,17 @@ Developer 页面拆分后继续修正 State 边界：
 - Sidebar、Nav Item、Content Frame 抽到 `navigation_shell_sidebar.dart`。
 - 使用 Dart `part / part of` 保持 private Widget 和 helper 的封装边界。
 - 不改变现有路由、选中状态、AI Drawer、窗口按钮和工作区切换行为。
+
+
+## 2026-09-21 Notes Editor Save Consistency
+
+进入 Notes Editor 阶段时先处理数据一致性，再做 UI 拆分：
+
+- 新增 `NotesEditorSaveCoordinator`，用 revision + 串行写入保护保存顺序。
+- Auto Save 期间继续编辑时，旧写入完成后继续保存最新 revision，避免旧内容覆盖新内容。
+- 手动保存期间继续编辑时，不会把新修改误标记为已保存。
+- 关闭 Auto Save 后切换笔记，会提示保存 / 放弃 / 取消，避免未保存内容静默丢失。
+- 新建笔记前同样保护当前未保存修改。
+- 保存进行中切换 / 新建会先等待当前显式保存结束。
+- 页面关闭时仍会把最后一版 Auto Save 内容排在正在执行的写入之后。
+- 新增 Save Coordinator 单元测试。
