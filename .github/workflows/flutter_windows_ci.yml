@@ -45,6 +45,15 @@ jobs:
       - name: Test
         run: flutter test
 
+      - name: Scale verification smoke
+        run: >
+          flutter test test/manual/workbench_scale_verification_test.dart
+          --dart-define=WORKBENCH_SCALE_VERIFY=true
+          --dart-define=WORKBENCH_SCALE_WORKSPACES=1
+          --dart-define=WORKBENCH_SCALE_TASKS_PER_WORKSPACE=10
+          --dart-define=WORKBENCH_SCALE_NOTES_PER_WORKSPACE=3
+          --dart-define=WORKBENCH_SCALE_NOTE_BODY_BYTES=512
+
   windows-build:
     name: Windows Release Build
     if: github.event_name != 'pull_request'
