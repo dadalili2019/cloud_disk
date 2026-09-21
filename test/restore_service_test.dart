@@ -206,16 +206,17 @@ void main() {
       await File(
         p.join(pending.path, 'restore_ready.json'),
       ).create(recursive: true);
-      await File(
+      final pendingDatabase = File(
         p.join(pending.path, 'data', 'workbench.db'),
-      )
-        ..createSync(recursive: true)
-        ..writeAsStringSync('pending-db');
-      await File(
+      );
+      await pendingDatabase.parent.create(recursive: true);
+      await pendingDatabase.writeAsString('pending-db');
+
+      final pendingSettings = File(
         p.join(pending.path, 'settings', 'settings.json'),
-      )
-        ..createSync(recursive: true)
-        ..writeAsStringSync('{broken json');
+      );
+      await pendingSettings.parent.create(recursive: true);
+      await pendingSettings.writeAsString('{broken json');
 
       await expectLater(
         RestoreService.applyPendingRestoreIfPresent(paths),
