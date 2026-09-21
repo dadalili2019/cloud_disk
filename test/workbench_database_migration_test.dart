@@ -144,9 +144,7 @@ WHERE search_index MATCH ?
         } finally {
           await database?.close();
           database = null;
-          if (await tempDirectory.exists()) {
-            await tempDirectory.delete(recursive: true);
-          }
+          await _deleteDirectoryWithRetry(tempDirectory);
         }
       });
     }
@@ -444,4 +442,23 @@ class _SchemaObjects {
 
   final Set<String> tables;
   final Set<String> indexes;
+}
+
+
+Future<void> _deleteDirectoryWithRetry(
+  Directory directory, {
+  int maxAttempts = 10,
+  Duration retryDelay = const Duration(milliseconds: 100),
+}) async {
+  for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+    if (!await directory.exists()) return;
+
+    try {
+      await directory.delete(recursive: true);
+      return;
+    } on PathAccessException {
+      if (attempt == maxAttempts) rethrow;
+      await Future<void>.delayed(retryDelay);
+    }
+  }
 }
