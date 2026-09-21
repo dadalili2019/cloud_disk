@@ -199,15 +199,14 @@ class _CropToolPageState extends State<CropToolPage> {
       if (decoded == null) return false;
 
       final transformed = _applyTransforms(decoded);
-      final ext = _outputFormat == ImageOutputFormat.jpg ? 'jpg' : 'png';
-      final outPath = p.join(outputDir.path, '${p.basenameWithoutExtension(file.path!)}_crop.$ext');
-
-      final Uint8List outBytes;
-      if (_outputFormat == ImageOutputFormat.jpg) {
-        outBytes = Uint8List.fromList(img.encodeJpg(transformed, quality: _quality.round()));
-      } else {
-        outBytes = Uint8List.fromList(img.encodePng(transformed, level: 6));
-      }
+      final outPath = p.join(
+        outputDir.path,
+        '${p.basenameWithoutExtension(file.path!)}_crop.${_outputFormat.extension}',
+      );
+      final outBytes = _outputFormat.encode(
+        transformed,
+        jpgQuality: _quality.round(),
+      );
       await File(outPath).writeAsBytes(outBytes, flush: true);
       return true;
     } catch (_) {
