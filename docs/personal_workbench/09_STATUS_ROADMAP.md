@@ -125,11 +125,17 @@ Workspace 旧聚合页面和当前 `V2` 历史命名也已经继续清理。
 - v1~v5 到 v6 Migration 自动化测试。
 - Migration 数据保留、Index、FTS 和约束验证。
 
+当前继续：
+
+- AI Provider Timeout / HTTP / JSON / Empty / Long Response 测试。
+- Retry History 规则测试。
+- Conversation Service anchor / archived / snapshot 测试。
+- SQLite Conversation 重启恢复测试。
+
 下一批：
 
-- GitHub Actions CI
-- AI Provider / Conversation 异常测试
 - Widget smoke
+- Image Tools 重复逻辑整理
 
 ### 异常
 

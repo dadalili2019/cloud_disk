@@ -271,3 +271,49 @@ workbench_knowledge_page.dart
 - Search Result route
 
 卡片和编辑 Dialog 只负责展示和输入，不直接重新组织 KnowledgeService 业务规则。
+
+
+## AI 异常与 Conversation 保护
+
+AI 第一轮异常链路已经开始自动化保护。
+
+Provider 层覆盖：
+
+- 未配置 Provider 时不发网络请求。
+- Endpoint / Header / Prompt Message 组装。
+- Timeout 转为可读错误。
+- 网络异常转为统一 Provider 错误。
+- HTTP 4xx / 5xx。
+- 错误 Body 限长，避免把超长响应直接带到 UI。
+- 非法 JSON。
+- 空 Response。
+- OpenAI-compatible 多段 content。
+- 长 Response 不在 Provider 层无故截断。
+
+Conversation 层覆盖：
+
+- Global / Task / Workspace / Knowledge anchor 校验。
+- Task Thread 自动绑定所属 Workspace。
+- Archived Anchor / Thread 不继续写入。
+- 第一条 User Message 自动生成 Thread Title。
+- Assistant Message 只保存 Context Reference Snapshot，不重复复制完整正文。
+- Thread / Message SQLite 持久化。
+- 数据库关闭重新打开后 Conversation History 仍然可恢复。
+
+Retry 规则：
+
+~~~text
+第一次发送
+→ User Message 已落库
+→ Provider 失败
+→ UI 保留 Failed Message
+
+Retry
+→ 不再重复追加同一条 User Message
+→ Prompt History 排除最后那条已落库 User Message
+→ Provider 成功后只补 Assistant Message
+~~~
+
+这条 History 规则已经从 Drawer 私有方法移到 Application 层纯函数，UI 行为不变，后续可以独立测试。
+
+当前暂时不拆 Global AI Drawer 的完整 State。先把 Provider、Conversation、Retry 行为锁住，再决定是否值得继续抽状态层。
