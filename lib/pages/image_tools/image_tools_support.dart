@@ -179,10 +179,12 @@ img.Image applyTextWatermark(
       x = (target.width - estimatedWidth - padding)
           .clamp(0, target.width)
           .toInt();
+      break;
     case ImageWatermarkPosition.bottomLeft:
       y = (target.height - estimatedHeight - padding)
           .clamp(0, target.height)
           .toInt();
+      break;
     case ImageWatermarkPosition.bottomRight:
       x = (target.width - estimatedWidth - padding)
           .clamp(0, target.width)
@@ -190,6 +192,7 @@ img.Image applyTextWatermark(
       y = (target.height - estimatedHeight - padding)
           .clamp(0, target.height)
           .toInt();
+      break;
     case ImageWatermarkPosition.center:
       x = ((target.width - estimatedWidth) / 2)
           .round()
@@ -199,6 +202,7 @@ img.Image applyTextWatermark(
           .round()
           .clamp(0, target.height)
           .toInt();
+      break;
   }
 
   final alpha = (options.opacity * 255).round().clamp(30, 255).toInt();
