@@ -153,3 +153,50 @@ CI 失败时先修失败项，不要绕过 Gate 直接合并。
 大范围清理不要直接在 main 上做。
 
 代码和文档一起改，详细编码要求看 [11_CODE_DEVELOPMENT_RULES.md](11_CODE_DEVELOPMENT_RULES.md)。
+
+
+## AI Real Environment Verification
+
+真实 AI Gateway 验证使用正式 Provider 代码，不使用独立 curl 脚本。
+
+PowerShell 示例：
+
+~~~powershell
+$env:WORKBENCH_AI_BASE_URL="https://your-gateway.example.com"
+$env:WORKBENCH_AI_MODEL="your-model"
+$env:WORKBENCH_AI_API_KEY="your-key"
+$env:WORKBENCH_AI_CHAT_PATH="/v1/chat/completions"
+$env:WORKBENCH_AI_TIMEOUT_SECONDS="90"
+
+dart run tool/verify_ai_provider.dart --strict-ok
+~~~
+
+可选环境变量：
+
+~~~text
+WORKBENCH_AI_API_KEY_HEADER
+WORKBENCH_AI_API_KEY_PREFIX
+WORKBENCH_AI_EXTRA_HEADERS_JSON
+~~~
+
+验证命令只输出：
+
+- Base URL
+- Chat Path
+- Model
+- Timeout
+- API Key Header 名
+- 是否配置 Credential
+- Extra Header 名
+- 请求耗时
+- 截断后的响应文本
+
+不会输出 API Key / Token / Header Value。
+
+通过标准：
+
+~~~text
+RESULT: PASS
+~~~
+
+失败时返回非 0 exit code，并输出正式 Provider 的 Timeout / Network / HTTP / JSON / Empty Response 错误信息。
