@@ -42,6 +42,27 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
+      - name: Validate PowerShell verification scripts
+        shell: powershell
+        run: |
+          $files = @(
+            './tool/verify_windows_release.ps1',
+            './tool/verify_stable_v1.ps1'
+          )
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $file),
+              [ref]$tokens,
+              [ref]$errors
+            ) | Out-Null
+            if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error $_.Message }
+              exit 1
+            }
+          }
+
       - name: Test
         run: flutter test
 
