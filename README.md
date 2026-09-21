@@ -4,7 +4,7 @@ Personal Workbench 是一个 Windows Desktop 优先、本地优先（Local-first
 
 它不是普通 Todo App。核心目标是：重新打开应用以后，我可以很快知道自己现在在做什么、下一步是什么、哪里被卡住了，以及相关的笔记、问题、资源、决策和知识放在哪里。
 
-仓库名称还保留为 `cloud_disk`，但当前产品统一叫 **Personal Workbench**。
+仓库与 Dart package 名称仍保留为 `cloud_disk`，当前产品与 Windows Release 统一叫 **Personal Workbench**。
 
 ## 当前能力
 
@@ -82,10 +82,10 @@ main push / 手工触发 → 上面质量检查通过后再 build Windows Releas
 Windows Release 输出仍然是：
 
 ~~~text
-build/windows/x64/runner/Release/cloud_disk.exe
+build/windows/x64/runner/Release/personal_workbench.exe
 ~~~
 
-可执行文件改名属于后续发布层面的事情，不和普通功能重构混在一起。
+Windows 可执行文件已经收口为 `personal_workbench.exe`；Dart package 名称暂时保留 `cloud_disk`，避免无业务价值的大范围 import 重命名。
 
 ## 文档
 
