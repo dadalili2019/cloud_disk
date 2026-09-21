@@ -60,6 +60,10 @@ Invoke-Step "Build Windows release" {
   flutter build windows --release
 }
 
+Invoke-Step "Windows release package verification" {
+  powershell -ExecutionPolicy Bypass -File ./tool/verify_release_package.ps1
+}
+
 Invoke-Step "Windows release startup smoke" {
   powershell -ExecutionPolicy Bypass -File ./tool/verify_windows_release.ps1
 }
